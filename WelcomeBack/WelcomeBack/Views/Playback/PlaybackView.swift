@@ -10,24 +10,27 @@ struct PlaybackView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color.backgroundDark.ignoresSafeArea()
+            GeometryReader { screen in
+                ZStack {
+                    Color.backgroundDark.ignoresSafeArea()
 
-                ScrollView {
                     VStack(spacing: 0) {
-                        memberPhoto
-                            .padding(.top, 16)
+                        // Photo — capped at 38% of screen height so everything fits
+                        memberPhoto(screenHeight: screen.size.height)
+                            .padding(.top, 8)
+                            .padding(.horizontal, 24)
 
+                        // Story text
                         storySection
-                            .padding(.top, 40)
+                            .padding(.top, 20)
+                            .padding(.horizontal, 24)
 
+                        Spacer(minLength: 12)
+
+                        // Play button — always fully visible
                         playButton
-                            .padding(.top, 32)
-
-                        Spacer(minLength: 64)
+                            .padding(.bottom, 32)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -57,101 +60,96 @@ struct PlaybackView: View {
 
     // MARK: - Subviews
 
-    private var memberPhoto: some View {
-        GeometryReader { geo in
-            let width = min(geo.size.width, 380)
-            let height = width * 1.25
+    private func memberPhoto(screenHeight: CGFloat) -> some View {
+        let photoHeight = screenHeight * 0.38
 
-            Group {
-                if let uiImage = UIImage(named: member.imageURL) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    ZStack {
-                        LinearGradient(
-                            colors: [Color.surfaceVariant, Color.surface],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        Text(member.name.prefix(1))
-                            .font(.system(size: 100, weight: .black))
-                            .foregroundColor(.onSurface.opacity(0.15))
-                    }
+        return Group {
+            if let uiImage = UIImage(named: member.imageURL) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                ZStack {
+                    LinearGradient(
+                        colors: [Color.surfaceVariant, Color.surface],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    Text(member.name.prefix(1))
+                        .font(.system(size: 80, weight: .black))
+                        .foregroundColor(.onSurface.opacity(0.15))
                 }
             }
-            .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 40))
-            .overlay(
-                RoundedRectangle(cornerRadius: 40)
-                    .strokeBorder(Color.surfaceVariant, lineWidth: 4)
-            )
-            .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
-            .frame(maxWidth: .infinity)
         }
-        .aspectRatio(0.8, contentMode: .fit)
+        .frame(maxWidth: .infinity)
+        .frame(height: photoHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 32))
+        .overlay(
+            RoundedRectangle(cornerRadius: 32)
+                .strokeBorder(Color.surfaceVariant, lineWidth: 3)
+        )
+        .shadow(color: .black.opacity(0.4), radius: 20, y: 10)
     }
 
     private var storySection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 10) {
             Text("Listen to \(member.name), your \(member.relationship.lowercased()), about who you are, \(appVM.userName).")
-                .font(.system(size: 28, weight: .black))
+                .font(.system(size: 22, weight: .black))
                 .foregroundColor(.onSurface)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
             Group {
                 if viewModel.isLoading {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                            .tint(.accentYellow)
-                        Text("Preparing a message...")
-                            .font(.system(size: 14))
+                    VStack(spacing: 8) {
+                        ProgressView().tint(.accentYellow)
+                        Text("Preparing a message…")
+                            .font(.system(size: 13))
                             .foregroundColor(.onSurface.opacity(0.6))
                     }
-                    .frame(height: 80)
+                    .frame(height: 60)
                 } else if let error = viewModel.errorMessage {
                     HStack(spacing: 10) {
                         Image(systemName: "exclamationmark.triangle")
                             .foregroundColor(.accentYellow)
                         Text(error)
-                            .font(.system(size: 14))
+                            .font(.system(size: 13))
                             .foregroundColor(.onSurface.opacity(0.6))
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(20)
+                    .padding(16)
                     .background(Color.accentYellow.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
                 } else {
                     Text("\"\(viewModel.story)\"")
-                        .font(.system(size: 18, weight: .regular))
+                        .font(.system(size: 16, weight: .regular))
                         .foregroundColor(.onSurface.opacity(0.8))
                         .italic()
                         .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .padding(24)
+                        .lineSpacing(3)
+                        .padding(18)
                         .background(Color.white.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
             }
         }
     }
 
     private var playButton: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             Button(action: viewModel.togglePlayback) {
                 ZStack {
                     Circle()
                         .fill(viewModel.isLoading ? Color.surfaceVariant : Color.accentYellow)
-                        .frame(width: 128, height: 128)
+                        .frame(width: 96, height: 96)
                         .shadow(
                             color: viewModel.isLoading ? .clear : Color.accentYellow.opacity(0.4),
-                            radius: 20, y: 8
+                            radius: 16, y: 6
                         )
                         .overlay(
                             Circle()
-                                .strokeBorder(Color.accentYellow.opacity(0.2), lineWidth: 8)
-                                .scaleEffect(viewModel.isPlaying ? 1.2 : 1.0)
+                                .strokeBorder(Color.accentYellow.opacity(0.2), lineWidth: 6)
+                                .scaleEffect(viewModel.isPlaying ? 1.25 : 1.0)
                                 .animation(
                                     viewModel.isPlaying
                                         ? .easeInOut(duration: 1).repeatForever(autoreverses: true)
@@ -161,14 +159,14 @@ struct PlaybackView: View {
                         )
 
                     Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 52))
+                        .font(.system(size: 40))
                         .foregroundColor(viewModel.isLoading ? .onSurface.opacity(0.3) : .black)
                 }
             }
             .disabled(viewModel.isLoading)
 
-            Text(viewModel.isLoading ? "LOADING..." : viewModel.isPlaying ? "NOW PLAYING" : "TAP TO LISTEN")
-                .font(.system(size: 14, weight: .bold))
+            Text(viewModel.isLoading ? "LOADING…" : viewModel.isPlaying ? "NOW PLAYING" : "TAP TO LISTEN")
+                .font(.system(size: 13, weight: .bold))
                 .tracking(4)
                 .foregroundColor(.onSurface.opacity(0.5))
                 .animation(.default, value: viewModel.isLoading)
