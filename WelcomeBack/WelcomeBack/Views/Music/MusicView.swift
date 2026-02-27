@@ -1,4 +1,4 @@
-import MusicKit
+import MediaPlayer
 import SwiftUI
 
 struct MusicView: View {
@@ -134,7 +134,7 @@ struct MusicView: View {
                 .multilineTextAlignment(.center)
                 .padding()
         } else if musicVM.recentTracks.isEmpty {
-            Text("No recently played tracks found.\nStart listening in Apple Music and come back.")
+            Text("No songs found in your library.\nAdd music to Apple Music and come back.")
                 .font(.system(size: 14))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -146,7 +146,7 @@ struct MusicView: View {
                         track: track,
                         isCurrentlyPlaying: musicVM.currentTrack?.id == track.id && musicVM.isPlaying
                     ) {
-                        Task { await musicVM.play(track: track) }
+                        musicVM.play(track: track)
                     }
                 }
             }
@@ -241,7 +241,7 @@ struct AppleMusicDeniedCard: View {
 // MARK: - Track Card
 
 struct TrackCard: View {
-    let track: Track
+    let track: MediaTrack
     let isCurrentlyPlaying: Bool
     let onTap: () -> Void
 
@@ -284,15 +284,10 @@ struct TrackCard: View {
 
     @ViewBuilder
     private var artworkView: some View {
-        if let artworkURL = track.artwork?.url(width: 200, height: 200) {
-            AsyncImage(url: artworkURL) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                default:
-                    artworkPlaceholder
-                }
-            }
+        if let image = track.artworkImage {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
         } else {
             artworkPlaceholder
         }
@@ -311,21 +306,17 @@ struct TrackCard: View {
 // MARK: - Now Playing Bar
 
 struct NowPlayingBar: View {
-    let track: Track
+    let track: MediaTrack
     let isPlaying: Bool
     let onToggle: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
             Group {
-                if let artworkURL = track.artwork?.url(width: 80, height: 80) {
-                    AsyncImage(url: artworkURL) { phase in
-                        if case .success(let image) = phase {
-                            image.resizable().scaledToFill()
-                        } else {
-                            Color.surfaceVariant
-                        }
-                    }
+                if let image = track.artworkImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
                 } else {
                     Color.surfaceVariant
                         .overlay(

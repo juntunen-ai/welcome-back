@@ -1,31 +1,50 @@
-import MusicKit
 import MediaPlayer
 import SwiftUI
+
+// MARK: - Track model (replaces MusicKit Track)
+
+struct MediaTrack: Identifiable {
+    let id: UInt64
+    let title: String
+    let artistName: String
+    let artworkImage: UIImage?
+    let mediaItem: MPMediaItem
+
+    init(item: MPMediaItem) {
+        self.id = item.persistentID
+        self.title = item.title ?? "Unknown Title"
+        self.artistName = item.artist ?? "Unknown Artist"
+        self.artworkImage = item.artwork?.image(at: CGSize(width: 200, height: 200))
+        self.mediaItem = item
+    }
+}
+
+// MARK: - ViewModel
 
 @MainActor
 final class MusicViewModel: ObservableObject {
 
-    // MARK: - Published State
-
-    @Published var authorizationStatus: MusicAuthorization.Status = MusicAuthorization.currentStatus
-    @Published var recentTracks: [Track] = []
+    @Published var authorizationStatus: MPMediaLibraryAuthorizationStatus = MPMediaLibrary.authorizationStatus()
+    @Published var recentTracks: [MediaTrack] = []
     @Published var isPlaying: Bool = false
-    @Published var currentTrack: Track? = nil
+    @Published var currentTrack: MediaTrack? = nil
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
 
+    private let player = MPMusicPlayerController.applicationMusicPlayer
     private var playbackObserver: NSObjectProtocol?
 
     // MARK: - Init
 
     init() {
-        if MusicAuthorization.currentStatus == .authorized {
-            Task { await loadRecentlyPlayed() }
+        if MPMediaLibrary.authorizationStatus() == .authorized {
+            Task { await loadLibraryTracks() }
         }
         observePlaybackState()
     }
 
     deinit {
+        player.endGeneratingPlaybackNotifications()
         if let observer = playbackObserver {
             NotificationCenter.default.removeObserver(observer)
         }
@@ -34,78 +53,74 @@ final class MusicViewModel: ObservableObject {
     // MARK: - Authorization
 
     func requestAuthorization() async {
-        let status = await MusicAuthorization.request()
+        let status = await MPMediaLibrary.requestAuthorization()
         authorizationStatus = status
         if status == .authorized {
-            await loadRecentlyPlayed()
+            await loadLibraryTracks()
         }
     }
 
     // MARK: - Load Content
 
-    func loadRecentlyPlayed() async {
-        guard #available(iOS 16, *) else { return }
+    func loadLibraryTracks() async {
         isLoading = true
         errorMessage = nil
-        do {
-            var request = MusicRecentlyPlayedRequest<Track>()
-            request.limit = 25
-            let response = try await request.response()
-            recentTracks = Array(response.items)
-        } catch {
-            errorMessage = error.localizedDescription
+
+        let query = MPMediaQuery.songs()
+        query.groupingType = .title
+
+        if let items = query.items, !items.isEmpty {
+            // Sort by last played date, most recent first; fall back to title sort
+            let sorted = items.sorted {
+                let a = $0.lastPlayedDate ?? .distantPast
+                let b = $1.lastPlayedDate ?? .distantPast
+                return a > b
+            }
+            recentTracks = Array(sorted.prefix(50)).map { MediaTrack(item: $0) }
+        } else {
+            errorMessage = "No songs found in your library.\nAdd music to Apple Music and try again."
         }
+
         isLoading = false
     }
 
     // MARK: - Playback
 
-    func play(track: Track) async {
-        do {
-            ApplicationMusicPlayer.shared.queue = [track]
-            try await ApplicationMusicPlayer.shared.play()
-            currentTrack = track
-        } catch {
-            errorMessage = "Could not play \(track.title). Please check your Apple Music subscription."
-        }
+    func play(track: MediaTrack) {
+        let collection = MPMediaItemCollection(items: [track.mediaItem])
+        player.setQueue(with: collection)
+        player.play()
+        currentTrack = track
     }
 
     func togglePlayback() {
         if isPlaying {
-            ApplicationMusicPlayer.shared.pause()
+            player.pause()
         } else {
-            Task {
-                do {
-                    try await ApplicationMusicPlayer.shared.play()
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
-            }
+            player.play()
         }
     }
 
     func pause() {
-        ApplicationMusicPlayer.shared.pause()
+        player.pause()
     }
 
     // MARK: - Observe Player State
 
     private func observePlaybackState() {
-        // Use NotificationCenter to observe playback state — available on iOS 15+
+        player.beginGeneratingPlaybackNotifications()
+
         playbackObserver = NotificationCenter.default.addObserver(
             forName: .MPMusicPlayerControllerPlaybackStateDidChange,
-            object: MPMusicPlayerController.applicationMusicPlayer,
+            object: player,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                let status = ApplicationMusicPlayer.shared.state.playbackStatus
-                self?.isPlaying = (status == .playing)
+                self?.isPlaying = self?.player.playbackState == .playing
             }
         }
-        MPMusicPlayerController.applicationMusicPlayer.beginGeneratingPlaybackNotifications()
 
         // Set initial state
-        let status = ApplicationMusicPlayer.shared.state.playbackStatus
-        isPlaying = (status == .playing)
+        isPlaying = player.playbackState == .playing
     }
 }
