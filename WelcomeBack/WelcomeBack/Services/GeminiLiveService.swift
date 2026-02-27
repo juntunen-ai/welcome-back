@@ -90,8 +90,8 @@ actor GeminiLiveService {
 
         updateState(.connecting)
 
-        // Build WebSocket URL
-        let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)"
+        // alt=ws is required by the Gemini Live API to enable WebSocket mode
+        let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)&alt=sse"
         guard let url = URL(string: urlString) else {
             updateState(.error("Could not connect to the live service."))
             throw LiveServiceError.connectionFailed
@@ -103,7 +103,7 @@ actor GeminiLiveService {
         task.resume()
         webSocketTask = task
 
-        // Send session setup
+        // Send session setup — must do this before starting receive loop
         do {
             try await sendSetupMessage(profile: profile)
         } catch {
@@ -113,7 +113,7 @@ actor GeminiLiveService {
             throw LiveServiceError.setupMessageFailed
         }
 
-        // Start receive loop
+        // Start receive loop — will get setupComplete before audio starts
         startReceiveLoop(task: task)
 
         // Configure audio engine (capture + playback)
@@ -146,24 +146,33 @@ actor GeminiLiveService {
     }
 
     // MARK: - Setup Message
+    //
+    // The Gemini Live API uses camelCase JSON field names.
+    // All field names must exactly match the proto field names as JSON:
+    //   generationConfig (not generation_config)
+    //   responseModalities (not response_modalities)
+    //   speechConfig / voiceName (not nested prebuilt_voice_config)
+    //   systemInstruction (not system_instruction)
+    //   realtimeInput / mediaChunks (not realtime_input / media_chunks)
 
     private func sendSetupMessage(profile: UserProfile) async throws {
         let systemPrompt = buildSystemPrompt(from: profile)
 
+        // Use camelCase keys exactly as the Gemini Live proto expects them
         let setup: [String: Any] = [
             "setup": [
-                "model": "models/gemini-2.0-flash-live-preview",
-                "generation_config": [
-                    "response_modalities": ["AUDIO"],
-                    "speech_config": [
-                        "voice_config": [
-                            "prebuilt_voice_config": [
-                                "voice_name": "Aoede"
+                "model": "models/gemini-2.0-flash-live-001",
+                "generationConfig": [
+                    "responseModalities": ["AUDIO"],
+                    "speechConfig": [
+                        "voiceConfig": [
+                            "prebuiltVoiceConfig": [
+                                "voiceName": "Aoede"
                             ]
                         ]
                     ]
                 ],
-                "system_instruction": [
+                "systemInstruction": [
                     "parts": [["text": systemPrompt]]
                 ]
             ]
@@ -252,31 +261,35 @@ actor GeminiLiveService {
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return }
 
-        // 1. Setup confirmation
+        // Debug: log raw response to console during development
+        #if DEBUG
+        print("[GeminiLive] ← \(text.prefix(300))")
+        #endif
+
+        // 1. Setup confirmation — API sends "setupComplete" as the key
         if json["setupComplete"] != nil {
             updateState(.listening)
             return
         }
 
-        // 2. Server content
+        // 2. Server content — camelCase keys in responses
         if let serverContent = json["serverContent"] as? [String: Any] {
 
-            // Interrupted — Harri spoke mid-response
+            // Interrupted — user spoke during AI response
             if let interrupted = serverContent["interrupted"] as? Bool, interrupted {
                 if playerNode.isPlaying { playerNode.stop() }
                 updateState(.interrupted)
-                // Immediately return to listening after interruption
                 updateState(.listening)
                 return
             }
 
-            // Turn complete — AI finished speaking
+            // Turn complete — AI finished its turn
             if let turnComplete = serverContent["turnComplete"] as? Bool, turnComplete {
                 updateState(.listening)
                 return
             }
 
-            // Audio chunks from model turn
+            // Audio chunks in modelTurn.parts[].inlineData
             if let modelTurn = serverContent["modelTurn"] as? [String: Any],
                let parts = modelTurn["parts"] as? [[String: Any]] {
                 updateState(.aiSpeaking)
@@ -299,16 +312,16 @@ actor GeminiLiveService {
         let avSession = AVAudioSession.sharedInstance()
         try avSession.setCategory(
             .playAndRecord,
-            mode: .voiceChat,          // enables hardware echo cancellation
+            mode: .voiceChat,           // enables hardware acoustic echo cancellation
             options: [.defaultToSpeaker, .allowBluetoothA2DP]
         )
         try avSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-        // Set up playback node
+        // Set up playback node before starting engine
         audioEngine.attach(playerNode)
         audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: playbackFormat)
 
-        // Install capture tap
+        // Install capture tap — nativeFormat is 44.1/48 kHz Float32 from hardware
         let inputNode = audioEngine.inputNode
         let nativeFormat = inputNode.outputFormat(forBus: 0)
 
@@ -316,29 +329,25 @@ actor GeminiLiveService {
             throw LiveServiceError.audioSetupFailed
         }
 
-        // Capture the formats as value types to avoid actor-isolation issues in the tap closure
+        // Capture local copies for the tap closure (avoids actor-isolation crossing)
         let captureFormat = self.captureFormat
 
         inputNode.installTap(onBus: 0, bufferSize: 4_096, format: nativeFormat) { [weak self] buffer, _ in
-            // The tap callback is called on an internal AVAudioEngine thread.
-            // Copy the buffer data synchronously here, then send it off-actor.
             guard let self,
                   let pcmBuffer = buffer as? AVAudioPCMBuffer else { return }
 
+            // Convert from hardware format to 16kHz Int16 mono synchronously in tap thread
             let inputFrames = pcmBuffer.frameLength
             let ratio = captureFormat.sampleRate / nativeFormat.sampleRate
             let outputFrames = AVAudioFrameCount(Double(inputFrames) * ratio)
             guard outputFrames > 0,
                   let outputBuffer = AVAudioPCMBuffer(pcmFormat: captureFormat,
-                                                       frameCapacity: outputFrames)
+                                                      frameCapacity: outputFrames)
             else { return }
 
             var filled = false
             converter.convert(to: outputBuffer, error: nil) { _, outStatus in
-                if filled {
-                    outStatus.pointee = .noDataNow
-                    return nil
-                }
+                if filled { outStatus.pointee = .noDataNow; return nil }
                 filled = true
                 outStatus.pointee = .haveData
                 return pcmBuffer
@@ -347,7 +356,7 @@ actor GeminiLiveService {
             guard let int16Data = outputBuffer.int16ChannelData,
                   outputBuffer.frameLength > 0 else { return }
 
-            let byteCount = Int(outputBuffer.frameLength) * 2
+            let byteCount = Int(outputBuffer.frameLength) * 2   // 2 bytes per Int16
             let rawData = Data(bytes: int16Data[0], count: byteCount)
 
             Task { await self.sendAudioChunk(rawData) }
@@ -358,13 +367,19 @@ actor GeminiLiveService {
         playerNode.play()
     }
 
+    // MARK: - Send Audio Chunk
+    //
+    // Outbound audio message uses camelCase:
+    //   realtimeInput > mediaChunks > { mimeType, data }
+    // mimeType must be "audio/pcm" (no rate suffix — rate is implied as 16kHz)
+
     private func sendAudioChunk(_ data: Data) async {
         let base64 = data.base64EncodedString()
         let message: [String: Any] = [
-            "realtime_input": [
-                "media_chunks": [
+            "realtimeInput": [
+                "mediaChunks": [
                     [
-                        "mime_type": "audio/pcm;rate=16000",
+                        "mimeType": "audio/pcm",
                         "data": base64
                     ]
                 ]
