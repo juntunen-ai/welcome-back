@@ -153,17 +153,6 @@ struct FamilyMemberRowView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.onSurface.opacity(0.6))
 
-                if member.isVoiceCloned {
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 12))
-                        Text("Voice Cloned")
-                            .font(.system(size: 11, weight: .bold))
-                            .tracking(0.5)
-                    }
-                    .foregroundColor(.accentYellow)
-                    .padding(.top, 2)
-                }
             }
 
             Spacer()
