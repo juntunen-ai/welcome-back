@@ -53,6 +53,8 @@ struct WelcomeBackWidgetView: View {
                 smallLayout
             case .systemMedium:
                 mediumLayout
+            case .systemLarge:
+                largeLayout
             default:
                 smallLayout
             }
@@ -110,6 +112,35 @@ struct WelcomeBackWidgetView: View {
         .padding(16)
     }
 
+    // MARK: - Large (tall square)
+
+    private var largeLayout: some View {
+        VStack(spacing: 0) {
+            // Big photo fills the top ~60%
+            photoView(size: 220)
+                .padding(.top, 24)
+
+            Spacer()
+
+            // Text stacked at the bottom
+            VStack(spacing: 8) {
+                Text("Welcome Back")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.white.opacity(0.9))
+
+                Text("Harri")
+                    .font(.system(size: 42, weight: .black))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+
+                Text("Remember who you are")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.white.opacity(0.55))
+            }
+            .padding(.bottom, 28)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     // MARK: - Shared photo view
 
     private func photoView(size: CGFloat) -> some View {
@@ -153,7 +184,7 @@ struct WelcomeBackWidget: Widget {
         }
         .configurationDisplayName("Welcome Back")
         .description("Remember who you are.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
@@ -166,6 +197,12 @@ struct WelcomeBackWidget: Widget {
 }
 
 #Preview(as: .systemMedium) {
+    WelcomeBackWidget()
+} timeline: {
+    WelcomeBackEntry(date: .now)
+}
+
+#Preview(as: .systemLarge) {
     WelcomeBackWidget()
 } timeline: {
     WelcomeBackEntry(date: .now)
