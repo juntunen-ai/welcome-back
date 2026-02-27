@@ -33,6 +33,11 @@
 		T001AA0000000000000000004 /* AppViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000004 /* AppViewModelTests.swift */; };
 		T001AA0000000000000000005 /* GeminiServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000005 /* GeminiServiceTests.swift */; };
 		T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000006 /* PlaybackViewModelTests.swift */; };
+		WGT001000000000000000001 /* WelcomeBackWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000001 /* WelcomeBackWidget.swift */; };
+		WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000005 /* WelcomeBackWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		WGT001000000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000002 /* Assets.xcassets */; };
+		WGT001000000000000000003 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000003 /* WidgetKit.framework */; };
+		WGT001000000000000000004 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000004 /* SwiftUI.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +47,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 15282737539D469CAF4A24B5;
 			remoteInfo = WelcomeBack;
+		};
+		WGT011000000000000000002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB72992900FF436E8131F682 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = WGT005000000000000000001;
+			remoteInfo = WelcomeBackWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -75,6 +87,11 @@
 		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
 		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		WGT002000000000000000001 /* WelcomeBackWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackWidget.swift; sourceTree = "<group>"; };
+		WGT002000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		WGT002000000000000000003 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		WGT002000000000000000004 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		WGT002000000000000000005 /* WelcomeBackWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WelcomeBackWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +107,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WGT003000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WGT001000000000000000003 /* WidgetKit.framework in Frameworks */,
+				WGT001000000000000000004 /* SwiftUI.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				2057BA6F46724B71A613E6DB /* WelcomeBack */,
+				WGT004000000000000000001 /* WelcomeBackWidget */,
 				T006AA0000000000000000001 /* WelcomeBackTests */,
 				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
 				BB001FRAMEWORKS0000001 /* Frameworks */,
@@ -167,6 +194,7 @@
 			children = (
 				AFFB626B53B843ABACAD5923 /* WelcomeBack.app */,
 				T004AA0000000000000000001 /* WelcomeBackTests.xctest */,
+				WGT002000000000000000005 /* WelcomeBackWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -200,8 +228,19 @@
 			isa = PBXGroup;
 			children = (
 				BB001MUSICKIT0000001 /* MusicKit.framework */,
+				WGT002000000000000000003 /* WidgetKit.framework */,
+				WGT002000000000000000004 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		WGT004000000000000000001 /* WelcomeBackWidget */ = {
+			isa = PBXGroup;
+			children = (
+				WGT002000000000000000001 /* WelcomeBackWidget.swift */,
+				WGT002000000000000000002 /* Assets.xcassets */,
+			);
+			path = WelcomeBackWidget;
 			sourceTree = "<group>";
 		};
 		C6BFC52C67974DCBB461A633 /* Views */ = {
@@ -278,6 +317,17 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		WGT010000000000000000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		15282737539D469CAF4A24B5 /* WelcomeBack */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AC866B4AFA354D33ABC46F51 /* Build configuration list for PBXNativeTarget "WelcomeBack" */;
@@ -285,10 +335,12 @@
 				57895A9AD78541B6B5F62E69 /* Sources */,
 				591463A43A7347799042A51D /* Frameworks */,
 				E8A96BFEE394464DB0D60924 /* Resources */,
+				WGT010000000000000000001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				WGT011000000000000000001 /* PBXTargetDependency */,
 			);
 			name = WelcomeBack;
 			productName = WelcomeBack;
@@ -312,6 +364,23 @@
 			productReference = T004AA0000000000000000001 /* WelcomeBackTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		WGT005000000000000000001 /* WelcomeBackWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WGT008000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackWidget" */;
+			buildPhases = (
+				WGT006000000000000000001 /* Sources */,
+				WGT003000000000000000001 /* Frameworks */,
+				WGT007000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WelcomeBackWidget;
+			productName = WelcomeBackWidget;
+			productReference = WGT002000000000000000005 /* WelcomeBackWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -320,7 +389,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1540;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					15282737539D469CAF4A24B5 = {
 						CreatedOnToolsVersion = 15.4;
@@ -328,6 +397,9 @@
 					T007AA0000000000000000001 = {
 						CreatedOnToolsVersion = 15.4;
 						TestTargetID = 15282737539D469CAF4A24B5;
+					};
+					WGT005000000000000000001 = {
+						CreatedOnToolsVersion = 15.4;
 					};
 				};
 			};
@@ -346,6 +418,7 @@
 			targets = (
 				15282737539D469CAF4A24B5 /* WelcomeBack */,
 				T007AA0000000000000000001 /* WelcomeBackTests */,
+				WGT005000000000000000001 /* WelcomeBackWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -356,6 +429,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WGT007000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WGT001000000000000000002 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,6 +481,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WGT006000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WGT001000000000000000001 /* WelcomeBackWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -407,6 +496,11 @@
 			isa = PBXTargetDependency;
 			target = 15282737539D469CAF4A24B5 /* WelcomeBack */;
 			targetProxy = T003AA0000000000000000001 /* PBXContainerItemProxy */;
+		};
+		WGT011000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = WGT005000000000000000001 /* WelcomeBackWidget */;
+			targetProxy = WGT011000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -435,6 +529,7 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLES = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
@@ -468,6 +563,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -549,6 +645,7 @@
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLES = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
@@ -574,6 +671,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -615,6 +713,58 @@
 			};
 			name = Release;
 		};
+		WGT009000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 647W3RAYL3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Welcome Back";
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		WGT009000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 647W3RAYL3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Welcome Back";
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -641,6 +791,15 @@
 			buildConfigurations = (
 				T011AA0000000000000000001 /* Debug */,
 				T011AA0000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		WGT008000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WGT009000000000000000001 /* Debug */,
+				WGT009000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
