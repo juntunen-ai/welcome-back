@@ -53,10 +53,10 @@ struct WelcomeBackWidgetView: View {
                 smallLayout
             case .systemMedium:
                 mediumLayout
-            case .systemLarge:
+            case .systemLarge, .systemExtraLarge:
                 largeLayout
             default:
-                smallLayout
+                largeLayout
             }
         }
         // Deep link opens the app on tap
@@ -115,30 +115,33 @@ struct WelcomeBackWidgetView: View {
     // MARK: - Large (tall square)
 
     private var largeLayout: some View {
-        VStack(spacing: 0) {
-            // Big photo fills the top ~60%
-            photoView(size: 220)
-                .padding(.top, 24)
+        GeometryReader { geo in
+            VStack(spacing: 0) {
+                // Photo fills top 58% of the widget height
+                photoView(size: geo.size.width * 0.72)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, geo.size.height * 0.06)
 
-            Spacer()
+                Spacer()
 
-            // Text stacked at the bottom
-            VStack(spacing: 8) {
-                Text("Welcome Back")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white.opacity(0.9))
+                // Text block anchored to bottom
+                VStack(spacing: 6) {
+                    Text("Welcome Back")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white.opacity(0.9))
 
-                Text("Harri")
-                    .font(.system(size: 42, weight: .black))
-                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    Text("Harri")
+                        .font(.system(size: 48, weight: .black))
+                        .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
 
-                Text("Remember who you are")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white.opacity(0.55))
+                    Text("Remember who you are")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.white.opacity(0.55))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, geo.size.height * 0.07)
             }
-            .padding(.bottom, 28)
         }
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Shared photo view
@@ -184,7 +187,7 @@ struct WelcomeBackWidget: Widget {
         }
         .configurationDisplayName("Welcome Back")
         .description("Remember who you are.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
     }
 }
 
