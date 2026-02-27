@@ -4,11 +4,6 @@ struct MemoriesView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
 
-    private let columns: [GridItem] = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -57,14 +52,40 @@ struct MemoriesView: View {
     }
 
     // MARK: - Grid
+    // Layout pattern (repeating every 4):
+    //   [0] full-width hero (tall)
+    //   [1] [2] side-by-side (medium)
+    //   [3] full-width (short)
 
     private var mosaicGrid: some View {
-        LazyVGrid(columns: columns, spacing: 12) {
-            ForEach(appVM.memories) { memory in
-                MemoryTileView(memory: memory)
-                    .onTapGesture {
-                        appVM.selectMemory(memory)
+        let items = appVM.memories
+        return VStack(spacing: 12) {
+            ForEach(Array(stride(from: 0, to: items.count, by: 4)), id: \.self) { base in
+                // Row A: full-width hero
+                if base < items.count {
+                    MemoryTileView(memory: items[base], height: 220)
+                        .onTapGesture { appVM.selectMemory(items[base]) }
+                }
+                // Row B: two side-by-side
+                let b1 = base + 1, b2 = base + 2
+                if b1 < items.count {
+                    HStack(spacing: 12) {
+                        MemoryTileView(memory: items[b1], height: 160)
+                            .onTapGesture { appVM.selectMemory(items[b1]) }
+                        if b2 < items.count {
+                            MemoryTileView(memory: items[b2], height: 160)
+                                .onTapGesture { appVM.selectMemory(items[b2]) }
+                        } else {
+                            Color.clear // keep left tile full-width if no pair
+                        }
                     }
+                }
+                // Row C: full-width shorter
+                let b3 = base + 3
+                if b3 < items.count {
+                    MemoryTileView(memory: items[b3], height: 160)
+                        .onTapGesture { appVM.selectMemory(items[b3]) }
+                }
             }
         }
     }
@@ -97,6 +118,7 @@ struct MemoriesView: View {
 struct MemoryTileView: View {
 
     let memory: Memory
+    var height: CGFloat = 160
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -139,7 +161,7 @@ struct MemoryTileView: View {
             .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 160)
+        .frame(height: height)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
