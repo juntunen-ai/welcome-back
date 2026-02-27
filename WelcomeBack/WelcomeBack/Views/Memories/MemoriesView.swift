@@ -56,12 +56,12 @@ struct MemoriesView: View {
         }
     }
 
-    // MARK: - Mosaic Grid
+    // MARK: - Grid
 
     private var mosaicGrid: some View {
         LazyVGrid(columns: columns, spacing: 12) {
-            ForEach(Array(appVM.memories.enumerated()), id: \.element.id) { index, memory in
-                MemoryTileView(memory: memory, isLarge: index == 0, isWide: index == 3)
+            ForEach(appVM.memories) { memory in
+                MemoryTileView(memory: memory)
                     .onTapGesture {
                         appVM.selectMemory(memory)
                     }
@@ -97,14 +97,6 @@ struct MemoriesView: View {
 struct MemoryTileView: View {
 
     let memory: Memory
-    let isLarge: Bool
-    let isWide: Bool
-
-    private var tileHeight: CGFloat {
-        if isLarge { return 260 }
-        if isWide  { return 120 }
-        return 160
-    }
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -143,17 +135,16 @@ struct MemoryTileView: View {
                     .foregroundColor(.white)
                     .lineLimit(2)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: tileHeight)
-        .clipShape(RoundedRectangle(cornerRadius: 28))
+        .frame(height: 160)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
-            RoundedRectangle(cornerRadius: 28)
+            RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Color.white.opacity(0.05))
         )
-        .gridCellColumns(isLarge || isWide ? 2 : 1)
     }
 }
 
