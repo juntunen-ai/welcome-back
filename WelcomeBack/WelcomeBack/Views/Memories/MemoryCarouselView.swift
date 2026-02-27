@@ -188,20 +188,29 @@ final class MemoryCarouselViewModel: ObservableObject {
     private func loadImages(from assets: [PHAsset]) async -> [UIImage] {
         let size = CGSize(width: 1080, height: 1080)
         let reqOptions = PHImageRequestOptions()
-        reqOptions.deliveryMode = .highQualityFormat
+        // opportunistic: delivers degraded then final; we guard against double-resume below
+        reqOptions.deliveryMode = .opportunistic
         reqOptions.isSynchronous = false
         reqOptions.isNetworkAccessAllowed = true
 
         return await withTaskGroup(of: (Int, UIImage?).self) { group in
             for (index, asset) in assets.enumerated() {
                 group.addTask {
-                    await withCheckedContinuation { continuation in
+                    await withCheckedContinuation { (continuation: CheckedContinuation<(Int, UIImage?), Never>) in
+                        // PHImageManager may call the handler twice (degraded + final).
+                        // Use a nonisolated(unsafe) flag to resume only once.
+                        nonisolated(unsafe) var resumed = false
                         self.imageManager.requestImage(
                             for: asset,
                             targetSize: size,
                             contentMode: .aspectFill,
                             options: reqOptions
-                        ) { image, _ in
+                        ) { image, info in
+                            // isDegraded == true means this is the low-res preview; wait for final.
+                            let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                            if isDegraded { return }
+                            guard !resumed else { return }
+                            resumed = true
                             continuation.resume(returning: (index, image))
                         }
                     }
