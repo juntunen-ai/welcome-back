@@ -9,11 +9,13 @@ final class AppViewModel: ObservableObject {
     @Published var selectedTab: AppTab = .home
     @Published var listeningSheetPresented = false
     @Published var playbackSheetPresented = false
+    @Published var memoryCarouselPresented = false
 
     // MARK: - Data
 
     @Published var userProfile: UserProfile = .default
     @Published var selectedFamilyMember: FamilyMember?
+    @Published var selectedMemory: Memory?
 
     // MARK: - Computed
 
@@ -40,9 +42,8 @@ final class AppViewModel: ObservableObject {
     }
 
     func selectMemory(_ memory: Memory) {
-        // Navigate to playback with the memory context (future: generate story from memory)
-        selectedFamilyMember = userProfile.familyMembers.randomElement()
-        playbackSheetPresented = true
+        selectedMemory = memory
+        memoryCarouselPresented = true
     }
 }
 

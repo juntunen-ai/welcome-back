@@ -41,12 +41,11 @@ struct MemoriesView: View {
                 }
             }
         }
-        .sheet(isPresented: $appVM.playbackSheetPresented, onDismiss: {
-            appVM.selectedFamilyMember = nil
+        .sheet(isPresented: $appVM.memoryCarouselPresented, onDismiss: {
+            appVM.selectedMemory = nil
         }) {
-            if let member = appVM.selectedFamilyMember {
-                PlaybackView(member: member)
-                    .environmentObject(appVM)
+            if let memory = appVM.selectedMemory {
+                MemoryCarouselView(memory: memory)
             }
         }
     }
