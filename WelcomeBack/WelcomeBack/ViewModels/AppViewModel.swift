@@ -14,7 +14,6 @@ final class AppViewModel: ObservableObject {
 
     @Published var userProfile: UserProfile = .default
     @Published var selectedFamilyMember: FamilyMember?
-    @Published var selectedMemory: Memory?
 
     // MARK: - Computed
 
@@ -38,10 +37,6 @@ final class AppViewModel: ObservableObject {
     func selectFamilyMember(_ member: FamilyMember) {
         selectedFamilyMember = member
         playbackSheetPresented = true
-    }
-
-    func selectMemory(_ memory: Memory) {
-        selectedMemory = memory
     }
 }
 

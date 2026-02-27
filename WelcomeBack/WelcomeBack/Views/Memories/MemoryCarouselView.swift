@@ -232,7 +232,6 @@ struct MemoryCarouselView: View {
 
     let memory: Memory
     @StateObject private var vm = MemoryCarouselViewModel()
-    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -247,25 +246,11 @@ struct MemoryCarouselView: View {
             } else {
                 carouselView
             }
-
-            // Close button always visible top-right
-            VStack {
-                HStack {
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(.ultraThinMaterial)
-                            .clipShape(Circle())
-                    }
-                    .padding(.trailing, 20)
-                }
-                .padding(.top, 56)
-                Spacer()
-            }
         }
+        .navigationTitle(memory.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .navigationBarBackButtonHidden(false)
         .task { await vm.load(for: memory) }
     }
 
@@ -273,17 +258,12 @@ struct MemoryCarouselView: View {
 
     private var carouselView: some View {
         VStack(spacing: 0) {
-            // Header
-            VStack(spacing: 4) {
-                Text(memory.title)
-                    .font(.system(size: 22, weight: .black))
-                    .foregroundColor(.white)
-                Text("\(vm.currentIndex + 1) of \(vm.photos.count)")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
-            }
-            .padding(.top, 60)
-            .padding(.bottom, 16)
+            // Counter
+            Text("\(vm.currentIndex + 1) of \(vm.photos.count)")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.white.opacity(0.5))
+                .padding(.top, 16)
+                .padding(.bottom, 12)
 
             // Swipeable photo pages
             TabView(selection: $vm.currentIndex) {

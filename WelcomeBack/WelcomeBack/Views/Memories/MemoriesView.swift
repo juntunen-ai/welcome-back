@@ -40,6 +40,10 @@ struct MemoriesView: View {
                     }
                 }
             }
+            // Push to carousel via NavigationLink — no global state needed
+            .navigationDestination(for: Memory.self) { memory in
+                MemoryCarouselView(memory: memory)
+            }
         }
     }
 
@@ -55,28 +59,36 @@ struct MemoriesView: View {
             ForEach(Array(stride(from: 0, to: items.count, by: 4)), id: \.self) { base in
                 // Row A: full-width hero
                 if base < items.count {
-                    MemoryTileView(memory: items[base], height: 220)
-                        .onTapGesture { appVM.selectMemory(items[base]) }
+                    NavigationLink(value: items[base]) {
+                        MemoryTileView(memory: items[base], height: 220)
+                    }
+                    .buttonStyle(.plain)
                 }
                 // Row B: two side-by-side
                 let b1 = base + 1, b2 = base + 2
                 if b1 < items.count {
                     HStack(spacing: 12) {
-                        MemoryTileView(memory: items[b1], height: 160)
-                            .onTapGesture { appVM.selectMemory(items[b1]) }
+                        NavigationLink(value: items[b1]) {
+                            MemoryTileView(memory: items[b1], height: 160)
+                        }
+                        .buttonStyle(.plain)
                         if b2 < items.count {
-                            MemoryTileView(memory: items[b2], height: 160)
-                                .onTapGesture { appVM.selectMemory(items[b2]) }
+                            NavigationLink(value: items[b2]) {
+                                MemoryTileView(memory: items[b2], height: 160)
+                            }
+                            .buttonStyle(.plain)
                         } else {
-                            Color.clear // keep left tile full-width if no pair
+                            Color.clear
                         }
                     }
                 }
                 // Row C: full-width shorter
                 let b3 = base + 3
                 if b3 < items.count {
-                    MemoryTileView(memory: items[b3], height: 160)
-                        .onTapGesture { appVM.selectMemory(items[b3]) }
+                    NavigationLink(value: items[b3]) {
+                        MemoryTileView(memory: items[b3], height: 160)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
