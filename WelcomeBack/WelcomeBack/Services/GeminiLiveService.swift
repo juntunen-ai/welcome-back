@@ -23,36 +23,32 @@ enum LiveServiceError: LocalizedError {
 
 /// Full-duplex voice session over the Gemini Multimodal Live WebSocket API.
 ///
-/// Streams 16 kHz PCM audio from the device microphone to Gemini and plays back
-/// 24 kHz PCM audio received from Gemini in real time.
-///
-/// State changes are published via `stateStream` — subscribe in
-/// `LiveSessionViewModel` to drive the UI.
-actor GeminiLiveService {
+/// Create a **new instance** per conversation session — do not reuse across sessions.
+/// This ensures the AsyncStream, audio engine, and WebSocket are always fresh.
+final class GeminiLiveService: @unchecked Sendable {
 
-    // MARK: - Singleton
+    // MARK: - State stream
 
-    static let shared = GeminiLiveService()
-
-    // MARK: - State stream (AsyncStream bridges actor → @MainActor)
-
+    /// Subscribe once in `LiveSessionViewModel`. The stream finishes when
+    /// `endSession()` is called, so the `for await` loop exits cleanly.
     let stateStream: AsyncStream<LiveSessionState>
     private let stateContinuation: AsyncStream<LiveSessionState>.Continuation
 
     private(set) var sessionState: LiveSessionState = .idle
 
-    // MARK: - Private state
+    // MARK: - Private
 
     private let apiKey: String
     private var webSocketTask: URLSessionWebSocketTask?
     private var receiveLoopTask: Task<Void, Never>?
 
-    // MARK: - Audio engine (shared for capture + playback)
+    // MARK: - Audio engine (one per instance)
 
     private let audioEngine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
+    private var audioConfigured = false
 
-    /// Target capture format: 16 kHz, Int16, mono — required by Gemini Live
+    /// Capture format: 16 kHz, Int16, mono
     private let captureFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16,
         sampleRate: 16_000,
@@ -60,7 +56,7 @@ actor GeminiLiveService {
         interleaved: true
     )!
 
-    /// Playback format: 24 kHz, Int16, mono — as returned by Gemini Live
+    /// Playback format: 24 kHz, Int16, mono
     private let playbackFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16,
         sampleRate: 24_000,
@@ -70,7 +66,7 @@ actor GeminiLiveService {
 
     // MARK: - Init
 
-    private init() {
+    init() {
         apiKey = Bundle.main.infoDictionary?["GEMINI_API_KEY"] as? String ?? ""
 
         var continuation: AsyncStream<LiveSessionState>.Continuation!
@@ -80,8 +76,6 @@ actor GeminiLiveService {
 
     // MARK: - Public API
 
-    /// Opens a WebSocket session, sends the setup message, and starts audio capture.
-    /// Throws `LiveServiceError` if the key is missing or connection fails.
     func startSession(profile: UserProfile) async throws {
         guard !apiKey.isEmpty else {
             updateState(.error("Gemini API key is not configured."))
@@ -90,20 +84,17 @@ actor GeminiLiveService {
 
         updateState(.connecting)
 
-        // alt=ws is required by the Gemini Live API to enable WebSocket mode
         let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)&alt=ws"
         guard let url = URL(string: urlString) else {
             updateState(.error("Could not connect to the live service."))
             throw LiveServiceError.connectionFailed
         }
 
-        // Open WebSocket
-        let session = URLSession(configuration: .default)
-        let task = session.webSocketTask(with: url)
+        let urlSession = URLSession(configuration: .default)
+        let task = urlSession.webSocketTask(with: url)
         task.resume()
         webSocketTask = task
 
-        // Send session setup — must do this before starting receive loop
         do {
             try await sendSetupMessage(profile: profile)
         } catch {
@@ -113,10 +104,8 @@ actor GeminiLiveService {
             throw LiveServiceError.setupMessageFailed
         }
 
-        // Start receive loop — will get setupComplete before audio starts
         startReceiveLoop(task: task)
 
-        // Configure audio engine (capture + playback)
         do {
             try configureAudioEngine()
         } catch {
@@ -127,7 +116,6 @@ actor GeminiLiveService {
         }
     }
 
-    /// Cleanly shuts down the session — call from `ListeningView.onDisappear`.
     func endSession() {
         receiveLoopTask?.cancel()
         receiveLoopTask = nil
@@ -140,25 +128,18 @@ actor GeminiLiveService {
             audioEngine.stop()
         }
         if playerNode.isPlaying { playerNode.stop() }
+        audioConfigured = false
 
         deactivateAudioSession()
         updateState(.disconnected)
+        stateContinuation.finish()   // ends the for-await loop in LiveSessionViewModel
     }
 
     // MARK: - Setup Message
-    //
-    // The Gemini Live REST API (generativelanguage.googleapis.com) uses snake_case
-    // JSON field names — matching the proto-over-HTTP encoding for this endpoint.
-    // Outbound audio uses: realtime_input > media_chunks > { mime_type, data }
-    // Setup uses: generation_config, response_modalities, speech_config,
-    //             voice_config, prebuilt_voice_config, voice_name, system_instruction
 
     private func sendSetupMessage(profile: UserProfile) async throws {
         let systemPrompt = buildSystemPrompt(from: profile)
 
-        // The Gemini Live REST API uses snake_case JSON field names
-        // (matching the proto-over-HTTP encoding used by generativelanguage.googleapis.com).
-        // Model: gemini-2.5-flash-native-audio-preview-12-2025 is the current Live model.
         let setup: [String: Any] = [
             "setup": [
                 "model": "models/gemini-2.5-flash-native-audio-preview-12-2025",
@@ -182,6 +163,11 @@ actor GeminiLiveService {
         guard let jsonString = String(data: data, encoding: .utf8) else {
             throw LiveServiceError.setupMessageFailed
         }
+
+        #if DEBUG
+        print("[GeminiLive] → setup sent")
+        #endif
+
         try await webSocketTask?.send(.string(jsonString))
     }
 
@@ -199,16 +185,14 @@ actor GeminiLiveService {
 
         return """
         You are a warm, gentle AI companion helping \(profile.name), who lives with a memory impairment. \
-        Your name does not matter — speak as a trusted friend.
+        Speak as a trusted friend.
 
         Your role:
-        - Speak in a calm, reassuring, unhurried tone. Never clinical, never rushed.
-        - Gently guide \(profile.name) to recall details themselves with soft questions \
-        rather than stating facts outright.
-        - Keep responses short (2–4 sentences) unless \(profile.name) explicitly asks for more.
-        - If \(profile.name) seems confused or distressed, calmly reassure and redirect.
-        - Never contradict, correct sharply, or express surprise at repeated questions.
-        - Stick strictly to the facts below. Do NOT invent memories, names, or events.
+        - Speak in a calm, reassuring, unhurried tone.
+        - Help \(profile.name) recall details with gentle questions rather than stating facts.
+        - Keep responses short (2–4 sentences) unless asked for more.
+        - If \(profile.name) seems confused, calmly reassure and redirect.
+        - Stick strictly to the facts below. Never invent memories, names, or events.
 
         About \(profile.name):
 
@@ -218,8 +202,8 @@ actor GeminiLiveService {
         Cherished memories:
         \(memoryLines)
 
-        If directly asked whether you are an AI, answer honestly but gently. \
-        Never give medical advice or diagnoses. Respond only in English.
+        If asked whether you are an AI, answer honestly but gently. \
+        Never give medical advice. Respond only in English.
         """
     }
 
@@ -233,17 +217,17 @@ actor GeminiLiveService {
                     let message = try await task.receive()
                     switch message {
                     case .string(let text):
-                        await self.handleInboundJSON(text)
+                        self.handleInboundJSON(text)
                     case .data(let data):
                         if let text = String(data: data, encoding: .utf8) {
-                            await self.handleInboundJSON(text)
+                            self.handleInboundJSON(text)
                         }
                     @unknown default:
                         break
                     }
                 } catch {
                     if !Task.isCancelled {
-                        await self.handleReceiveError(error)
+                        self.updateState(.error(error.localizedDescription))
                     }
                     break
                 }
@@ -251,31 +235,23 @@ actor GeminiLiveService {
         }
     }
 
-    private func handleReceiveError(_ error: Error) {
-        updateState(.error(error.localizedDescription))
-    }
-
-    private func handleInboundJSON(_ text: String) async {
+    private func handleInboundJSON(_ text: String) {
         guard
             let data = text.data(using: .utf8),
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return }
 
-        // Debug: log raw response to console during development
         #if DEBUG
         print("[GeminiLive] ← \(text.prefix(300))")
         #endif
 
-        // 1. Setup confirmation — API sends "setupComplete" as the key
         if json["setupComplete"] != nil {
             updateState(.listening)
             return
         }
 
-        // 2. Server content — camelCase keys in responses
         if let serverContent = json["serverContent"] as? [String: Any] {
 
-            // Interrupted — user spoke during AI response
             if let interrupted = serverContent["interrupted"] as? Bool, interrupted {
                 if playerNode.isPlaying { playerNode.stop() }
                 updateState(.interrupted)
@@ -283,13 +259,11 @@ actor GeminiLiveService {
                 return
             }
 
-            // Turn complete — AI finished its turn
             if let turnComplete = serverContent["turnComplete"] as? Bool, turnComplete {
                 updateState(.listening)
                 return
             }
 
-            // Audio chunks in modelTurn.parts[].inlineData
             if let modelTurn = serverContent["modelTurn"] as? [String: Any],
                let parts = modelTurn["parts"] as? [[String: Any]] {
                 updateState(.aiSpeaking)
@@ -305,23 +279,22 @@ actor GeminiLiveService {
         }
     }
 
-    // MARK: - Audio Engine Setup
+    // MARK: - Audio Engine
 
     private func configureAudioEngine() throws {
-        // Configure AVAudioSession for simultaneous record + playback
+        guard !audioConfigured else { return }
+
         let avSession = AVAudioSession.sharedInstance()
         try avSession.setCategory(
             .playAndRecord,
-            mode: .voiceChat,           // enables hardware acoustic echo cancellation
+            mode: .voiceChat,
             options: [.defaultToSpeaker, .allowBluetoothA2DP]
         )
         try avSession.setActive(true, options: .notifyOthersOnDeactivation)
 
-        // Set up playback node before starting engine
         audioEngine.attach(playerNode)
         audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: playbackFormat)
 
-        // Install capture tap — nativeFormat is 44.1/48 kHz Float32 from hardware
         let inputNode = audioEngine.inputNode
         let nativeFormat = inputNode.outputFormat(forBus: 0)
 
@@ -329,14 +302,12 @@ actor GeminiLiveService {
             throw LiveServiceError.audioSetupFailed
         }
 
-        // Capture local copies for the tap closure (avoids actor-isolation crossing)
         let captureFormat = self.captureFormat
 
         inputNode.installTap(onBus: 0, bufferSize: 4_096, format: nativeFormat) { [weak self] buffer, _ in
             guard let self,
                   let pcmBuffer = buffer as? AVAudioPCMBuffer else { return }
 
-            // Convert from hardware format to 16kHz Int16 mono synchronously in tap thread
             let inputFrames = pcmBuffer.frameLength
             let ratio = captureFormat.sampleRate / nativeFormat.sampleRate
             let outputFrames = AVAudioFrameCount(Double(inputFrames) * ratio)
@@ -356,32 +327,24 @@ actor GeminiLiveService {
             guard let int16Data = outputBuffer.int16ChannelData,
                   outputBuffer.frameLength > 0 else { return }
 
-            let byteCount = Int(outputBuffer.frameLength) * 2   // 2 bytes per Int16
+            let byteCount = Int(outputBuffer.frameLength) * 2
             let rawData = Data(bytes: int16Data[0], count: byteCount)
 
-            Task { await self.sendAudioChunk(rawData) }
+            Task { [weak self] in await self?.sendAudioChunk(rawData) }
         }
 
         audioEngine.prepare()
         try audioEngine.start()
         playerNode.play()
+        audioConfigured = true
     }
-
-    // MARK: - Send Audio Chunk
-    //
-    // Outbound audio message uses snake_case (same encoding as setup):
-    //   realtime_input > media_chunks > { mime_type, data }
-    // mime_type is "audio/pcm" — rate is implied as 16 kHz by the API.
 
     private func sendAudioChunk(_ data: Data) async {
         let base64 = data.base64EncodedString()
         let message: [String: Any] = [
             "realtime_input": [
                 "media_chunks": [
-                    [
-                        "mime_type": "audio/pcm",
-                        "data": base64
-                    ]
+                    ["mime_type": "audio/pcm", "data": base64]
                 ]
             ]
         ]
@@ -392,12 +355,10 @@ actor GeminiLiveService {
         try? await webSocketTask?.send(.string(jsonString))
     }
 
-    // MARK: - Playback: Enqueue Audio Chunk
-
     private func enqueueAudioChunk(_ base64: String) {
         guard let data = Data(base64Encoded: base64) else { return }
 
-        let frameCount = data.count / 2   // 2 bytes per Int16 sample
+        let frameCount = data.count / 2
         guard frameCount > 0,
               let pcmBuffer = AVAudioPCMBuffer(
                 pcmFormat: playbackFormat,
@@ -416,13 +377,10 @@ actor GeminiLiveService {
         if !playerNode.isPlaying { playerNode.play() }
     }
 
-    // MARK: - Audio Session Cleanup
-
     private func deactivateAudioSession() {
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        try? AVAudioSession.sharedInstance().setActive(false,
+            options: .notifyOthersOnDeactivation)
     }
-
-    // MARK: - State Update (synchronous — actor guarantees mutual exclusion)
 
     private func updateState(_ newState: LiveSessionState) {
         sessionState = newState

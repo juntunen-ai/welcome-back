@@ -37,6 +37,10 @@ struct ContentView: View {
                 .tag(AppTab.settings)
         }
         .tint(.accentYellow)
+        .sheet(isPresented: $appVM.listeningSheetPresented) {
+            ListeningView()
+                .environmentObject(appVM)
+        }
         .sheet(item: $appVM.selectedFamilyMember) { member in
             PlaybackView(member: member)
                 .environmentObject(appVM)

@@ -28,10 +28,6 @@ struct HomeView: View {
             .padding(.top, 8)
         }
         .onAppear { startPulse() }
-        .sheet(isPresented: $appVM.listeningSheetPresented) {
-            ListeningView()
-                .environmentObject(appVM)
-        }
     }
 
     // MARK: - Subviews

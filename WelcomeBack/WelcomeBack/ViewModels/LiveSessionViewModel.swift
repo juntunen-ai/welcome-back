@@ -3,8 +3,9 @@ import SwiftUI
 
 // MARK: - LiveSessionViewModel
 
-/// Bridges `GeminiLiveService`'s actor-isolated `AsyncStream` into
-/// `@Published` properties that SwiftUI views can bind to.
+/// Bridges `GeminiLiveService` into `@Published` properties for SwiftUI.
+/// Creates a fresh `GeminiLiveService` for every session so the AsyncStream
+/// and audio engine are always in a clean state.
 @MainActor
 final class LiveSessionViewModel: ObservableObject {
 
@@ -12,29 +13,30 @@ final class LiveSessionViewModel: ObservableObject {
 
     @Published var sessionState: LiveSessionState = .idle
     @Published var errorMessage: String?
-    /// Set to `true` when the Live connection fails — `ListeningView`
-    /// observes this and falls back to the legacy REST + PlaybackView path.
+    /// True when Live WebSocket fails — ListeningView falls back to REST path.
     @Published var useFallback: Bool = false
 
     // MARK: - Private
 
-    private let service = GeminiLiveService.shared
+    /// A new service instance is created each time beginSession() is called.
+    private var service: GeminiLiveService?
     private var stateObserverTask: Task<Void, Never>?
 
     // MARK: - Session Lifecycle
 
-    /// Opens a Gemini Live session for the given user profile.
-    /// On connection failure, sets `useFallback = true` so the caller
-    /// can gracefully revert to the REST path.
     func beginSession(profile: UserProfile) {
+        // Always start with a fresh service so the stream is clean
+        service = GeminiLiveService()
         errorMessage = nil
         useFallback = false
         sessionState = .connecting
 
-        // Subscribe to state stream from the actor
+        guard let service else { return }
+
+        // Subscribe to state stream
         stateObserverTask = Task { [weak self] in
             guard let self else { return }
-            for await state in self.service.stateStream {
+            for await state in service.stateStream {
                 self.sessionState = state
                 if case .error(let msg) = state {
                     self.errorMessage = msg
@@ -44,22 +46,20 @@ final class LiveSessionViewModel: ObservableObject {
 
         // Start the session
         Task { [weak self] in
-            guard let self else { return }
+            guard let self, let service = self.service else { return }
             do {
-                try await self.service.startSession(profile: profile)
-            } catch LiveServiceError.apiKeyMissing {
-                self.useFallback = true
+                try await service.startSession(profile: profile)
             } catch {
-                // Any connection/setup failure — fall back to REST
+                // Any failure → fall back to REST + PlaybackView
                 self.useFallback = true
             }
         }
     }
 
-    /// Closes the WebSocket session and tears down audio.
     func endSession() {
         stateObserverTask?.cancel()
         stateObserverTask = nil
-        Task { await service.endSession() }
+        service?.endSession()
+        service = nil
     }
 }
