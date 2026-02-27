@@ -12,6 +12,9 @@
 		27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */; };
 		CAR001000000000000000001 /* MemoryCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAR002000000000000000001 /* MemoryCarouselView.swift */; };
 		38ABF02D442148B7AD863466 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76343AB596AD4B76B1119451 /* Colors.swift */; };
+		41365669B934429CBCA5F6A5 /* LiveSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2663102EF4682ACD4795F /* LiveSessionState.swift */; };
+		B89C9A45AFC5415E96101AD8 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */; };
+		C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */; };
 		45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BA50C87DF43E190C6BF96 /* GeminiService.swift */; };
 		7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */; };
 		8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7259413FA8F24BA9950D9980 /* PlaybackView.swift */; };
@@ -68,6 +71,9 @@
 		70108CE7B4714B598E18371E /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		7259413FA8F24BA9950D9980 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		76343AB596AD4B76B1119451 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		2AD2663102EF4682ACD4795F /* LiveSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionState.swift; sourceTree = "<group>"; };
+		215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
+		23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionViewModel.swift; sourceTree = "<group>"; };
 		983BA50C87DF43E190C6BF96 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
 		A06FA49070CC404EA37C543E /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		AE8C6810B365488E95EE918D /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
@@ -130,6 +136,7 @@
 			children = (
 				A06FA49070CC404EA37C543E /* AppViewModel.swift */,
 				29100E5723B2440287B86994 /* PlaybackViewModel.swift */,
+				23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */,
 				BB001MUSICVM0000001 /* MusicViewModel.swift */,
 			);
 			path = ViewModels;
@@ -222,6 +229,8 @@
 			isa = PBXGroup;
 			children = (
 				983BA50C87DF43E190C6BF96 /* GeminiService.swift */,
+				215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */,
+				2AD2663102EF4682ACD4795F /* LiveSessionState.swift */,
 				C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */,
 			);
 			path = Services;
@@ -470,6 +479,9 @@
 				CD08A9AB62BF4F9797B044D6 /* PlaybackViewModel.swift in Sources */,
 				BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */,
 				45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */,
+				41365669B934429CBCA5F6A5 /* LiveSessionState.swift in Sources */,
+				B89C9A45AFC5415E96101AD8 /* GeminiLiveService.swift in Sources */,
+				C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */,
 				7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -8,6 +8,9 @@ final class AppViewModel: ObservableObject {
 
     @Published var selectedTab: AppTab = .home
     @Published var listeningSheetPresented = false
+    /// True while a Gemini Live session is active — used to suppress
+    /// the PlaybackView sheet auto-launching during a live conversation.
+    @Published var isLiveSessionActive = false
 
     // MARK: - Data
 
