@@ -138,27 +138,29 @@ struct MemoryTileView: View {
 
             // Gradient overlay — always present so labels remain readable
             LinearGradient(
-                colors: [.black.opacity(0.8), .clear],
+                colors: [.black.opacity(0.85), .black.opacity(0.3), .clear],
                 startPoint: .bottom,
-                endPoint: .center
+                endPoint: .top
             )
 
             // Labels
-            VStack(alignment: .leading, spacing: 2) {
-                if !memory.date.isEmpty {
-                    Text(memory.date.uppercased())
-                        .font(.system(size: 10, weight: .bold))
-                        .tracking(1.5)
-                        .foregroundColor(.accentYellow)
-                }
-
+            VStack(alignment: .leading, spacing: 4) {
                 Text(memory.title)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 18, weight: .black))
                     .foregroundColor(.white)
                     .lineLimit(2)
+                    .shadow(color: .black.opacity(0.6), radius: 4, y: 2)
+
+                if !memory.date.isEmpty {
+                    Text(memory.date.uppercased())
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(1.5)
+                        .foregroundColor(.accentYellow)
+                        .shadow(color: .black.opacity(0.6), radius: 4, y: 1)
+                }
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity)
         .frame(height: height)
