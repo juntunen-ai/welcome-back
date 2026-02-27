@@ -39,7 +39,7 @@ struct MusicView: View {
             }
             .animation(.spring(response: 0.4), value: musicVM.currentTrack?.id)
             .navigationTitle("Memory Lane")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { } label: {
@@ -70,18 +70,12 @@ struct MusicView: View {
                     .symbolEffect(.variableColor.iterative, isActive: musicVM.memoryLaneIsPlaying)
             }
 
-            // Title + inspirational copy
-            VStack(spacing: 8) {
-                Text("Memory Lane")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.onSurface)
-
-                Text("Harri, these are your favorite songs.\nListen to them to remember who you are.")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(Color.accentYellow.opacity(0.85))
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-            }
+            // Inspirational copy
+            Text("Harri, these are your favorite songs.\nListen to them to remember who you are.")
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundColor(Color.accentYellow.opacity(0.9))
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
 
             // Now-playing info / error
             if let error = musicVM.memoryLaneError {
