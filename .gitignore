@@ -31,6 +31,9 @@ xcuserdata/
 .env.local
 *.env
 
+# API key lives in Info.plist for prototype — keep it local only
+WelcomeBack/WelcomeBack/Supporting/Info.plist
+
 # Prototype artefacts (kept locally only)
 prototype.zip
 prototype_extracted/
