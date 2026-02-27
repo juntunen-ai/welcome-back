@@ -37,6 +37,9 @@ struct ContentView: View {
                 .tag(AppTab.settings)
         }
         .tint(.accentYellow)
+        .sheet(item: $appVM.selectedMemory) { memory in
+            MemoryCarouselView(memory: memory)
+        }
     }
 }
 

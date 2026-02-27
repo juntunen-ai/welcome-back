@@ -9,7 +9,6 @@ final class AppViewModel: ObservableObject {
     @Published var selectedTab: AppTab = .home
     @Published var listeningSheetPresented = false
     @Published var playbackSheetPresented = false
-    @Published var memoryCarouselPresented = false
 
     // MARK: - Data
 
@@ -43,7 +42,6 @@ final class AppViewModel: ObservableObject {
 
     func selectMemory(_ memory: Memory) {
         selectedMemory = memory
-        memoryCarouselPresented = true
     }
 }
 

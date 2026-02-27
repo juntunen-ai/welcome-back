@@ -41,13 +41,6 @@ struct MemoriesView: View {
                 }
             }
         }
-        .sheet(isPresented: $appVM.memoryCarouselPresented, onDismiss: {
-            appVM.selectedMemory = nil
-        }) {
-            if let memory = appVM.selectedMemory {
-                MemoryCarouselView(memory: memory)
-            }
-        }
     }
 
     // MARK: - Grid
