@@ -7,9 +7,9 @@ final class MusicViewModel: ObservableObject {
     // MARK: - Published State
 
     @Published var authorizationStatus: MusicAuthorization.Status = MusicAuthorization.currentStatus
-    @Published var recentAlbums: [Album] = []
+    @Published var recentTracks: [Track] = []
     @Published var isPlaying: Bool = false
-    @Published var currentAlbum: Album? = nil
+    @Published var currentTrack: Track? = nil
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
 
@@ -38,31 +38,10 @@ final class MusicViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            // Try personal recommendations first (requires MusicKit entitlement)
-            var albums: [Album] = []
-            do {
-                var request = MusicPersonalRecommendationsRequest()
-                request.limit = 10
-                let response = try await request.response()
-                for recommendation in response.recommendations {
-                    for item in recommendation.items {
-                        if case .album(let album) = item {
-                            albums.append(album)
-                        }
-                    }
-                }
-            } catch {
-                // Recommendations unavailable — fall through to recently played
-            }
-
-            // Fallback: recently played albums
-            if albums.isEmpty {
-                let recentRequest = MusicRecentlyPlayedRequest<Album>()
-                let recentResponse = try await recentRequest.response()
-                albums = Array(recentResponse.items.prefix(10))
-            }
-
-            recentAlbums = albums
+            var request = MusicRecentlyPlayedRequest<Track>()
+            request.limit = 20
+            let response = try await request.response()
+            recentTracks = Array(response.items)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -71,13 +50,13 @@ final class MusicViewModel: ObservableObject {
 
     // MARK: - Playback
 
-    func play(album: Album) async {
+    func play(track: Track) async {
         do {
-            ApplicationMusicPlayer.shared.queue = [album]
+            ApplicationMusicPlayer.shared.queue = [track]
             try await ApplicationMusicPlayer.shared.play()
-            currentAlbum = album
+            currentTrack = track
         } catch {
-            errorMessage = "Could not play \(album.title). Please check your Apple Music subscription."
+            errorMessage = "Could not play \(track.title). Please check your Apple Music subscription."
         }
     }
 
@@ -108,9 +87,8 @@ final class MusicViewModel: ObservableObject {
                     let status = ApplicationMusicPlayer.shared.state.playbackStatus
                     self.isPlaying = (status == .playing)
                 } onChange: {
-                    // Re-runs the loop body on next iteration to pick up the new value
+                    // Loop re-runs on next iteration to pick up the new value
                 }
-                // Yield to avoid a tight spin loop — playback changes are infrequent
                 try? await Task.sleep(for: .milliseconds(250))
             }
         }

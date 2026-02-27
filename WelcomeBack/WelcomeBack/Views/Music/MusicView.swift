@@ -6,7 +6,7 @@ struct MusicView: View {
     @EnvironmentObject private var appVM: AppViewModel
     @StateObject private var musicVM = MusicViewModel()
 
-    private let albumColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+    private let trackColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
         NavigationStack {
@@ -26,19 +26,19 @@ struct MusicView: View {
                             .padding(.horizontal, 16)
 
                         // Extra bottom padding so now-playing bar doesn't obscure content
-                        Spacer(minLength: musicVM.currentAlbum != nil ? 100 : 24)
+                        Spacer(minLength: musicVM.currentTrack != nil ? 100 : 24)
                     }
                 }
 
                 // Now-playing bar slides up from bottom when music is active
-                if let album = musicVM.currentAlbum {
-                    NowPlayingBar(album: album, isPlaying: musicVM.isPlaying) {
+                if let track = musicVM.currentTrack {
+                    NowPlayingBar(track: track, isPlaying: musicVM.isPlaying) {
                         musicVM.togglePlayback()
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.4), value: musicVM.currentAlbum?.id)
+            .animation(.spring(response: 0.4), value: musicVM.currentTrack?.id)
             .navigationTitle("Therapeutic Music")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -139,20 +139,20 @@ struct MusicView: View {
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .padding()
-        } else if musicVM.recentAlbums.isEmpty {
-            Text("No recently played albums found.\nStart listening in Apple Music and come back.")
+        } else if musicVM.recentTracks.isEmpty {
+            Text("No recently played tracks found.\nStart listening in Apple Music and come back.")
                 .font(.system(size: 14))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .padding()
         } else {
-            LazyVGrid(columns: albumColumns, spacing: 12) {
-                ForEach(musicVM.recentAlbums) { album in
-                    AlbumCard(
-                        album: album,
-                        isCurrentlyPlaying: musicVM.currentAlbum?.id == album.id && musicVM.isPlaying
+            LazyVGrid(columns: trackColumns, spacing: 12) {
+                ForEach(musicVM.recentTracks) { track in
+                    TrackCard(
+                        track: track,
+                        isCurrentlyPlaying: musicVM.currentTrack?.id == track.id && musicVM.isPlaying
                     ) {
-                        Task { await musicVM.play(album: album) }
+                        Task { await musicVM.play(track: track) }
                     }
                 }
             }
@@ -244,10 +244,10 @@ struct AppleMusicDeniedCard: View {
     }
 }
 
-// MARK: - Album Card
+// MARK: - Track Card
 
-struct AlbumCard: View {
-    let album: Album
+struct TrackCard: View {
+    let track: Track
     let isCurrentlyPlaying: Bool
     let onTap: () -> Void
 
@@ -274,12 +274,12 @@ struct AlbumCard: View {
                         }
                     }
 
-                Text(album.title)
+                Text(track.title)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
 
-                Text(album.artistName)
+                Text(track.artistName)
                     .font(.system(size: 10))
                     .foregroundColor(.onSurface.opacity(0.5))
                     .lineLimit(1)
@@ -290,7 +290,7 @@ struct AlbumCard: View {
 
     @ViewBuilder
     private var artworkView: some View {
-        if let artworkURL = album.artwork?.url(width: 200, height: 200) {
+        if let artworkURL = track.artwork?.url(width: 200, height: 200) {
             AsyncImage(url: artworkURL) { phase in
                 switch phase {
                 case .success(let image):
@@ -317,15 +317,14 @@ struct AlbumCard: View {
 // MARK: - Now Playing Bar
 
 struct NowPlayingBar: View {
-    let album: Album
+    let track: Track
     let isPlaying: Bool
     let onToggle: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
-            // Artwork thumbnail
             Group {
-                if let artworkURL = album.artwork?.url(width: 80, height: 80) {
+                if let artworkURL = track.artwork?.url(width: 80, height: 80) {
                     AsyncImage(url: artworkURL) { phase in
                         if case .success(let image) = phase {
                             image.resizable().scaledToFill()
@@ -341,12 +340,12 @@ struct NowPlayingBar: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(album.title)
+                Text(track.title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
 
-                Text(album.artistName)
+                Text(track.artistName)
                     .font(.system(size: 11))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .lineLimit(1)
