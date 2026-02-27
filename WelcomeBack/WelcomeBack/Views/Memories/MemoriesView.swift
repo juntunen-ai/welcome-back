@@ -122,25 +122,11 @@ struct MemoryTileView: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Background image or colour placeholder
-            if let uiImage = UIImage(named: memory.imageURL) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                ZStack {
-                    Color.surfaceVariant
-                    Image(systemName: "photo")
-                        .font(.system(size: 28))
-                        .foregroundColor(.onSurface.opacity(0.2))
-                }
-            }
-
             // Gradient — strong at bottom so text is always legible
             LinearGradient(
                 stops: [
                     .init(color: .black.opacity(0.75), location: 0),
-                    .init(color: .black.opacity(0.55), location: 0.5),
+                    .init(color: .black.opacity(0.45), location: 0.5),
                     .init(color: .clear, location: 1),
                 ],
                 startPoint: .bottom,
@@ -153,14 +139,14 @@ struct MemoryTileView: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
-                    .shadow(color: .black.opacity(0.8), radius: 3, y: 1)
+                    .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
 
                 if !memory.date.isEmpty {
                     Text(memory.date.uppercased())
                         .font(.system(size: 10, weight: .semibold))
                         .tracking(1)
                         .foregroundColor(.accentYellow)
-                        .shadow(color: .black.opacity(0.8), radius: 3, y: 1)
+                        .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
                 }
             }
             .padding(.horizontal, 12)
@@ -168,6 +154,22 @@ struct MemoryTileView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: height)
+        .background {
+            // Image as background so it fills without disrupting ZStack alignment
+            if let uiImage = UIImage(named: memory.imageURL) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .clipped()
+            } else {
+                ZStack {
+                    Color.surfaceVariant
+                    Image(systemName: "photo")
+                        .font(.system(size: 28))
+                        .foregroundColor(.onSurface.opacity(0.2))
+                }
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)

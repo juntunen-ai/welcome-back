@@ -30,7 +30,7 @@ extension Memory {
         Memory(
             id: "2",
             title: "Our Dog Pätkis",
-            date: "Autumn 2022",
+            date: "",
             imageURL: "memory_sarah",
             category: .family,
             description: "Pätkis, our beloved family dog."
