@@ -1,6 +1,6 @@
 import Foundation
 
-struct Memory: Identifiable, Codable {
+struct Memory: Identifiable, Codable, Hashable {
     let id: String
     var title: String
     var date: String
@@ -9,7 +9,7 @@ struct Memory: Identifiable, Codable {
     var description: String
 }
 
-enum MemoryCategory: String, Codable, CaseIterable {
+enum MemoryCategory: String, Codable, CaseIterable, Hashable {
     case family = "Family"
     case events = "Events"
     case places = "Places"
