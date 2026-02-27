@@ -1,5 +1,5 @@
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 
 // MARK: - Errors
 
@@ -84,16 +84,16 @@ actor GeminiLiveService {
     /// Throws `LiveServiceError` if the key is missing or connection fails.
     func startSession(profile: UserProfile) async throws {
         guard !apiKey.isEmpty else {
-            await updateState(.error(LiveServiceError.apiKeyMissing.localizedDescription!))
+            updateState(.error("Gemini API key is not configured."))
             throw LiveServiceError.apiKeyMissing
         }
 
-        await updateState(.connecting)
+        updateState(.connecting)
 
         // Build WebSocket URL
         let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)"
         guard let url = URL(string: urlString) else {
-            await updateState(.error(LiveServiceError.connectionFailed.localizedDescription!))
+            updateState(.error("Could not connect to the live service."))
             throw LiveServiceError.connectionFailed
         }
 
@@ -109,7 +109,7 @@ actor GeminiLiveService {
         } catch {
             task.cancel(with: .normalClosure, reason: nil)
             webSocketTask = nil
-            await updateState(.error(LiveServiceError.setupMessageFailed.localizedDescription!))
+            updateState(.error("Session setup failed."))
             throw LiveServiceError.setupMessageFailed
         }
 
@@ -122,13 +122,13 @@ actor GeminiLiveService {
         } catch {
             task.cancel(with: .normalClosure, reason: nil)
             webSocketTask = nil
-            await updateState(.error(LiveServiceError.audioSetupFailed.localizedDescription!))
+            updateState(.error("Could not access the microphone."))
             throw LiveServiceError.audioSetupFailed
         }
     }
 
     /// Cleanly shuts down the session — call from `ListeningView.onDisappear`.
-    func endSession() async {
+    func endSession() {
         receiveLoopTask?.cancel()
         receiveLoopTask = nil
 
@@ -142,7 +142,7 @@ actor GeminiLiveService {
         if playerNode.isPlaying { playerNode.stop() }
 
         deactivateAudioSession()
-        await updateState(.disconnected)
+        updateState(.disconnected)
     }
 
     // MARK: - Setup Message
@@ -234,12 +234,16 @@ actor GeminiLiveService {
                     }
                 } catch {
                     if !Task.isCancelled {
-                        await self.updateState(.error(error.localizedDescription))
+                        await self.handleReceiveError(error)
                     }
                     break
                 }
             }
         }
+    }
+
+    private func handleReceiveError(_ error: Error) {
+        updateState(.error(error.localizedDescription))
     }
 
     private func handleInboundJSON(_ text: String) async {
@@ -250,7 +254,7 @@ actor GeminiLiveService {
 
         // 1. Setup confirmation
         if json["setupComplete"] != nil {
-            await updateState(.listening)
+            updateState(.listening)
             return
         }
 
@@ -260,22 +264,22 @@ actor GeminiLiveService {
             // Interrupted — Harri spoke mid-response
             if let interrupted = serverContent["interrupted"] as? Bool, interrupted {
                 if playerNode.isPlaying { playerNode.stop() }
-                await updateState(.interrupted)
+                updateState(.interrupted)
                 // Immediately return to listening after interruption
-                await updateState(.listening)
+                updateState(.listening)
                 return
             }
 
             // Turn complete — AI finished speaking
             if let turnComplete = serverContent["turnComplete"] as? Bool, turnComplete {
-                await updateState(.listening)
+                updateState(.listening)
                 return
             }
 
             // Audio chunks from model turn
             if let modelTurn = serverContent["modelTurn"] as? [String: Any],
                let parts = modelTurn["parts"] as? [[String: Any]] {
-                await updateState(.aiSpeaking)
+                updateState(.aiSpeaking)
                 for part in parts {
                     if let inlineData = part["inlineData"] as? [String: Any],
                        let mimeType = inlineData["mimeType"] as? String,
@@ -296,7 +300,7 @@ actor GeminiLiveService {
         try avSession.setCategory(
             .playAndRecord,
             mode: .voiceChat,          // enables hardware echo cancellation
-            options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP]
+            options: [.defaultToSpeaker, .allowBluetoothA2DP]
         )
         try avSession.setActive(true, options: .notifyOthersOnDeactivation)
 
@@ -312,54 +316,46 @@ actor GeminiLiveService {
             throw LiveServiceError.audioSetupFailed
         }
 
+        // Capture the formats as value types to avoid actor-isolation issues in the tap closure
+        let captureFormat = self.captureFormat
+
         inputNode.installTap(onBus: 0, bufferSize: 4_096, format: nativeFormat) { [weak self] buffer, _ in
-            guard let self else { return }
-            Task { await self.convertAndSend(buffer: buffer, converter: converter, sourceFormat: nativeFormat) }
+            // The tap callback is called on an internal AVAudioEngine thread.
+            // Copy the buffer data synchronously here, then send it off-actor.
+            guard let self,
+                  let pcmBuffer = buffer as? AVAudioPCMBuffer else { return }
+
+            let inputFrames = pcmBuffer.frameLength
+            let ratio = captureFormat.sampleRate / nativeFormat.sampleRate
+            let outputFrames = AVAudioFrameCount(Double(inputFrames) * ratio)
+            guard outputFrames > 0,
+                  let outputBuffer = AVAudioPCMBuffer(pcmFormat: captureFormat,
+                                                       frameCapacity: outputFrames)
+            else { return }
+
+            var filled = false
+            converter.convert(to: outputBuffer, error: nil) { _, outStatus in
+                if filled {
+                    outStatus.pointee = .noDataNow
+                    return nil
+                }
+                filled = true
+                outStatus.pointee = .haveData
+                return pcmBuffer
+            }
+
+            guard let int16Data = outputBuffer.int16ChannelData,
+                  outputBuffer.frameLength > 0 else { return }
+
+            let byteCount = Int(outputBuffer.frameLength) * 2
+            let rawData = Data(bytes: int16Data[0], count: byteCount)
+
+            Task { await self.sendAudioChunk(rawData) }
         }
 
         audioEngine.prepare()
         try audioEngine.start()
         playerNode.play()
-    }
-
-    // MARK: - Capture: Convert and Send
-
-    private func convertAndSend(
-        buffer: AVAudioBuffer,
-        converter: AVAudioConverter,
-        sourceFormat: AVAudioFormat
-    ) async {
-        guard let pcmBuffer = buffer as? AVAudioPCMBuffer else { return }
-
-        let inputFrames = pcmBuffer.frameLength
-        let ratio = captureFormat.sampleRate / sourceFormat.sampleRate
-        let outputFrames = AVAudioFrameCount(Double(inputFrames) * ratio)
-
-        guard outputFrames > 0,
-              let outputBuffer = AVAudioPCMBuffer(pcmFormat: captureFormat, frameCapacity: outputFrames)
-        else { return }
-
-        var conversionError: NSError?
-        var filled = false
-
-        converter.convert(to: outputBuffer, error: &conversionError) { _, outStatus in
-            if filled {
-                outStatus.pointee = .noDataNow
-                return nil
-            }
-            filled = true
-            outStatus.pointee = .haveData
-            return pcmBuffer
-        }
-
-        guard conversionError == nil,
-              let int16Data = outputBuffer.int16ChannelData,
-              outputBuffer.frameLength > 0
-        else { return }
-
-        let byteCount = Int(outputBuffer.frameLength) * 2   // 2 bytes per Int16
-        let rawData = Data(bytes: int16Data[0], count: byteCount)
-        await sendAudioChunk(rawData)
     }
 
     private func sendAudioChunk(_ data: Data) async {
@@ -411,7 +407,7 @@ actor GeminiLiveService {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
-    // MARK: - State Update
+    // MARK: - State Update (synchronous — actor guarantees mutual exclusion)
 
     private func updateState(_ newState: LiveSessionState) {
         sessionState = newState

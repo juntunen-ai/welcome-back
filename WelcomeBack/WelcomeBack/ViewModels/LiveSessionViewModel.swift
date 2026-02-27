@@ -34,7 +34,7 @@ final class LiveSessionViewModel: ObservableObject {
         // Subscribe to state stream from the actor
         stateObserverTask = Task { [weak self] in
             guard let self else { return }
-            for await state in await self.service.stateStream {
+            for await state in self.service.stateStream {
                 self.sessionState = state
                 if case .error(let msg) = state {
                     self.errorMessage = msg

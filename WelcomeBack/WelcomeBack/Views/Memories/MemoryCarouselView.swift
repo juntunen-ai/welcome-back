@@ -1,6 +1,6 @@
 import SwiftUI
 import Photos
-import Vision
+@preconcurrency import Vision
 
 // MARK: - View Model
 
@@ -74,8 +74,10 @@ final class MemoryCarouselViewModel: ObservableObject {
         _ assets: [PHAsset],
         against seedPrint: VNFeaturePrintObservation
     ) async -> [PHAsset] {
-        await withCheckedContinuation { continuation in
+        nonisolated(unsafe) let safeSeedPrint = seedPrint
+        return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
+                let seedPrint = safeSeedPrint
                 let thumbnailSize = CGSize(width: 224, height: 224)
                 let reqOptions = PHImageRequestOptions()
                 reqOptions.isSynchronous = true          // synchronous is fine on background queue
@@ -123,7 +125,7 @@ final class MemoryCarouselViewModel: ObservableObject {
 
     // MARK: - Feature print helper
 
-    private static func featurePrint(for image: UIImage) -> VNFeaturePrintObservation? {
+    nonisolated private static func featurePrint(for image: UIImage) -> VNFeaturePrintObservation? {
         guard let cgImage = image.cgImage else { return nil }
         let request = VNGenerateImageFeaturePrintRequest()
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
