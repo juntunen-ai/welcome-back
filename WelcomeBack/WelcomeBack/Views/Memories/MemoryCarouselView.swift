@@ -267,7 +267,7 @@ struct MemoryCarouselView: View {
             Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 48))
                 .foregroundColor(.white.opacity(0.3))
-            Text("No photos found for this memory.\nTry adding photos to an album named "\(memory.title)".")
+            Text("No photos found for this memory.\nTry adding photos to an album named \"\(memory.title)\".")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
