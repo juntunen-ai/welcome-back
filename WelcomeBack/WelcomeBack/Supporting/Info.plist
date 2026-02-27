@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Welcome Back</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+
+	<!-- Permissions -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Welcome Back uses the microphone to listen to your voice so it can help you rediscover your memories.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Welcome Back uses speech recognition to understand what you say and respond with personalised memory stories.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Welcome Back can use the camera to capture new memory photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Welcome Back accesses your photo library to display and add memory photos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Welcome Back saves captured photos to your photo library.</string>
+
+	<!-- Gemini API key — replace with your real key or use a secrets manager -->
+	<key>GEMINI_API_KEY</key>
+	<string>$(GEMINI_API_KEY)</string>
+</dict>
+</plist>
