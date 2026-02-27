@@ -71,11 +71,17 @@ struct MusicView: View {
             }
 
             // Inspirational copy
-            Text("Harri, these are your favorite songs.\nListen to them to remember who you are.")
-                .font(.system(size: 19, weight: .semibold))
-                .foregroundColor(Color.accentYellow.opacity(0.9))
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
+            VStack(spacing: 4) {
+                Text("Harri")
+                    .font(.system(size: 32, weight: .black))
+                    .foregroundColor(.white)
+
+                Text("these are your favorite songs.\nListen to them to remember who you are.")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(Color.accentYellow.opacity(0.9))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+            }
 
             // Now-playing info / error
             if let error = musicVM.memoryLaneError {
