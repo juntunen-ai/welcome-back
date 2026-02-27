@@ -91,7 +91,7 @@ actor GeminiLiveService {
         updateState(.connecting)
 
         // alt=ws is required by the Gemini Live API to enable WebSocket mode
-        let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)&alt=sse"
+        let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)&alt=ws"
         guard let url = URL(string: urlString) else {
             updateState(.error("Could not connect to the live service."))
             throw LiveServiceError.connectionFailed
@@ -147,32 +147,32 @@ actor GeminiLiveService {
 
     // MARK: - Setup Message
     //
-    // The Gemini Live API uses camelCase JSON field names.
-    // All field names must exactly match the proto field names as JSON:
-    //   generationConfig (not generation_config)
-    //   responseModalities (not response_modalities)
-    //   speechConfig / voiceName (not nested prebuilt_voice_config)
-    //   systemInstruction (not system_instruction)
-    //   realtimeInput / mediaChunks (not realtime_input / media_chunks)
+    // The Gemini Live REST API (generativelanguage.googleapis.com) uses snake_case
+    // JSON field names — matching the proto-over-HTTP encoding for this endpoint.
+    // Outbound audio uses: realtime_input > media_chunks > { mime_type, data }
+    // Setup uses: generation_config, response_modalities, speech_config,
+    //             voice_config, prebuilt_voice_config, voice_name, system_instruction
 
     private func sendSetupMessage(profile: UserProfile) async throws {
         let systemPrompt = buildSystemPrompt(from: profile)
 
-        // Use camelCase keys exactly as the Gemini Live proto expects them
+        // The Gemini Live REST API uses snake_case JSON field names
+        // (matching the proto-over-HTTP encoding used by generativelanguage.googleapis.com).
+        // Model: gemini-2.5-flash-native-audio-preview-12-2025 is the current Live model.
         let setup: [String: Any] = [
             "setup": [
-                "model": "models/gemini-2.0-flash-live-001",
-                "generationConfig": [
-                    "responseModalities": ["AUDIO"],
-                    "speechConfig": [
-                        "voiceConfig": [
-                            "prebuiltVoiceConfig": [
-                                "voiceName": "Aoede"
+                "model": "models/gemini-2.5-flash-native-audio-preview-12-2025",
+                "generation_config": [
+                    "response_modalities": ["audio"],
+                    "speech_config": [
+                        "voice_config": [
+                            "prebuilt_voice_config": [
+                                "voice_name": "Aoede"
                             ]
                         ]
                     ]
                 ],
-                "systemInstruction": [
+                "system_instruction": [
                     "parts": [["text": systemPrompt]]
                 ]
             ]
@@ -369,17 +369,17 @@ actor GeminiLiveService {
 
     // MARK: - Send Audio Chunk
     //
-    // Outbound audio message uses camelCase:
-    //   realtimeInput > mediaChunks > { mimeType, data }
-    // mimeType must be "audio/pcm" (no rate suffix — rate is implied as 16kHz)
+    // Outbound audio message uses snake_case (same encoding as setup):
+    //   realtime_input > media_chunks > { mime_type, data }
+    // mime_type is "audio/pcm" — rate is implied as 16 kHz by the API.
 
     private func sendAudioChunk(_ data: Data) async {
         let base64 = data.base64EncodedString()
         let message: [String: Any] = [
-            "realtimeInput": [
-                "mediaChunks": [
+            "realtime_input": [
+                "media_chunks": [
                     [
-                        "mimeType": "audio/pcm",
+                        "mime_type": "audio/pcm",
                         "data": base64
                     ]
                 ]
