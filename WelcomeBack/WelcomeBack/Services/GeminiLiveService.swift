@@ -48,6 +48,10 @@ final class GeminiLiveService: @unchecked Sendable {
     private let playerNode = AVAudioPlayerNode()
     private var audioConfigured = false
 
+    /// Accumulates raw Int16 bytes from inbound audio chunks during a model turn.
+    /// Flushed to the player as one contiguous buffer on `turnComplete` or `interrupted`.
+    private var pendingAudioBytes = Data()
+
     /// Capture format: 16 kHz, Int16, mono
     private let captureFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16,
@@ -254,12 +258,8 @@ final class GeminiLiveService: @unchecked Sendable {
 
             if let interrupted = serverContent["interrupted"] as? Bool, interrupted {
                 if playerNode.isPlaying { playerNode.stop() }
+                pendingAudioBytes.removeAll()
                 updateState(.interrupted)
-                updateState(.listening)
-                return
-            }
-
-            if let turnComplete = serverContent["turnComplete"] as? Bool, turnComplete {
                 updateState(.listening)
                 return
             }
@@ -271,10 +271,19 @@ final class GeminiLiveService: @unchecked Sendable {
                     if let inlineData = part["inlineData"] as? [String: Any],
                        let mimeType = inlineData["mimeType"] as? String,
                        mimeType.hasPrefix("audio/pcm"),
-                       let b64 = inlineData["data"] as? String {
-                        enqueueAudioChunk(b64)
+                       let b64 = inlineData["data"] as? String,
+                       let chunkData = Data(base64Encoded: b64) {
+                        // Accumulate — don't schedule yet
+                        pendingAudioBytes.append(chunkData)
                     }
                 }
+            }
+
+            if let turnComplete = serverContent["turnComplete"] as? Bool, turnComplete {
+                // Flush all accumulated audio as one contiguous buffer
+                flushPendingAudio()
+                updateState(.listening)
+                return
             }
         }
     }
@@ -304,7 +313,7 @@ final class GeminiLiveService: @unchecked Sendable {
 
         let captureFormat = self.captureFormat
 
-        inputNode.installTap(onBus: 0, bufferSize: 4_096, format: nativeFormat) { [weak self] buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 16_384, format: nativeFormat) { [weak self] buffer, _ in
             guard let self,
                   let pcmBuffer = buffer as? AVAudioPCMBuffer else { return }
 
@@ -355,8 +364,11 @@ final class GeminiLiveService: @unchecked Sendable {
         try? await webSocketTask?.send(.string(jsonString))
     }
 
-    private func enqueueAudioChunk(_ base64: String) {
-        guard let data = Data(base64Encoded: base64) else { return }
+    /// Schedules all accumulated audio bytes as one contiguous PCM buffer.
+    /// Called when the model signals `turnComplete`, ensuring gap-free playback.
+    private func flushPendingAudio() {
+        let data = pendingAudioBytes
+        pendingAudioBytes.removeAll()
 
         let frameCount = data.count / 2
         guard frameCount > 0,
