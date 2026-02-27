@@ -28,34 +28,44 @@ struct SettingsView: View {
 
     private var generalSection: some View {
         Section {
-            SettingsRowView(icon: "person.fill", iconColor: .blue, title: "Personal Info", subtitle: "Manage your name and relations")
-            SettingsRowView(icon: "bell.fill", iconColor: .red, title: "Notifications", subtitle: "Reminders to check in", hasToggle: true, toggleBinding: $appVM.userProfile.notificationsEnabled)
+            NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+                SettingsRowView(icon: "person.fill", iconColor: .blue,
+                                title: "Personal Info",
+                                subtitle: "Name, address, biography")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: NotificationsSettingsView().environmentObject(appVM)) {
+                SettingsRowView(icon: "bell.fill", iconColor: .red,
+                                title: "Notifications",
+                                subtitle: appVM.userProfile.notificationsEnabled ? "Enabled" : "Disabled")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("General")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         }
-        .listRowBackground(Color.surfaceVariant.opacity(0.4))
     }
 
     private var aiSection: some View {
         Section {
-            SettingsRowView(
-                icon: "waveform.badge.mic",
-                iconColor: .accentYellow,
-                title: "Record Voice",
-                subtitle: "\(appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count) active personalities",
-                hasToggle: true,
-                toggleBinding: $appVM.userProfile.isVoiceCloningEnabled
-            )
+            NavigationLink(destination: RecordVoiceView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "waveform.badge.mic",
+                    iconColor: .accentYellow,
+                    title: "Record Voice",
+                    subtitle: "\(appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count) recorded"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("Artificial Intelligence")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         }
-        .listRowBackground(Color.surfaceVariant.opacity(0.4))
     }
 
     private var systemSection: some View {
@@ -124,10 +134,6 @@ struct SettingsRowView: View {
                 Toggle("", isOn: binding)
                     .tint(.accentYellow)
                     .labelsHidden()
-            } else {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.onSurface.opacity(0.2))
             }
         }
         .padding(.vertical, 4)

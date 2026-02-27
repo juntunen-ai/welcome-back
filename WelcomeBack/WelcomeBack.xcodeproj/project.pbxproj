@@ -21,6 +21,9 @@
 		966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E2AADFDDECE49C2847688B6 /* Assets.xcassets */; };
 		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
 		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
+		SE001000000000000000001 /* PersonalInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000001 /* PersonalInfoView.swift */; };
+		SE001000000000000000002 /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000002 /* NotificationsSettingsView.swift */; };
+		SE001000000000000000003 /* RecordVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000003 /* RecordVoiceView.swift */; };
 		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
 		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
 		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
@@ -68,6 +71,9 @@
 		3B71E72C11464A6798CA4FC3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3E2AADFDDECE49C2847688B6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5042CD26087445D78D12F05E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		SE002000000000000000001 /* PersonalInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInfoView.swift; sourceTree = "<group>"; };
+		SE002000000000000000002 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
+		SE002000000000000000003 /* RecordVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordVoiceView.swift; sourceTree = "<group>"; };
 		70108CE7B4714B598E18371E /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		7259413FA8F24BA9950D9980 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		76343AB596AD4B76B1119451 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
@@ -195,6 +201,9 @@
 			isa = PBXGroup;
 			children = (
 				5042CD26087445D78D12F05E /* SettingsView.swift */,
+				SE002000000000000000001 /* PersonalInfoView.swift */,
+				SE002000000000000000002 /* NotificationsSettingsView.swift */,
+				SE002000000000000000003 /* RecordVoiceView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -471,6 +480,9 @@
 				E969761872CB48C986337B81 /* FamilyView.swift in Sources */,
 				F00D1E1EFFED4B138C82C702 /* MusicView.swift in Sources */,
 				9C309B4373B443F999011B83 /* SettingsView.swift in Sources */,
+				SE001000000000000000001 /* PersonalInfoView.swift in Sources */,
+				SE001000000000000000002 /* NotificationsSettingsView.swift in Sources */,
+				SE001000000000000000003 /* RecordVoiceView.swift in Sources */,
 				38ABF02D442148B7AD863466 /* Colors.swift in Sources */,
 				BDE30EA8963E4970B93DF40F /* Memory.swift in Sources */,
 				D5902CCD9A4B40B681B9E5F6 /* FamilyMember.swift in Sources */,
