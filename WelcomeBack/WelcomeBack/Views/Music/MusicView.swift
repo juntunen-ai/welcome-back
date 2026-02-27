@@ -1,4 +1,4 @@
-import MusicKit
+import MediaPlayer
 import SwiftUI
 
 struct MusicView: View {
@@ -25,7 +25,6 @@ struct MusicView: View {
                         memoryMixesSection
                             .padding(.horizontal, 16)
 
-                        // Extra bottom padding so now-playing bar doesn't obscure content
                         Spacer(minLength: musicVM.currentTrack != nil ? 100 : 24)
                     }
                 }
@@ -38,14 +37,12 @@ struct MusicView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(response: 0.4), value: musicVM.currentTrack?.id)
+            .animation(.spring(response: 0.4), value: musicVM.currentTrack?.persistentID)
             .navigationTitle("Therapeutic Music")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        // Future: add playlist action
-                    } label: {
+                    Button { } label: {
                         Image(systemName: "text.badge.plus")
                             .foregroundColor(.onSurface)
                             .frame(width: 44, height: 44)
@@ -113,13 +110,10 @@ struct MusicView: View {
                 ConnectAppleMusicCard {
                     Task { await musicVM.requestAuthorization() }
                 }
-
             case .denied, .restricted:
                 AppleMusicDeniedCard()
-
             case .authorized:
                 authorizedContent
-
             @unknown default:
                 EmptyView()
             }
@@ -140,19 +134,19 @@ struct MusicView: View {
                 .multilineTextAlignment(.center)
                 .padding()
         } else if musicVM.recentTracks.isEmpty {
-            Text("No recently played tracks found.\nStart listening in Apple Music and come back.")
+            Text("No tracks found in your music library.")
                 .font(.system(size: 14))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .padding()
         } else {
             LazyVGrid(columns: trackColumns, spacing: 12) {
-                ForEach(musicVM.recentTracks) { track in
+                ForEach(musicVM.recentTracks, id: \.persistentID) { track in
                     TrackCard(
                         track: track,
-                        isCurrentlyPlaying: musicVM.currentTrack?.id == track.id && musicVM.isPlaying
+                        isCurrentlyPlaying: musicVM.currentTrack?.persistentID == track.persistentID && musicVM.isPlaying
                     ) {
-                        Task { await musicVM.play(track: track) }
+                        musicVM.play(track: track)
                     }
                 }
             }
@@ -197,14 +191,14 @@ struct ConnectAppleMusicCard: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Listen to your favourite songs and albums from your Apple Music library.")
+                Text("Allow access to play your favourite songs from your music library.")
                     .font(.system(size: 13))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
 
             Button(action: onConnect) {
-                Text("Connect")
+                Text("Allow Access")
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
@@ -232,7 +226,7 @@ struct AppleMusicDeniedCard: View {
                 .font(.system(size: 28))
                 .foregroundColor(.onSurface.opacity(0.3))
 
-            Text("Apple Music access was denied.\nPlease enable it in Settings \u{203A} Privacy \u{203A} Media & Apple Music.")
+            Text("Music library access was denied.\nPlease enable it in Settings \u{203A} Privacy \u{203A} Media & Apple Music.")
                 .font(.system(size: 13))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -247,7 +241,7 @@ struct AppleMusicDeniedCard: View {
 // MARK: - Track Card
 
 struct TrackCard: View {
-    let track: Track
+    let track: MPMediaItem
     let isCurrentlyPlaying: Bool
     let onTap: () -> Void
 
@@ -274,12 +268,12 @@ struct TrackCard: View {
                         }
                     }
 
-                Text(track.title)
+                Text(track.title ?? "Unknown")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
 
-                Text(track.artistName)
+                Text(track.artist ?? "Unknown Artist")
                     .font(.system(size: 10))
                     .foregroundColor(.onSurface.opacity(0.5))
                     .lineLimit(1)
@@ -290,62 +284,56 @@ struct TrackCard: View {
 
     @ViewBuilder
     private var artworkView: some View {
-        if let artworkURL = track.artwork?.url(width: 200, height: 200) {
-            AsyncImage(url: artworkURL) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                default:
-                    artworkPlaceholder
-                }
-            }
+        if let artwork = track.artwork,
+           let image = artwork.image(at: CGSize(width: 200, height: 200)) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
         } else {
-            artworkPlaceholder
+            Rectangle()
+                .fill(Color.surfaceVariant)
+                .overlay(
+                    Image(systemName: "music.note")
+                        .foregroundColor(.onSurface.opacity(0.3))
+                )
         }
-    }
-
-    private var artworkPlaceholder: some View {
-        Rectangle()
-            .fill(Color.surfaceVariant)
-            .overlay(
-                Image(systemName: "music.note")
-                    .foregroundColor(.onSurface.opacity(0.3))
-            )
     }
 }
 
 // MARK: - Now Playing Bar
 
 struct NowPlayingBar: View {
-    let track: Track
+    let track: MPMediaItem
     let isPlaying: Bool
     let onToggle: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
+            // Artwork thumbnail
             Group {
-                if let artworkURL = track.artwork?.url(width: 80, height: 80) {
-                    AsyncImage(url: artworkURL) { phase in
-                        if case .success(let image) = phase {
-                            image.resizable().scaledToFill()
-                        } else {
-                            Color.surfaceVariant
-                        }
-                    }
+                if let artwork = track.artwork,
+                   let image = artwork.image(at: CGSize(width: 80, height: 80)) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
                 } else {
                     Color.surfaceVariant
+                        .overlay(
+                            Image(systemName: "music.note")
+                                .foregroundColor(.onSurface.opacity(0.3))
+                        )
                 }
             }
             .frame(width: 44, height: 44)
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(track.title)
+                Text(track.title ?? "Unknown")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
 
-                Text(track.artistName)
+                Text(track.artist ?? "Unknown Artist")
                     .font(.system(size: 11))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .lineLimit(1)

@@ -1,4 +1,4 @@
-import MusicKit
+import MediaPlayer
 import SwiftUI
 
 @MainActor
@@ -6,18 +6,20 @@ final class MusicViewModel: ObservableObject {
 
     // MARK: - Published State
 
-    @Published var authorizationStatus: MusicAuthorization.Status = MusicAuthorization.currentStatus
-    @Published var recentTracks: [Track] = []
+    @Published var authorizationStatus: MPMediaLibraryAuthorizationStatus = MPMediaLibrary.authorizationStatus()
+    @Published var recentTracks: [MPMediaItem] = []
     @Published var isPlaying: Bool = false
-    @Published var currentTrack: Track? = nil
+    @Published var currentTrack: MPMediaItem? = nil
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
+
+    private let player = MPMusicPlayerController.applicationMusicPlayer
 
     // MARK: - Init
 
     init() {
-        if MusicAuthorization.currentStatus == .authorized {
-            Task { await loadRecentlyPlayed() }
+        if MPMediaLibrary.authorizationStatus() == .authorized {
+            loadRecentlyPlayed()
         }
         observePlaybackState()
     }
@@ -25,72 +27,81 @@ final class MusicViewModel: ObservableObject {
     // MARK: - Authorization
 
     func requestAuthorization() async {
-        let status = await MusicAuthorization.request()
+        let status = await withCheckedContinuation { continuation in
+            MPMediaLibrary.requestAuthorization { status in
+                continuation.resume(returning: status)
+            }
+        }
         authorizationStatus = status
         if status == .authorized {
-            await loadRecentlyPlayed()
+            loadRecentlyPlayed()
         }
     }
 
     // MARK: - Load Content
 
-    func loadRecentlyPlayed() async {
+    func loadRecentlyPlayed() {
         isLoading = true
         errorMessage = nil
-        do {
-            var request = MusicRecentlyPlayedRequest<Track>()
-            request.limit = 20
-            let response = try await request.response()
-            recentTracks = Array(response.items)
-        } catch {
-            errorMessage = error.localizedDescription
+
+        // Query all songs, sorted by last played date descending
+        let query = MPMediaQuery.songs()
+        query.addFilterPredicate(
+            MPMediaPropertyPredicate(
+                value: MPMediaType.music.rawValue,
+                forProperty: MPMediaItemPropertyMediaType
+            )
+        )
+
+        guard let items = query.items, !items.isEmpty else {
+            // Fallback: show all songs if no recently played found
+            let allQuery = MPMediaQuery.songs()
+            recentTracks = Array((allQuery.items ?? []).prefix(30))
+            isLoading = false
+            return
         }
+
+        // Sort by lastPlayedDate descending, take top 30
+        let sorted = items
+            .filter { $0.lastPlayedDate != nil }
+            .sorted { ($0.lastPlayedDate ?? .distantPast) > ($1.lastPlayedDate ?? .distantPast) }
+
+        recentTracks = Array((sorted.isEmpty ? items : sorted).prefix(30))
         isLoading = false
     }
 
     // MARK: - Playback
 
-    func play(track: Track) async {
-        do {
-            ApplicationMusicPlayer.shared.queue = [track]
-            try await ApplicationMusicPlayer.shared.play()
-            currentTrack = track
-        } catch {
-            errorMessage = "Could not play \(track.title). Please check your Apple Music subscription."
-        }
+    func play(track: MPMediaItem) {
+        player.setQueue(with: MPMediaItemCollection(items: [track]))
+        player.play()
+        currentTrack = track
     }
 
     func togglePlayback() {
         if isPlaying {
-            ApplicationMusicPlayer.shared.pause()
+            player.pause()
         } else {
-            Task {
-                do {
-                    try await ApplicationMusicPlayer.shared.play()
-                } catch {
-                    errorMessage = error.localizedDescription
-                }
-            }
+            player.play()
         }
     }
 
     func pause() {
-        ApplicationMusicPlayer.shared.pause()
+        player.pause()
     }
 
     // MARK: - Observe Player State
 
     private func observePlaybackState() {
-        Task { @MainActor in
-            while !Task.isCancelled {
-                withObservationTracking {
-                    let status = ApplicationMusicPlayer.shared.state.playbackStatus
-                    self.isPlaying = (status == .playing)
-                } onChange: {
-                    // Loop re-runs on next iteration to pick up the new value
-                }
-                try? await Task.sleep(for: .milliseconds(250))
+        NotificationCenter.default.addObserver(
+            forName: .MPMusicPlayerControllerPlaybackStateDidChange,
+            object: player,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.isPlaying = self?.player.playbackState == .playing
             }
         }
+        player.beginGeneratingPlaybackNotifications()
     }
 }

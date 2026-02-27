@@ -34,7 +34,7 @@
 		T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000006 /* PlaybackViewModelTests.swift */; };
 		/* WelcomeBack.app linked into test target */
 		T001AA0000000000000000010 /* WelcomeBack.app in Frameworks */ = {isa = PBXBuildFile; fileRef = AFFB626B53B843ABACAD5923 /* WelcomeBack.app */; };
-		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
+		BB001MUSICKIT0000002 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MediaPlayer.framework */; };
 		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -77,7 +77,7 @@
 		T002AA0000000000000000004 /* AppViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModelTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
-		BB001MUSICKIT0000001 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
+		BB001MUSICKIT0000001 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		BB001MUSICVM0000001 /* MusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -86,7 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */,
+				BB001MUSICKIT0000002 /* MediaPlayer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,7 +274,7 @@
 		BB001FRAMEWORKS0000001 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				BB001MUSICKIT0000001 /* MusicKit.framework */,
+				BB001MUSICKIT0000001 /* MediaPlayer.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
