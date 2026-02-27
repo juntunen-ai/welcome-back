@@ -89,6 +89,7 @@
 		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		WGT002000000000000000001 /* WelcomeBackWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackWidget.swift; sourceTree = "<group>"; };
 		WGT002000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WelcomeBackWidget-Info.plist"; sourceTree = "<group>"; };
 		WGT002000000000000000003 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		WGT002000000000000000004 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		WGT002000000000000000005 /* WelcomeBackWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WelcomeBackWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -239,6 +240,7 @@
 			children = (
 				WGT002000000000000000001 /* WelcomeBackWidget.swift */,
 				WGT002000000000000000002 /* Assets.xcassets */,
+				WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */,
 			);
 			path = WelcomeBackWidget;
 			sourceTree = "<group>";
@@ -720,9 +722,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Welcome Back";
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WelcomeBackWidget/WelcomeBackWidget-Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -746,9 +747,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Welcome Back";
-				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WelcomeBackWidget/WelcomeBackWidget-Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
