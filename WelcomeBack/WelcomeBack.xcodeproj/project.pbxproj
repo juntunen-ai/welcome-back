@@ -25,7 +25,26 @@
 		45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BA50C87DF43E190C6BF96 /* GeminiService.swift */; };
 		7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */; };
 		966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E2AADFDDECE49C2847688B6 /* Assets.xcassets */; };
+		/* Test file references in Sources */
+		T001AA0000000000000000001 /* MemoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000001 /* MemoryTests.swift */; };
+		T001AA0000000000000000002 /* FamilyMemberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000002 /* FamilyMemberTests.swift */; };
+		T001AA0000000000000000003 /* UserProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000003 /* UserProfileTests.swift */; };
+		T001AA0000000000000000004 /* AppViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000004 /* AppViewModelTests.swift */; };
+		T001AA0000000000000000005 /* GeminiServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000005 /* GeminiServiceTests.swift */; };
+		T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000006 /* PlaybackViewModelTests.swift */; };
+		/* WelcomeBack.app linked into test target */
+		T001AA0000000000000000010 /* WelcomeBack.app in Frameworks */ = {isa = PBXBuildFile; fileRef = AFFB626B53B843ABACAD5923 /* WelcomeBack.app */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		T003AA0000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB72992900FF436E8131F682 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 15282737539D469CAF4A24B5;
+			remoteInfo = WelcomeBack;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackApp.swift; sourceTree = "<group>"; };
@@ -48,10 +67,25 @@
 		3E2AADFDDECE49C2847688B6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AFFB626B53B843ABACAD5923 /* WelcomeBack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WelcomeBack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		/* Test target product and source files */
+		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		T002AA0000000000000000001 /* MemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTests.swift; sourceTree = "<group>"; };
+		T002AA0000000000000000002 /* FamilyMemberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberTests.swift; sourceTree = "<group>"; };
+		T002AA0000000000000000003 /* UserProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileTests.swift; sourceTree = "<group>"; };
+		T002AA0000000000000000004 /* AppViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModelTests.swift; sourceTree = "<group>"; };
+		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
+		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		591463A43A7347799042A51D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		T005AA0000000000000000001 /* Frameworks (Tests) */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -203,14 +237,29 @@
 			isa = PBXGroup;
 			children = (
 				AFFB626B53B843ABACAD5923 /* WelcomeBack.app */,
+				T004AA0000000000000000001 /* WelcomeBackTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		T006AA0000000000000000001 /* WelcomeBackTests */ = {
+			isa = PBXGroup;
+			children = (
+				T002AA0000000000000000001 /* MemoryTests.swift */,
+				T002AA0000000000000000002 /* FamilyMemberTests.swift */,
+				T002AA0000000000000000003 /* UserProfileTests.swift */,
+				T002AA0000000000000000004 /* AppViewModelTests.swift */,
+				T002AA0000000000000000005 /* GeminiServiceTests.swift */,
+				T002AA0000000000000000006 /* PlaybackViewModelTests.swift */,
+			);
+			path = WelcomeBackTests;
 			sourceTree = "<group>";
 		};
 		0B822AB8ABC64A07BA47C3B4 = {
 			isa = PBXGroup;
 			children = (
 				2057BA6F46724B71A613E6DB /* WelcomeBack */,
+				T006AA0000000000000000001 /* WelcomeBackTests */,
 				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -235,6 +284,23 @@
 			productReference = AFFB626B53B843ABACAD5923 /* WelcomeBack.app */;
 			productType = "com.apple.product-type.application";
 		};
+		T007AA0000000000000000001 /* WelcomeBackTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = T008AA0000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackTests" */;
+			buildPhases = (
+				T009AA0000000000000000001 /* Sources */,
+				T005AA0000000000000000001 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				T010AA0000000000000000001 /* PBXTargetDependency */,
+			);
+			name = WelcomeBackTests;
+			productName = WelcomeBackTests;
+			productReference = T004AA0000000000000000001 /* WelcomeBackTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -247,6 +313,10 @@
 				TargetAttributes = {
 					15282737539D469CAF4A24B5 = {
 						CreatedOnToolsVersion = 15.4;
+					};
+					T007AA0000000000000000001 = {
+						CreatedOnToolsVersion = 15.4;
+						TestTargetID = 15282737539D469CAF4A24B5;
 					};
 				};
 			};
@@ -264,6 +334,7 @@
 			projectRoot = "";
 			targets = (
 				15282737539D469CAF4A24B5 /* WelcomeBack */,
+				T007AA0000000000000000001 /* WelcomeBackTests */,
 			);
 		};
 /* End PBXProject section */
@@ -304,7 +375,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		T009AA0000000000000000001 /* Sources (Tests) */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				T001AA0000000000000000001 /* MemoryTests.swift in Sources */,
+				T001AA0000000000000000002 /* FamilyMemberTests.swift in Sources */,
+				T001AA0000000000000000003 /* UserProfileTests.swift in Sources */,
+				T001AA0000000000000000004 /* AppViewModelTests.swift in Sources */,
+				T001AA0000000000000000005 /* GeminiServiceTests.swift in Sources */,
+				T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		T010AA0000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 15282737539D469CAF4A24B5 /* WelcomeBack */;
+			targetProxy = T003AA0000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3E2AADFDDECE49C2847688BX /* Debug */ = {
@@ -473,6 +565,42 @@
 			};
 			name = Release;
 		};
+		T011AA0000000000000000001 /* Debug (Tests) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WelcomeBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WelcomeBack";
+			};
+			name = Debug;
+		};
+		T011AA0000000000000000002 /* Release (Tests) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WelcomeBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WelcomeBack";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -490,6 +618,15 @@
 			buildConfigurations = (
 				AFFB626B53B843ABACAD592X /* Debug */,
 				591463A43A7347799042A51X /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		T008AA0000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				T011AA0000000000000000001 /* Debug */,
+				T011AA0000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
