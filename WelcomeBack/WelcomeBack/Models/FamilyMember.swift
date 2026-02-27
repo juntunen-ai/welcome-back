@@ -1,0 +1,44 @@
+import Foundation
+
+struct FamilyMember: Identifiable, Codable {
+    let id: String
+    var name: String
+    var relationship: String
+    var imageURL: String
+    var isVoiceCloned: Bool
+    var voiceProfileID: String?
+}
+
+// MARK: - Mock Data
+extension FamilyMember {
+    static let mockData: [FamilyMember] = [
+        FamilyMember(
+            id: "1",
+            name: "Jane",
+            relationship: "Daughter",
+            imageURL: "family_jane",
+            isVoiceCloned: true
+        ),
+        FamilyMember(
+            id: "2",
+            name: "Michael",
+            relationship: "Son",
+            imageURL: "family_michael",
+            isVoiceCloned: false
+        ),
+        FamilyMember(
+            id: "3",
+            name: "Susan",
+            relationship: "Wife",
+            imageURL: "family_susan",
+            isVoiceCloned: true
+        ),
+        FamilyMember(
+            id: "4",
+            name: "Emily",
+            relationship: "Grandchild",
+            imageURL: "family_emily",
+            isVoiceCloned: true
+        )
+    ]
+}
