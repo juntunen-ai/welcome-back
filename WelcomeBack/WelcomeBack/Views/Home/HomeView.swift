@@ -122,7 +122,7 @@ struct HomeView: View {
                         .foregroundColor(.accentYellow)
                 )
 
-            Text("Say something like \"Tell me about my wedding day\" or \"Who is Susan?\"")
+            Text("Say something like \"Tell me about my wedding day\" or \"Who is Anna?\"")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.onSurface.opacity(0.8))
                 .fixedSize(horizontal: false, vertical: true)

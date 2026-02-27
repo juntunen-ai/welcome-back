@@ -26,7 +26,7 @@ final class FamilyMemberTests: XCTestCase {
     func test_familyMember_withVoiceProfile_storesID() {
         let member = FamilyMember(
             id: "1",
-            name: "Jane",
+            name: "Helmi",
             relationship: "Daughter",
             imageURL: "family_jane",
             isVoiceCloned: true,
@@ -42,7 +42,7 @@ final class FamilyMemberTests: XCTestCase {
     func test_familyMember_encodesAndDecodes() throws {
         let original = FamilyMember(
             id: "2",
-            name: "Michael",
+            name: "Toivo",
             relationship: "Son",
             imageURL: "family_michael",
             isVoiceCloned: false
@@ -60,7 +60,7 @@ final class FamilyMemberTests: XCTestCase {
     func test_familyMember_encodesAndDecodes_withVoiceProfileID() throws {
         let original = FamilyMember(
             id: "3",
-            name: "Susan",
+            name: "Anna",
             relationship: "Wife",
             imageURL: "family_susan",
             isVoiceCloned: true,
@@ -92,13 +92,13 @@ final class FamilyMemberTests: XCTestCase {
 
     func test_mockData_expectedVoiceClonedCount() {
         let cloned = FamilyMember.mockData.filter(\.isVoiceCloned)
-        // Jane, Susan, Emily are voice cloned; Michael is not
+        // Helmi, Anna, Emily are voice cloned; Toivo is not
         XCTAssertEqual(cloned.count, 3)
     }
 
-    func test_mockData_michaelIsNotVoiceCloned() {
-        let michael = FamilyMember.mockData.first { $0.name == "Michael" }
-        XCTAssertNotNil(michael)
-        XCTAssertFalse(michael!.isVoiceCloned)
+    func test_mockData_toivoIsNotVoiceCloned() {
+        let toivo = FamilyMember.mockData.first { $0.name == "Toivo" }
+        XCTAssertNotNil(toivo)
+        XCTAssertFalse(toivo!.isVoiceCloned)
     }
 }

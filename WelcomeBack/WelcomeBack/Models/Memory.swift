@@ -21,19 +21,19 @@ extension Memory {
     static let mockData: [Memory] = [
         Memory(
             id: "1",
-            title: "Family Reunion at Lake House",
-            date: "Summer 1965",
+            title: "Our Family",
+            date: "Summer 2023",
             imageURL: "memory_lake_reunion",
             category: .family,
-            description: "A beautiful sunny day at the lake with everyone gathered."
+            description: "A wonderful day together with the whole family."
         ),
         Memory(
             id: "2",
-            title: "Granddaughter Sarah",
-            date: "March 2021",
+            title: "Our Dog Pätkis",
+            date: "Autumn 2022",
             imageURL: "memory_sarah",
             category: .family,
-            description: "Sarah visiting for the holidays."
+            description: "Pätkis, our beloved family dog."
         ),
         Memory(
             id: "3",

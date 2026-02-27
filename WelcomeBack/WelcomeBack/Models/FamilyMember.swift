@@ -14,21 +14,21 @@ extension FamilyMember {
     static let mockData: [FamilyMember] = [
         FamilyMember(
             id: "1",
-            name: "Jane",
+            name: "Helmi",
             relationship: "Daughter",
             imageURL: "family_jane",
             isVoiceCloned: true
         ),
         FamilyMember(
             id: "2",
-            name: "Michael",
+            name: "Toivo",
             relationship: "Son",
             imageURL: "family_michael",
             isVoiceCloned: false
         ),
         FamilyMember(
             id: "3",
-            name: "Susan",
+            name: "Anna",
             relationship: "Wife",
             imageURL: "family_susan",
             isVoiceCloned: true

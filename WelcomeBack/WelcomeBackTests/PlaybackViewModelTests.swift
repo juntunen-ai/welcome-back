@@ -51,7 +51,7 @@ final class PlaybackViewModelTests: XCTestCase {
     // MARK: - togglePlayback
 
     func test_togglePlayback_whenStory_togglesIsPlaying() {
-        sut.story = "Hi Harri, it's Jane."
+        sut.story = "Hi Harri, it's Helmi."
         sut.isLoading = false
 
         sut.togglePlayback()
@@ -75,7 +75,7 @@ final class PlaybackViewModelTests: XCTestCase {
     // MARK: - loadStory (with no API key — fallback path)
 
     func test_loadStory_withNoAPIKey_setsFallbackStory() async {
-        let member = FamilyMember.mockData[0] // Jane
+        let member = FamilyMember.mockData[0] // Helmi
         await sut.loadStory(for: member, userName: "Harri")
 
         XCTAssertFalse(sut.isLoading)
@@ -83,8 +83,8 @@ final class PlaybackViewModelTests: XCTestCase {
         // Should contain the user name and member name in some form
         XCTAssertTrue(
             sut.story.localizedCaseInsensitiveContains("Harri") ||
-            sut.story.localizedCaseInsensitiveContains("Jane"),
-            "Fallback story should mention Harri or Jane — got: \(sut.story)"
+            sut.story.localizedCaseInsensitiveContains("Helmi"),
+            "Fallback story should mention Harri or Helmi — got: \(sut.story)"
         )
     }
 
@@ -101,8 +101,8 @@ final class PlaybackViewModelTests: XCTestCase {
     }
 
     func test_loadStory_differentMembers_produceDifferentFallbacks() async {
-        let member1 = FamilyMember.mockData[0] // Jane
-        let member2 = FamilyMember.mockData[1] // Michael
+        let member1 = FamilyMember.mockData[0] // Helmi
+        let member2 = FamilyMember.mockData[1] // Toivo
 
         let vm1 = PlaybackViewModel()
         let vm2 = PlaybackViewModel()

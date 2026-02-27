@@ -33,13 +33,13 @@ final class GeminiServiceTests: XCTestCase {
         let json: [String: Any] = [
             "candidates": [[
                 "content": [
-                    "parts": [["text": "Hi Harri, it's Jane."]]
+                    "parts": [["text": "Hi Harri, it's Helmi."]]
                 ]
             ]]
         ]
         let data = try JSONSerialization.data(withJSONObject: json)
         let result = extractText(from: data)
-        XCTAssertEqual(result, "Hi Harri, it's Jane.")
+        XCTAssertEqual(result, "Hi Harri, it's Helmi.")
     }
 
     func test_parseResponse_multipleCandidates_usesFirst() throws {
