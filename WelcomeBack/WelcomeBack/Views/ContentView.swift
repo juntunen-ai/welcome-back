@@ -37,6 +37,10 @@ struct ContentView: View {
                 .tag(AppTab.settings)
         }
         .tint(.accentYellow)
+        .sheet(item: $appVM.selectedFamilyMember) { member in
+            PlaybackView(member: member)
+                .environmentObject(appVM)
+        }
     }
 }
 

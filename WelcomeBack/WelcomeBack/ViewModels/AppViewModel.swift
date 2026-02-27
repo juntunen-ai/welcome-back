@@ -8,7 +8,6 @@ final class AppViewModel: ObservableObject {
 
     @Published var selectedTab: AppTab = .home
     @Published var listeningSheetPresented = false
-    @Published var playbackSheetPresented = false
 
     // MARK: - Data
 
@@ -31,12 +30,10 @@ final class AppViewModel: ObservableObject {
         listeningSheetPresented = false
         // Pick a random family member to respond (prototype behaviour)
         selectedFamilyMember = userProfile.familyMembers.randomElement()
-        playbackSheetPresented = true
     }
 
     func selectFamilyMember(_ member: FamilyMember) {
         selectedFamilyMember = member
-        playbackSheetPresented = true
     }
 }
 

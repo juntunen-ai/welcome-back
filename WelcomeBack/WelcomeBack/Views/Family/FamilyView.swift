@@ -41,14 +41,6 @@ struct FamilyView: View {
                 }
             }
         }
-        .sheet(isPresented: $appVM.playbackSheetPresented, onDismiss: {
-            appVM.selectedFamilyMember = nil
-        }) {
-            if let member = appVM.selectedFamilyMember {
-                PlaybackView(member: member)
-                    .environmentObject(appVM)
-            }
-        }
     }
 
     // MARK: - Subviews

@@ -26,10 +26,6 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertFalse(sut.listeningSheetPresented)
     }
 
-    func test_initialState_playbackSheetNotPresented() {
-        XCTAssertFalse(sut.playbackSheetPresented)
-    }
-
     func test_initialState_noSelectedFamilyMember() {
         XCTAssertNil(sut.selectedFamilyMember)
     }
@@ -45,22 +41,12 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertTrue(sut.listeningSheetPresented)
     }
 
-    func test_startListening_doesNotOpenPlaybackSheet() {
-        sut.startListening()
-        XCTAssertFalse(sut.playbackSheetPresented)
-    }
-
     // MARK: - doneSpeaking
 
     func test_doneSpeaking_closesListeningSheet() {
         sut.startListening()
         sut.doneSpeaking()
         XCTAssertFalse(sut.listeningSheetPresented)
-    }
-
-    func test_doneSpeaking_opensPlaybackSheet() {
-        sut.doneSpeaking()
-        XCTAssertTrue(sut.playbackSheetPresented)
     }
 
     func test_doneSpeaking_selectsAFamilyMember() {
@@ -89,27 +75,10 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertEqual(sut.selectedFamilyMember?.id, member.id)
     }
 
-    func test_selectFamilyMember_opensPlaybackSheet() {
-        sut.selectFamilyMember(FamilyMember.mockData[0])
-        XCTAssertTrue(sut.playbackSheetPresented)
-    }
-
     func test_selectFamilyMember_selectsExactMember() {
         let member = FamilyMember.mockData.first { $0.name == "My Parents & Children" }!
         sut.selectFamilyMember(member)
         XCTAssertEqual(sut.selectedFamilyMember?.name, "My Parents & Children")
-    }
-
-    // MARK: - selectMemory
-
-    func test_selectMemory_opensPlaybackSheet() {
-        sut.selectMemory(Memory.mockData[0])
-        XCTAssertTrue(sut.playbackSheetPresented)
-    }
-
-    func test_selectMemory_selectsAFamilyMember() {
-        sut.selectMemory(Memory.mockData[0])
-        XCTAssertNotNil(sut.selectedFamilyMember)
     }
 
     // MARK: - Tab Navigation
