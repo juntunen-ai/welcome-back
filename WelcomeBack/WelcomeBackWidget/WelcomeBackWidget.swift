@@ -33,21 +33,7 @@ struct WelcomeBackWidgetView: View {
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        ZStack {
-            // Dark background
-            Color(red: 0.078, green: 0.094, blue: 0.125)
-
-            // Soft yellow glow in the centre
-            RadialGradient(
-                colors: [
-                    Color(red: 1.0, green: 0.84, blue: 0.0).opacity(0.18),
-                    Color.clear
-                ],
-                center: .center,
-                startRadius: 0,
-                endRadius: 120
-            )
-
+        Group {
             switch family {
             case .systemSmall:
                 smallLayout
@@ -59,7 +45,6 @@ struct WelcomeBackWidgetView: View {
                 largeLayout
             }
         }
-        // Deep link opens the app on tap
         .widgetURL(URL(string: "welcomeback://open"))
     }
 
@@ -67,7 +52,6 @@ struct WelcomeBackWidgetView: View {
 
     private var smallLayout: some View {
         VStack(spacing: 6) {
-            // Photo in yellow-ringed circle
             photoView(size: 72)
 
             Text("Welcome Back")
@@ -76,12 +60,9 @@ struct WelcomeBackWidgetView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            Text("Remember who\nyou are")
-                .font(.system(size: 10, weight: .medium))
+            Text("Harri")
+                .font(.system(size: 14, weight: .black))
                 .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
         }
         .padding(10)
     }
@@ -100,11 +81,6 @@ struct WelcomeBackWidgetView: View {
                 Text("Harri")
                     .font(.system(size: 26, weight: .black))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
-
-                Text("Remember who you are")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.6))
-                    .lineLimit(2)
             }
 
             Spacer()
@@ -133,10 +109,6 @@ struct WelcomeBackWidgetView: View {
                     Text("Harri")
                         .font(.system(size: 48, weight: .black))
                         .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
-
-                    Text("Remember who you are")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.white.opacity(0.55))
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, geo.size.height * 0.07)
