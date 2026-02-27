@@ -118,6 +118,7 @@ struct WelcomeBackWidgetView: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
+                    .rotationEffect(.degrees(180))
             } else {
                 Color(red: 0.2, green: 0.22, blue: 0.28)
                     .overlay(
