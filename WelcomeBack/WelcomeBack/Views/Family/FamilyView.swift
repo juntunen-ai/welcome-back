@@ -18,9 +18,6 @@ struct FamilyView: View {
                         } else {
                             familyList
                                 .padding(.horizontal, 16)
-
-                            discoveryCard
-                                .padding(.horizontal, 16)
                         }
 
                         Spacer(minLength: 24)
@@ -65,32 +62,6 @@ struct FamilyView: View {
                     }
             }
         }
-    }
-
-    private var discoveryCard: some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: "wand.and.stars")
-                .font(.system(size: 28))
-                .foregroundColor(.accentYellow)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("New Photos Found")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.accentYellow)
-
-                Text("We've identified new photos of your family members. Would you like to add them to your memories?")
-                    .font(.system(size: 14))
-                    .foregroundColor(.onSurface.opacity(0.6))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(20)
-        .background(Color.accentYellow.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(Color.accentYellow.opacity(0.2))
-        )
     }
 
     private var emptyState: some View {
