@@ -92,7 +92,7 @@ final class FamilyMemberTests: XCTestCase {
 
     func test_mockData_expectedVoiceClonedCount() {
         let cloned = FamilyMember.mockData.filter(\.isVoiceCloned)
-        // Helmi, Anna, Emily are voice cloned; Toivo is not
+        // Helmi, Anna, My Parents & Children are voice cloned; Toivo is not
         XCTAssertEqual(cloned.count, 3)
     }
 

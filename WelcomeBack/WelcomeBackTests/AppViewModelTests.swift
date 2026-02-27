@@ -95,9 +95,9 @@ final class AppViewModelTests: XCTestCase {
     }
 
     func test_selectFamilyMember_selectsExactMember() {
-        let emily = FamilyMember.mockData.first { $0.name == "Emily" }!
-        sut.selectFamilyMember(emily)
-        XCTAssertEqual(sut.selectedFamilyMember?.name, "Emily")
+        let member = FamilyMember.mockData.first { $0.name == "My Parents & Children" }!
+        sut.selectFamilyMember(member)
+        XCTAssertEqual(sut.selectedFamilyMember?.name, "My Parents & Children")
     }
 
     // MARK: - selectMemory

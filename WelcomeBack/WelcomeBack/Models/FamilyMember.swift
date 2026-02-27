@@ -35,8 +35,8 @@ extension FamilyMember {
         ),
         FamilyMember(
             id: "4",
-            name: "Emily",
-            relationship: "Grandchild",
+            name: "My Parents & Children",
+            relationship: "Family",
             imageURL: "family_emily",
             isVoiceCloned: true
         )
