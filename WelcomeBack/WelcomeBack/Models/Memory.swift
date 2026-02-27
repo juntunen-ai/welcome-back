@@ -37,19 +37,19 @@ extension Memory {
         ),
         Memory(
             id: "3",
-            title: "June 1960 Birthday",
-            date: "June 1960",
+            title: "Me and LUMI",
+            date: "",
             imageURL: "memory_birthday_1960",
-            category: .events,
-            description: "A celebration with a big blue cake."
+            category: .family,
+            description: "A special moment with LUMI."
         ),
         Memory(
             id: "4",
-            title: "The Lake",
-            date: "August 1972",
+            title: "Skiing at Karttimo",
+            date: "",
             imageURL: "memory_lake_1972",
             category: .places,
-            description: "Quiet moments by the water."
+            description: "Our cabin at Karttimo — winter days on the slopes."
         )
     ]
 }
