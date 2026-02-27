@@ -40,17 +40,6 @@ struct MusicView: View {
             .animation(.spring(response: 0.4), value: musicVM.currentTrack?.id)
             .navigationTitle("Memory Lane")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { } label: {
-                        Image(systemName: "text.badge.plus")
-                            .foregroundColor(.onSurface)
-                            .frame(width: 44, height: 44)
-                            .background(Color.surfaceVariant)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                }
-            }
         }
     }
 
