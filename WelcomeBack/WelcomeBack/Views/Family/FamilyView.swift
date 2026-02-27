@@ -3,6 +3,8 @@ import SwiftUI
 struct FamilyView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @State private var showingAddSheet = false
+    @State private var editingMemberIndex: Int? = nil
 
     var body: some View {
         NavigationStack {
@@ -30,7 +32,7 @@ struct FamilyView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // Add family member (future)
+                        showingAddSheet = true
                     } label: {
                         Image(systemName: "plus")
                             .foregroundColor(.onSurface)
@@ -40,6 +42,17 @@ struct FamilyView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingAddSheet) {
+                FamilyMemberDetailView(memberIndex: nil)
+                    .environmentObject(appVM)
+            }
+            .sheet(item: $editingMemberIndex) { index in
+                FamilyMemberDetailView(
+                    memberIndex: index,
+                    existingMember: appVM.userProfile.familyMembers[index]
+                )
+                .environmentObject(appVM)
+            }
         }
     }
 
@@ -47,10 +60,10 @@ struct FamilyView: View {
 
     private var familyList: some View {
         VStack(spacing: 12) {
-            ForEach(appVM.familyMembers) { member in
+            ForEach(Array(appVM.familyMembers.enumerated()), id: \.element.id) { index, member in
                 FamilyMemberRowView(member: member)
                     .onTapGesture {
-                        appVM.selectFamilyMember(member)
+                        editingMemberIndex = index
                     }
             }
         }
@@ -132,6 +145,12 @@ struct FamilyMemberRowView: View {
                 .strokeBorder(Color.white.opacity(0.05))
         )
     }
+}
+
+// MARK: - Helpers
+
+extension Int: @retroactive Identifiable {
+    public var id: Int { self }
 }
 
 #Preview {

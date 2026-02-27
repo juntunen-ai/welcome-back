@@ -4,6 +4,7 @@ struct PersonalInfoView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var editingMemberIndex: Int? = nil
 
     var body: some View {
         ZStack {
@@ -22,6 +23,13 @@ struct PersonalInfoView: View {
         .navigationTitle("Personal Info")
         .navigationBarTitleDisplayMode(.large)
         .scrollDismissesKeyboard(.interactively)
+        .sheet(item: $editingMemberIndex) { index in
+            FamilyMemberDetailView(
+                memberIndex: index,
+                existingMember: appVM.userProfile.familyMembers[index]
+            )
+            .environmentObject(appVM)
+        }
     }
 
     // MARK: - Sections
@@ -124,37 +132,44 @@ struct PersonalInfoView: View {
     }
 
     private func familyRow(index: Int, member: FamilyMember) -> some View {
-        HStack(spacing: 14) {
-            // Photo thumbnail
-            Group {
-                if let uiImage = UIImage(named: member.imageURL) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 36, height: 36)
-                        .clipped()
-                } else {
-                    Color.surfaceVariant
-                        .frame(width: 36, height: 36)
-                        .overlay(Image(systemName: "person.fill")
-                            .foregroundColor(.onSurface.opacity(0.4)))
+        Button { editingMemberIndex = index } label: {
+            HStack(spacing: 14) {
+                // Photo thumbnail
+                Group {
+                    if let uiImage = UIImage(named: member.imageURL) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 36, height: 36)
+                            .clipped()
+                    } else {
+                        Color.surfaceVariant
+                            .frame(width: 36, height: 36)
+                            .overlay(Image(systemName: "person.fill")
+                                .foregroundColor(.onSurface.opacity(0.4)))
+                    }
                 }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            VStack(alignment: .leading, spacing: 2) {
-                TextField("Name", text: $appVM.userProfile.familyMembers[index].name)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.onSurface)
-                TextField("Relationship", text: $appVM.userProfile.familyMembers[index].relationship)
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.55))
-            }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(member.name.isEmpty ? "Unnamed" : member.name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.onSurface)
+                    Text(member.relationship.isEmpty ? "Relationship" : member.relationship)
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.55))
+                }
 
-            Spacer()
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.onSurface.opacity(0.2))
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .buttonStyle(.plain)
     }
 
     // MARK: - Utility

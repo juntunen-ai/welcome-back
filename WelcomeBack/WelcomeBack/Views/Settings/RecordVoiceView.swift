@@ -3,6 +3,7 @@ import SwiftUI
 struct RecordVoiceView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @State private var editingMemberIndex: Int? = nil
 
     var body: some View {
         ZStack {
@@ -20,6 +21,13 @@ struct RecordVoiceView: View {
         }
         .navigationTitle("Record Voice")
         .navigationBarTitleDisplayMode(.large)
+        .sheet(item: $editingMemberIndex) { index in
+            FamilyMemberDetailView(
+                memberIndex: index,
+                existingMember: appVM.userProfile.familyMembers[index]
+            )
+            .environmentObject(appVM)
+        }
     }
 
     // MARK: - Header
@@ -53,7 +61,8 @@ struct RecordVoiceView: View {
             ForEach(Array(appVM.userProfile.familyMembers.enumerated()), id: \.element.id) { index, member in
                 RecordVoiceMemberRow(
                     member: member,
-                    isRecorded: $appVM.userProfile.familyMembers[index].isVoiceCloned
+                    isRecorded: $appVM.userProfile.familyMembers[index].isVoiceCloned,
+                    onTap: { editingMemberIndex = index }
                 )
             }
         }
@@ -66,10 +75,10 @@ struct RecordVoiceMemberRow: View {
 
     let member: FamilyMember
     @Binding var isRecorded: Bool
-    @State private var showingRecordSheet = false
+    let onTap: () -> Void
 
     var body: some View {
-        Button { showingRecordSheet = true } label: {
+        Button { onTap() } label: {
             HStack(spacing: 16) {
                 // Photo
                 Group {
@@ -144,122 +153,6 @@ struct RecordVoiceMemberRow: View {
             )
         }
         .buttonStyle(.plain)
-        .sheet(isPresented: $showingRecordSheet) {
-            RecordVoiceSheetView(memberName: member.name, isRecorded: $isRecorded)
-        }
-    }
-}
-
-// MARK: - Record sheet (placeholder)
-
-struct RecordVoiceSheetView: View {
-
-    let memberName: String
-    @Binding var isRecorded: Bool
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var isSimulatingRecord = false
-    @State private var progress: Double = 0
-    private let recordDuration: Double = 5
-
-    var body: some View {
-        ZStack {
-            Color.backgroundDark.ignoresSafeArea()
-
-            VStack(spacing: 32) {
-                Capsule()
-                    .fill(Color.white.opacity(0.2))
-                    .frame(width: 40, height: 4)
-                    .padding(.top, 12)
-
-                Text("Record \(memberName)'s Voice")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.onSurface)
-
-                Text("Ask \(memberName) to read the phrase below clearly into the microphone.")
-                    .font(.system(size: 14))
-                    .foregroundColor(.onSurface.opacity(0.6))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-
-                // Prompt card
-                Text("\"Hi \(memberName.components(separatedBy: " ").first ?? memberName), I love you and I'm always here for you.\"")
-                    .font(.system(size: 17, weight: .medium, design: .serif))
-                    .foregroundColor(.onSurface)
-                    .multilineTextAlignment(.center)
-                    .padding(20)
-                    .background(Color.surfaceVariant.opacity(0.5))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal, 24)
-
-                // Mic visualiser
-                ZStack {
-                    Circle()
-                        .fill(isSimulatingRecord ? Color.red.opacity(0.15) : Color.surfaceVariant.opacity(0.3))
-                        .frame(width: 110, height: 110)
-                        .scaleEffect(isSimulatingRecord ? 1.15 : 1.0)
-                        .animation(isSimulatingRecord
-                            ? .easeInOut(duration: 0.7).repeatForever(autoreverses: true)
-                            : .default, value: isSimulatingRecord)
-
-                    Circle()
-                        .fill(isSimulatingRecord ? Color.red : Color.surfaceVariant.opacity(0.6))
-                        .frame(width: 80, height: 80)
-
-                    Image(systemName: isSimulatingRecord ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 30))
-                        .foregroundColor(isSimulatingRecord ? .white : .accentYellow)
-                }
-
-                if isSimulatingRecord {
-                    ProgressView(value: progress)
-                        .tint(.accentYellow)
-                        .padding(.horizontal, 48)
-                }
-
-                Button {
-                    if isSimulatingRecord {
-                        // Stop early — mark as recorded
-                        isSimulatingRecord = false
-                        isRecorded = true
-                        dismiss()
-                    } else {
-                        startRecording()
-                    }
-                } label: {
-                    Text(isSimulatingRecord ? "Stop Recording" : "Start Recording")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(isSimulatingRecord ? .white : .backgroundDark)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(isSimulatingRecord ? Color.red : Color.accentYellow)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .padding(.horizontal, 24)
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
-            }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
-    }
-
-    private func startRecording() {
-        isSimulatingRecord = true
-        progress = 0
-
-        // Simulate recording progress
-        let step = 0.05
-        Timer.scheduledTimer(withTimeInterval: recordDuration * step, repeats: true) { timer in
-            progress += step
-            if progress >= 1.0 {
-                timer.invalidate()
-                isSimulatingRecord = false
-                isRecorded = true
-                dismiss()
-            }
-        }
     }
 }
 

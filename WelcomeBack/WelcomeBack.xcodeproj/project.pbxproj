@@ -13,6 +13,7 @@
 		CAR001000000000000000001 /* MemoryCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAR002000000000000000001 /* MemoryCarouselView.swift */; };
 		38ABF02D442148B7AD863466 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76343AB596AD4B76B1119451 /* Colors.swift */; };
 		41365669B934429CBCA5F6A5 /* LiveSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2663102EF4682ACD4795F /* LiveSessionState.swift */; };
+		FM001000000000000000001 /* FamilyMemberDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FM002000000000000000001 /* FamilyMemberDetailView.swift */; };
 		B89C9A45AFC5415E96101AD8 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */; };
 		C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */; };
 		45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BA50C87DF43E190C6BF96 /* GeminiService.swift */; };
@@ -78,6 +79,7 @@
 		7259413FA8F24BA9950D9980 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		76343AB596AD4B76B1119451 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		2AD2663102EF4682ACD4795F /* LiveSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionState.swift; sourceTree = "<group>"; };
+		FM002000000000000000001 /* FamilyMemberDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberDetailView.swift; sourceTree = "<group>"; };
 		215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
 		23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionViewModel.swift; sourceTree = "<group>"; };
 		983BA50C87DF43E190C6BF96 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
@@ -295,6 +297,7 @@
 			isa = PBXGroup;
 			children = (
 				B1A7AC45DE64420D84C56C35 /* FamilyView.swift */,
+				FM002000000000000000001 /* FamilyMemberDetailView.swift */,
 			);
 			path = Family;
 			sourceTree = "<group>";
@@ -478,6 +481,7 @@
 				27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */,
 				CAR001000000000000000001 /* MemoryCarouselView.swift in Sources */,
 				E969761872CB48C986337B81 /* FamilyView.swift in Sources */,
+				FM001000000000000000001 /* FamilyMemberDetailView.swift in Sources */,
 				F00D1E1EFFED4B138C82C702 /* MusicView.swift in Sources */,
 				9C309B4373B443F999011B83 /* SettingsView.swift in Sources */,
 				SE001000000000000000001 /* PersonalInfoView.swift in Sources */,
