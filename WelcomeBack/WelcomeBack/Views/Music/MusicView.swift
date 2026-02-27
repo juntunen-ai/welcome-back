@@ -54,49 +54,87 @@ struct MusicView: View {
         }
     }
 
-    // MARK: - AI Radio Card
+    // MARK: - Memory Lane Card
 
     private var aiRadioCard: some View {
         VStack(spacing: 16) {
-            Circle()
-                .fill(Color.accentYellow)
-                .frame(width: 64, height: 64)
-                .overlay(
-                    Image(systemName: "wand.and.stars.inverse")
-                        .font(.system(size: 28))
-                        .foregroundColor(.black)
-                )
+            // Icon — animated when playing
+            ZStack {
+                Circle()
+                    .fill(musicVM.memoryLaneIsPlaying ? Color.accentYellow : Color.accentYellow.opacity(0.15))
+                    .frame(width: 72, height: 72)
+
+                Image(systemName: musicVM.memoryLaneIsPlaying ? "waveform" : "music.note.house.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(musicVM.memoryLaneIsPlaying ? .black : .accentYellow)
+                    .symbolEffect(.variableColor.iterative, isActive: musicVM.memoryLaneIsPlaying)
+            }
 
             VStack(spacing: 6) {
-                Text("AI Radio")
+                Text("Memory Lane")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Generating a playlist of your favourite hits from the 1960s to help trigger positive memories.")
-                    .font(.system(size: 14))
-                    .foregroundColor(.onSurface.opacity(0.6))
-                    .multilineTextAlignment(.center)
+                if let error = musicVM.memoryLaneError {
+                    Text(error)
+                        .font(.system(size: 13))
+                        .foregroundColor(.red.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                } else if musicVM.memoryLaneIsPlaying, let track = musicVM.currentTrack {
+                    VStack(spacing: 2) {
+                        Text("Now playing")
+                            .font(.system(size: 12))
+                            .foregroundColor(.onSurface.opacity(0.5))
+                        Text(track.title)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.accentYellow)
+                            .lineLimit(1)
+                        Text(track.artistName)
+                            .font(.system(size: 12))
+                            .foregroundColor(.onSurface.opacity(0.6))
+                            .lineLimit(1)
+                    }
+                } else {
+                    Text(musicVM.memoryLaneTrackCount > 0
+                         ? "Plays your \(musicVM.memoryLaneTrackCount) favourite songs, shuffled — to bring back familiar memories."
+                         : "Plays your favourite songs to bring back familiar memories.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.onSurface.opacity(0.6))
+                        .multilineTextAlignment(.center)
+                }
             }
 
+            // Play / Stop button
             Button {
-                // Start therapy session (future)
+                if musicVM.memoryLaneIsPlaying {
+                    musicVM.stopMemoryLane()
+                } else {
+                    musicVM.startMemoryLane()
+                }
             } label: {
-                Label("Start Therapy Session", systemImage: "play.circle.fill")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(Color.accentYellow)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                Label(
+                    musicVM.memoryLaneIsPlaying ? "Stop" : "Play Memory Lane",
+                    systemImage: musicVM.memoryLaneIsPlaying ? "stop.fill" : "play.circle.fill"
+                )
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(musicVM.memoryLaneIsPlaying ? Color.red.opacity(0.85) : Color.accentYellow)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .disabled(musicVM.authorizationStatus != .authorized)
         }
         .padding(24)
-        .background(Color.accentYellow.opacity(0.1))
+        .background(Color.accentYellow.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 28))
         .overlay(
             RoundedRectangle(cornerRadius: 28)
-                .strokeBorder(Color.accentYellow.opacity(0.2))
+                .strokeBorder(
+                    musicVM.memoryLaneIsPlaying ? Color.accentYellow.opacity(0.5) : Color.accentYellow.opacity(0.2)
+                )
         )
+        .animation(.easeInOut(duration: 0.3), value: musicVM.memoryLaneIsPlaying)
     }
 
     // MARK: - Apple Music Section (state-driven)
