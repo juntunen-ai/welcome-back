@@ -131,15 +131,17 @@ struct MemoryTileView: View {
 
             // Labels
             VStack(alignment: .leading, spacing: 2) {
-                Text(memory.date.uppercased())
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(1.5)
-                    .foregroundColor(.accentYellow)
+                if !memory.date.isEmpty {
+                    Text(memory.date.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(1.5)
+                        .foregroundColor(.accentYellow)
+                }
 
                 Text(memory.title)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.white)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 16)

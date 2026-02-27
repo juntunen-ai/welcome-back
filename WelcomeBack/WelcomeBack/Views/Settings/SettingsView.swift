@@ -17,6 +17,7 @@ struct SettingsView: View {
                 }
                 .scrollContentBackground(.hidden)
                 .listStyle(.insetGrouped)
+                .listRowSeparatorTint(Color.white.opacity(0.07))
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
@@ -103,6 +104,7 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
         }
+        .listRowBackground(Color.clear)
     }
 }
 

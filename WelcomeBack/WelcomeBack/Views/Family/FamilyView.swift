@@ -124,21 +124,23 @@ struct FamilyMemberRowView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Photo
+            // Photo — top-aligned fill so faces show at the right position
             Group {
                 if let uiImage = UIImage(named: member.imageURL) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
+                        .frame(width: 80, height: 80)
+                        .clipped()
                 } else {
                     Color.surfaceVariant
+                        .frame(width: 80, height: 80)
                         .overlay(
                             Image(systemName: "person.fill")
                                 .foregroundColor(.onSurface.opacity(0.3))
                         )
                 }
             }
-            .frame(width: 80, height: 80)
             .clipShape(RoundedRectangle(cornerRadius: 20))
 
             // Info

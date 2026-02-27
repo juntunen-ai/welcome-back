@@ -24,9 +24,10 @@ struct PlaybackView: View {
                         playButton
                             .padding(.top, 32)
 
-                        Spacer(minLength: 48)
+                        Spacer(minLength: 64)
                     }
                     .padding(.horizontal, 24)
+                    .padding(.bottom, 16)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -57,32 +58,38 @@ struct PlaybackView: View {
     // MARK: - Subviews
 
     private var memberPhoto: some View {
-        Group {
-            if let uiImage = UIImage(named: member.imageURL) {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                // Personalised placeholder: initials on a gradient
-                ZStack {
-                    LinearGradient(
-                        colors: [Color.surfaceVariant, Color.surface],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Text(member.name.prefix(1))
-                        .font(.system(size: 100, weight: .black))
-                        .foregroundColor(.onSurface.opacity(0.15))
+        GeometryReader { geo in
+            let width = min(geo.size.width, 380)
+            let height = width * 1.25
+
+            Group {
+                if let uiImage = UIImage(named: member.imageURL) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ZStack {
+                        LinearGradient(
+                            colors: [Color.surfaceVariant, Color.surface],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        Text(member.name.prefix(1))
+                            .font(.system(size: 100, weight: .black))
+                            .foregroundColor(.onSurface.opacity(0.15))
+                    }
                 }
             }
+            .frame(width: width, height: height)
+            .clipShape(RoundedRectangle(cornerRadius: 40))
+            .overlay(
+                RoundedRectangle(cornerRadius: 40)
+                    .strokeBorder(Color.surfaceVariant, lineWidth: 4)
+            )
+            .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
+            .frame(maxWidth: .infinity)
         }
-        .frame(width: 340, height: 425)
-        .clipShape(RoundedRectangle(cornerRadius: 40))
-        .overlay(
-            RoundedRectangle(cornerRadius: 40)
-                .strokeBorder(Color.surfaceVariant, lineWidth: 4)
-        )
-        .shadow(color: .black.opacity(0.5), radius: 24, y: 12)
+        .aspectRatio(0.8, contentMode: .fit)
     }
 
     private var storySection: some View {

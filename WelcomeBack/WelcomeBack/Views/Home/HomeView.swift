@@ -13,19 +13,19 @@ struct HomeView: View {
 
             VStack(spacing: 0) {
                 heroSection
-                    .padding(.top, 60)
+                    .padding(.top, 24)
 
-                Spacer()
+                Spacer(minLength: 16)
 
                 micButton
-                    .padding(.bottom, 40)
 
-                Spacer()
+                Spacer(minLength: 16)
 
                 hintCard
                     .padding(.horizontal, 24)
-                    .padding(.bottom, 32)
+                    .padding(.bottom, 24)
             }
+            .padding(.top, 8)
         }
         .onAppear { startPulse() }
         .sheet(isPresented: $appVM.listeningSheetPresented) {
