@@ -22,6 +22,10 @@ struct FamilyView: View {
                                 .padding(.horizontal, 16)
                         }
 
+                        addMemberButton
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
+
                         Spacer(minLength: 24)
                     }
                     .padding(.top, 8)
@@ -29,19 +33,6 @@ struct FamilyView: View {
             }
             .navigationTitle("Family")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingAddSheet = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundColor(.onSurface)
-                            .frame(width: 44, height: 44)
-                            .background(Color.surfaceVariant)
-                            .clipShape(Circle())
-                    }
-                }
-            }
             .sheet(isPresented: $showingAddSheet) {
                 FamilyMemberDetailView(memberIndex: nil)
                     .environmentObject(appVM)
@@ -69,6 +60,25 @@ struct FamilyView: View {
         }
     }
 
+    private var addMemberButton: some View {
+        Button {
+            showingAddSheet = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20))
+                Text("Add member")
+                    .font(.system(size: 17, weight: .semibold))
+            }
+            .foregroundColor(.backgroundDark)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.accentYellow)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
+    }
+
     private var emptyState: some View {
         VStack(spacing: 16) {
             Image(systemName: "person.3")
@@ -80,7 +90,7 @@ struct FamilyView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Tap + to add your first family member")
+                Text("Tap \"Add member\" to get started")
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
             }
