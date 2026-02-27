@@ -1,12 +1,16 @@
+import MusicKit
 import SwiftUI
 
 struct MusicView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @StateObject private var musicVM = MusicViewModel()
+
+    private let albumColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
 
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .bottom) {
                 Color.backgroundDark.ignoresSafeArea()
 
                 ScrollView {
@@ -15,22 +19,32 @@ struct MusicView: View {
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
 
-                        connectedServicesSection
+                        appleMusicSection
                             .padding(.horizontal, 16)
 
                         memoryMixesSection
                             .padding(.horizontal, 16)
 
-                        Spacer(minLength: 24)
+                        // Extra bottom padding so now-playing bar doesn't obscure content
+                        Spacer(minLength: musicVM.currentAlbum != nil ? 100 : 24)
                     }
                 }
+
+                // Now-playing bar slides up from bottom when music is active
+                if let album = musicVM.currentAlbum {
+                    NowPlayingBar(album: album, isPlaying: musicVM.isPlaying) {
+                        musicVM.togglePlayback()
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
+            .animation(.spring(response: 0.4), value: musicVM.currentAlbum?.id)
             .navigationTitle("Therapeutic Music")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // Add playlist action (future)
+                        // Future: add playlist action
                     } label: {
                         Image(systemName: "text.badge.plus")
                             .foregroundColor(.onSurface)
@@ -43,7 +57,7 @@ struct MusicView: View {
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - AI Radio Card
 
     private var aiRadioCard: some View {
         VStack(spacing: 16) {
@@ -88,53 +102,72 @@ struct MusicView: View {
         )
     }
 
-    private var connectedServicesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Connected Services")
+    // MARK: - Apple Music Section (state-driven)
 
-            VStack(spacing: 12) {
-                MusicServiceRowView(
-                    icon: "music.note",
-                    title: "Spotify",
-                    subtitle: "Connected as Harri J.",
-                    color: Color(red: 0.11, green: 0.73, blue: 0.33),
-                    isConnected: true
-                )
-                MusicServiceRowView(
-                    icon: "music.note.list",
-                    title: "Apple Music",
-                    subtitle: "Link your account",
-                    color: Color(red: 0.99, green: 0.24, blue: 0.27),
-                    isConnected: false
-                )
-                MusicServiceRowView(
-                    icon: "play.rectangle.fill",
-                    title: "YouTube Music",
-                    subtitle: "Link your account",
-                    color: Color(red: 1.0, green: 0.0, blue: 0.0),
-                    isConnected: false
-                )
+    private var appleMusicSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Apple Music")
+
+            switch musicVM.authorizationStatus {
+            case .notDetermined:
+                ConnectAppleMusicCard {
+                    Task { await musicVM.requestAuthorization() }
+                }
+
+            case .denied, .restricted:
+                AppleMusicDeniedCard()
+
+            case .authorized:
+                authorizedContent
+
+            @unknown default:
+                EmptyView()
             }
         }
     }
+
+    @ViewBuilder
+    private var authorizedContent: some View {
+        if musicVM.isLoading {
+            ProgressView("Loading your music\u{2026}")
+                .tint(.accentYellow)
+                .foregroundColor(.onSurface.opacity(0.6))
+                .frame(maxWidth: .infinity, minHeight: 120)
+        } else if let error = musicVM.errorMessage {
+            Text(error)
+                .font(.system(size: 14))
+                .foregroundColor(.onSurface.opacity(0.5))
+                .multilineTextAlignment(.center)
+                .padding()
+        } else if musicVM.recentAlbums.isEmpty {
+            Text("No recently played albums found.\nStart listening in Apple Music and come back.")
+                .font(.system(size: 14))
+                .foregroundColor(.onSurface.opacity(0.5))
+                .multilineTextAlignment(.center)
+                .padding()
+        } else {
+            LazyVGrid(columns: albumColumns, spacing: 12) {
+                ForEach(musicVM.recentAlbums) { album in
+                    AlbumCard(
+                        album: album,
+                        isCurrentlyPlaying: musicVM.currentAlbum?.id == album.id && musicVM.isPlaying
+                    ) {
+                        Task { await musicVM.play(album: album) }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Memory Mixes (cosmetic placeholder)
 
     private var memoryMixesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Memory Mixes")
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MemoryMixCard(
-                    icon: "drop.fill",
-                    iconColor: .blue,
-                    title: "Summer Lake 1965",
-                    trackCount: 12
-                )
-                MemoryMixCard(
-                    icon: "birthday.cake.fill",
-                    iconColor: .orange,
-                    title: "Birthday Jams",
-                    trackCount: 8
-                )
+                MemoryMixCard(icon: "drop.fill",          iconColor: .blue,   title: "Summer Lake 1965", trackCount: 12)
+                MemoryMixCard(icon: "birthday.cake.fill", iconColor: .orange, title: "Birthday Jams",    trackCount: 8)
             }
         }
     }
@@ -148,58 +181,196 @@ struct MusicView: View {
     }
 }
 
-// MARK: - Music Service Row
+// MARK: - Connect Apple Music Card
 
-struct MusicServiceRowView: View {
-
-    let icon: String
-    let title: String
-    let subtitle: String
-    let color: Color
-    let isConnected: Bool
+struct ConnectAppleMusicCard: View {
+    let onConnect: () -> Void
 
     var body: some View {
-        HStack(spacing: 16) {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(color)
-                .frame(width: 48, height: 48)
-                .overlay(
-                    Image(systemName: icon)
-                        .foregroundColor(.white)
-                        .font(.system(size: 20))
-                )
+        VStack(spacing: 16) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 40))
+                .foregroundColor(Color(red: 0.99, green: 0.24, blue: 0.27))
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 16, weight: .bold))
+            VStack(spacing: 6) {
+                Text("Connect Apple Music")
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text(subtitle)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(isConnected ? .accentYellow : .onSurface.opacity(0.5))
+                Text("Listen to your favourite songs and albums from your Apple Music library.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.onSurface.opacity(0.6))
+                    .multilineTextAlignment(.center)
             }
 
-            Spacer()
-
-            Button {
-                // Settings / Link action (future)
-            } label: {
-                Text(isConnected ? "Settings" : "Link")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(isConnected ? .onSurface.opacity(0.4) : .onSurface)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(isConnected ? Color.surfaceVariant : Color.onSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            Button(action: onConnect) {
+                Text("Connect")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.accentYellow)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
             }
         }
-        .padding(16)
+        .padding(24)
         .background(Color.surfaceVariant.opacity(0.4))
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .overlay(
             RoundedRectangle(cornerRadius: 24)
                 .strokeBorder(Color.white.opacity(0.05))
         )
+    }
+}
+
+// MARK: - Denied / Restricted Card
+
+struct AppleMusicDeniedCard: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 28))
+                .foregroundColor(.onSurface.opacity(0.3))
+
+            Text("Apple Music access was denied.\nPlease enable it in Settings \u{203A} Privacy \u{203A} Media & Apple Music.")
+                .font(.system(size: 13))
+                .foregroundColor(.onSurface.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(Color.surfaceVariant.opacity(0.3))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+    }
+}
+
+// MARK: - Album Card
+
+struct AlbumCard: View {
+    let album: Album
+    let isCurrentlyPlaying: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 6) {
+                artworkView
+                    .frame(maxWidth: .infinity)
+                    .aspectRatio(1, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(isCurrentlyPlaying ? Color.accentYellow : Color.clear, lineWidth: 2)
+                    )
+                    .overlay(alignment: .bottomTrailing) {
+                        if isCurrentlyPlaying {
+                            Image(systemName: "waveform")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.black)
+                                .padding(5)
+                                .background(Color.accentYellow)
+                                .clipShape(RoundedRectangle(cornerRadius: 5))
+                                .padding(6)
+                        }
+                    }
+
+                Text(album.title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.onSurface)
+                    .lineLimit(1)
+
+                Text(album.artistName)
+                    .font(.system(size: 10))
+                    .foregroundColor(.onSurface.opacity(0.5))
+                    .lineLimit(1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private var artworkView: some View {
+        if let artworkURL = album.artwork?.url(width: 200, height: 200) {
+            AsyncImage(url: artworkURL) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().scaledToFill()
+                default:
+                    artworkPlaceholder
+                }
+            }
+        } else {
+            artworkPlaceholder
+        }
+    }
+
+    private var artworkPlaceholder: some View {
+        Rectangle()
+            .fill(Color.surfaceVariant)
+            .overlay(
+                Image(systemName: "music.note")
+                    .foregroundColor(.onSurface.opacity(0.3))
+            )
+    }
+}
+
+// MARK: - Now Playing Bar
+
+struct NowPlayingBar: View {
+    let album: Album
+    let isPlaying: Bool
+    let onToggle: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Artwork thumbnail
+            Group {
+                if let artworkURL = album.artwork?.url(width: 80, height: 80) {
+                    AsyncImage(url: artworkURL) { phase in
+                        if case .success(let image) = phase {
+                            image.resizable().scaledToFill()
+                        } else {
+                            Color.surfaceVariant
+                        }
+                    }
+                } else {
+                    Color.surfaceVariant
+                }
+            }
+            .frame(width: 44, height: 44)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(album.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.onSurface)
+                    .lineLimit(1)
+
+                Text(album.artistName)
+                    .font(.system(size: 11))
+                    .foregroundColor(.onSurface.opacity(0.6))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            Button(action: onToggle) {
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(.black)
+                    .frame(width: 44, height: 44)
+                    .background(Color.accentYellow)
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.4), radius: 16, y: -4)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
     }
 }
 

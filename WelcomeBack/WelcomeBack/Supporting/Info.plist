@@ -47,6 +47,8 @@
 	<string>Welcome Back accesses your photo library to display and add memory photos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Welcome Back saves captured photos to your photo library.</string>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Welcome Back uses Apple Music to play familiar songs from your past, helping to trigger positive memories and feelings of comfort.</string>
 
 	<!-- Gemini API key — replace with your real key or use a secrets manager -->
 	<key>GEMINI_API_KEY</key>

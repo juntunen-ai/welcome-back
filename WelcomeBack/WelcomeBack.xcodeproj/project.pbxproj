@@ -34,6 +34,8 @@
 		T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000006 /* PlaybackViewModelTests.swift */; };
 		/* WelcomeBack.app linked into test target */
 		T001AA0000000000000000010 /* WelcomeBack.app in Frameworks */ = {isa = PBXBuildFile; fileRef = AFFB626B53B843ABACAD5923 /* WelcomeBack.app */; };
+		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
+		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,6 +77,8 @@
 		T002AA0000000000000000004 /* AppViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModelTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
+		BB001MUSICKIT0000001 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
+		BB001MUSICVM0000001 /* MusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,6 +129,7 @@
 			children = (
 				A06FA49070CC404EA37C543E /* AppViewModel.swift */,
 				29100E5723B2440287B86994 /* PlaybackViewModel.swift */,
+				BB001MUSICVM0000001 /* MusicViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -261,7 +267,16 @@
 				2057BA6F46724B71A613E6DB /* WelcomeBack */,
 				T006AA0000000000000000001 /* WelcomeBackTests */,
 				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
+				BB001FRAMEWORKS0000001 /* Frameworks */,
 			);
+			sourceTree = "<group>";
+		};
+		BB001FRAMEWORKS0000001 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BB001MUSICKIT0000001 /* MusicKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -370,6 +385,7 @@
 				150F7B3F557940EA90CA8901 /* UserProfile.swift in Sources */,
 				1F7BD671EB4442D0AEF5D8CE /* AppViewModel.swift in Sources */,
 				CD08A9AB62BF4F9797B044D6 /* PlaybackViewModel.swift in Sources */,
+				BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */,
 				45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */,
 				7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */,
 			);
