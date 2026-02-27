@@ -41,31 +41,10 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         Section {
-            // Model picker
-            HStack {
-                Label {
-                    Text("Core Model")
-                        .foregroundColor(.onSurface)
-                } icon: {
-                    Image(systemName: "cpu.fill")
-                        .foregroundColor(.purple)
-                }
-
-                Spacer()
-
-                Picker("", selection: $appVM.userProfile.preferredAIModel) {
-                    ForEach(AIModel.allCases, id: \.self) { model in
-                        Text(model.rawValue).tag(model)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(.accentYellow)
-            }
-
             SettingsRowView(
                 icon: "waveform.badge.mic",
                 iconColor: .accentYellow,
-                title: "Voice Cloning",
+                title: "Record Voice",
                 subtitle: "\(appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count) active personalities",
                 hasToggle: true,
                 toggleBinding: $appVM.userProfile.isVoiceCloningEnabled
@@ -81,7 +60,6 @@ struct SettingsView: View {
 
     private var systemSection: some View {
         Section {
-            SettingsRowView(icon: "moon.fill", iconColor: .indigo, title: "Display", subtitle: "Dark mode")
             SettingsRowView(icon: "info.circle.fill", iconColor: .gray, title: "About", subtitle: "Version 1.0.0")
         } header: {
             Text("System")
