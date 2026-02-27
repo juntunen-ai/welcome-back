@@ -20,7 +20,9 @@ final class MemoryCarouselViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+        // Permission was already requested by MemoriesView on appear.
+        // Just read the current status — no dialog, no navigation disruption.
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         authStatus = status
 
         guard status == .authorized || status == .limited else {

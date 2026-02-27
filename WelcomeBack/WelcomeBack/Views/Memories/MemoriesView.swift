@@ -1,11 +1,13 @@
 import SwiftUI
+import Photos
 
 struct MemoriesView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @State private var navPath: [Memory] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navPath) {
             ZStack {
                 Color.backgroundDark.ignoresSafeArea()
 
@@ -44,6 +46,10 @@ struct MemoriesView: View {
             .navigationDestination(for: Memory.self) { memory in
                 MemoryCarouselView(memory: memory)
             }
+            // Request photo permission early so it never fires mid-navigation
+            .task {
+                _ = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+            }
         }
     }
 
@@ -59,24 +65,18 @@ struct MemoriesView: View {
             ForEach(Array(stride(from: 0, to: items.count, by: 4)), id: \.self) { base in
                 // Row A: full-width hero
                 if base < items.count {
-                    NavigationLink(value: items[base]) {
-                        MemoryTileView(memory: items[base], height: 220)
-                    }
-                    .buttonStyle(.plain)
+                    MemoryTileView(memory: items[base], height: 220)
+                        .onTapGesture { navPath.append(items[base]) }
                 }
                 // Row B: two side-by-side
                 let b1 = base + 1, b2 = base + 2
                 if b1 < items.count {
                     HStack(spacing: 12) {
-                        NavigationLink(value: items[b1]) {
-                            MemoryTileView(memory: items[b1], height: 160)
-                        }
-                        .buttonStyle(.plain)
+                        MemoryTileView(memory: items[b1], height: 160)
+                            .onTapGesture { navPath.append(items[b1]) }
                         if b2 < items.count {
-                            NavigationLink(value: items[b2]) {
-                                MemoryTileView(memory: items[b2], height: 160)
-                            }
-                            .buttonStyle(.plain)
+                            MemoryTileView(memory: items[b2], height: 160)
+                                .onTapGesture { navPath.append(items[b2]) }
                         } else {
                             Color.clear
                         }
@@ -85,10 +85,8 @@ struct MemoriesView: View {
                 // Row C: full-width shorter
                 let b3 = base + 3
                 if b3 < items.count {
-                    NavigationLink(value: items[b3]) {
-                        MemoryTileView(memory: items[b3], height: 160)
-                    }
-                    .buttonStyle(.plain)
+                    MemoryTileView(memory: items[b3], height: 160)
+                        .onTapGesture { navPath.append(items[b3]) }
                 }
             }
         }
