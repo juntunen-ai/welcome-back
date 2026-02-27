@@ -52,6 +52,7 @@ struct HomeView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
+                        .rotationEffect(.degrees(180))
                 } else {
                     Color.surfaceVariant
                         .overlay(

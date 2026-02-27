@@ -172,6 +172,19 @@ final class MusicViewModel: ObservableObject {
         }
     }
 
+    func skipForward() {
+        player.skipToNextItem()
+    }
+
+    func skipBackward() {
+        // If more than 3 seconds in, restart current track; otherwise skip to previous
+        if player.currentPlaybackTime > 3 {
+            player.skipToBeginning()
+        } else {
+            player.skipToPreviousItem()
+        }
+    }
+
     func pause() {
         player.pause()
     }

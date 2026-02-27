@@ -38,7 +38,7 @@ struct MusicView: View {
                 }
             }
             .animation(.spring(response: 0.4), value: musicVM.currentTrack?.id)
-            .navigationTitle("Therapeutic Music")
+            .navigationTitle("Memory Lane")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -57,7 +57,7 @@ struct MusicView: View {
     // MARK: - Memory Lane Card
 
     private var aiRadioCard: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             // Icon — animated when playing
             ZStack {
                 Circle()
@@ -70,60 +70,90 @@ struct MusicView: View {
                     .symbolEffect(.variableColor.iterative, isActive: musicVM.memoryLaneIsPlaying)
             }
 
-            VStack(spacing: 6) {
+            // Title + inspirational copy
+            VStack(spacing: 8) {
                 Text("Memory Lane")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                if let error = musicVM.memoryLaneError {
-                    Text(error)
-                        .font(.system(size: 13))
-                        .foregroundColor(.red.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                } else if musicVM.memoryLaneIsPlaying, let track = musicVM.currentTrack {
-                    VStack(spacing: 2) {
-                        Text("Now playing")
-                            .font(.system(size: 12))
-                            .foregroundColor(.onSurface.opacity(0.5))
-                        Text(track.title)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.accentYellow)
-                            .lineLimit(1)
-                        Text(track.artistName)
-                            .font(.system(size: 12))
-                            .foregroundColor(.onSurface.opacity(0.6))
-                            .lineLimit(1)
-                    }
-                } else {
-                    Text(musicVM.memoryLaneTrackCount > 0
-                         ? "Plays your \(musicVM.memoryLaneTrackCount) favourite songs, shuffled — to bring back familiar memories."
-                         : "Plays your favourite songs to bring back familiar memories.")
-                        .font(.system(size: 14))
+                Text("Harri, these are your favorite songs.\nListen to them to remember who you are.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(Color.accentYellow.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+
+            // Now-playing info / error
+            if let error = musicVM.memoryLaneError {
+                Text(error)
+                    .font(.system(size: 13))
+                    .foregroundColor(.red.opacity(0.8))
+                    .multilineTextAlignment(.center)
+            } else if musicVM.memoryLaneIsPlaying, let track = musicVM.currentTrack {
+                VStack(spacing: 2) {
+                    Text("Now playing")
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.5))
+                    Text(track.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.accentYellow)
+                        .lineLimit(1)
+                    Text(track.artistName)
+                        .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.6))
-                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
                 }
             }
 
-            // Play / Stop button
-            Button {
-                if musicVM.memoryLaneIsPlaying {
-                    musicVM.stopMemoryLane()
-                } else {
-                    musicVM.startMemoryLane()
+            // Playback controls: skip back | play/stop | skip forward
+            HStack(spacing: 24) {
+                // Skip back
+                Button {
+                    musicVM.skipBackward()
+                } label: {
+                    Image(systemName: "backward.fill")
+                        .font(.system(size: 26))
+                        .foregroundColor(musicVM.memoryLaneIsPlaying ? .onSurface : .onSurface.opacity(0.3))
+                        .frame(width: 56, height: 56)
+                        .background(Color.surfaceVariant.opacity(0.5))
+                        .clipShape(Circle())
                 }
-            } label: {
-                Label(
-                    musicVM.memoryLaneIsPlaying ? "Stop" : "Play Memory Lane",
-                    systemImage: musicVM.memoryLaneIsPlaying ? "stop.fill" : "play.circle.fill"
-                )
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(musicVM.memoryLaneIsPlaying ? Color.red.opacity(0.85) : Color.accentYellow)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .disabled(!musicVM.memoryLaneIsPlaying)
+                .buttonStyle(.plain)
+
+                // Play / Stop
+                Button {
+                    if musicVM.memoryLaneIsPlaying {
+                        musicVM.stopMemoryLane()
+                    } else {
+                        musicVM.startMemoryLane()
+                    }
+                } label: {
+                    Image(systemName: musicVM.memoryLaneIsPlaying ? "stop.fill" : "play.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.black)
+                        .frame(width: 72, height: 72)
+                        .background(musicVM.memoryLaneIsPlaying ? Color.red.opacity(0.85) : Color.accentYellow)
+                        .clipShape(Circle())
+                        .shadow(color: Color.accentYellow.opacity(0.3), radius: 10, y: 4)
+                }
+                .disabled(musicVM.authorizationStatus != .authorized)
+                .buttonStyle(.plain)
+
+                // Skip forward
+                Button {
+                    musicVM.skipForward()
+                } label: {
+                    Image(systemName: "forward.fill")
+                        .font(.system(size: 26))
+                        .foregroundColor(musicVM.memoryLaneIsPlaying ? .onSurface : .onSurface.opacity(0.3))
+                        .frame(width: 56, height: 56)
+                        .background(Color.surfaceVariant.opacity(0.5))
+                        .clipShape(Circle())
+                }
+                .disabled(!musicVM.memoryLaneIsPlaying)
+                .buttonStyle(.plain)
             }
-            .disabled(musicVM.authorizationStatus != .authorized)
         }
         .padding(24)
         .background(Color.accentYellow.opacity(0.08))
