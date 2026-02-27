@@ -29,77 +29,135 @@ final class MemoryCarouselViewModel: ObservableObject {
             return
         }
 
-        let keywords = searchKeywords(for: memory)
-        let assets = fetchAssets(keywords: keywords)
+        var collected: [PHAsset] = []
 
-        if assets.isEmpty {
-            // Fallback: fetch 20 most recent photos
-            let recent = fetchRecent(limit: 20)
-            photos = await loadImages(from: recent)
-        } else {
-            photos = await loadImages(from: assets)
+        // 1. Date-range search (most relevant if memory has a date)
+        if let dateRange = parseDateRange(from: memory.date) {
+            let byDate = fetchByDateRange(from: dateRange.start, to: dateRange.end)
+            collected.append(contentsOf: byDate)
         }
 
+        // 2. Album name keyword search
+        let keywords = searchKeywords(for: memory)
+        let byAlbum = fetchByAlbumKeywords(keywords)
+        for asset in byAlbum where !collected.contains(where: { $0.localIdentifier == asset.localIdentifier }) {
+            collected.append(asset)
+        }
+
+        // 3. Filename / title keyword search across all photos
+        let byFilename = fetchByFilenameKeywords(keywords)
+        for asset in byFilename where !collected.contains(where: { $0.localIdentifier == asset.localIdentifier }) {
+            collected.append(asset)
+        }
+
+        // 4. Fallback — 20 most recent photos
+        if collected.isEmpty {
+            collected = fetchRecent(limit: 20)
+        }
+
+        photos = await loadImages(from: Array(collected.prefix(30)))
         isLoading = false
     }
 
-    // MARK: - Keyword extraction
+    // MARK: - Date parsing
 
-    private func searchKeywords(for memory: Memory) -> [String] {
-        var words: [String] = []
+    /// Converts a human-readable date string like "Summer 2023" or "March 2021" into a date range.
+    private func parseDateRange(from dateString: String) -> (start: Date, end: Date)? {
+        guard !dateString.isEmpty else { return nil }
 
-        // Split title into significant words (3+ chars)
-        let titleWords = memory.title
-            .components(separatedBy: .whitespaces)
-            .filter { $0.count >= 3 }
-        words.append(contentsOf: titleWords)
+        let lower = dateString.lowercased()
+        let cal = Calendar.current
 
-        // Add category name
-        words.append(memory.category.rawValue)
+        // Extract a 4-digit year
+        guard let yearRange = dateString.range(of: #"\b(19|20)\d{2}\b"#, options: .regularExpression),
+              let year = Int(dateString[yearRange]) else { return nil }
 
-        return words
-    }
-
-    // MARK: - PHAsset fetch
-
-    private func fetchAssets(keywords: [String]) -> [PHAsset] {
-        var results: [PHAsset] = []
-
-        let options = PHFetchOptions()
-        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        options.fetchLimit = 40
-
-        // Search smart albums by title keywords
-        let albumResult = PHAssetCollection.fetchAssetCollections(
-            with: .smartAlbum, subtype: .any, options: nil
-        )
-        albumResult.enumerateObjects { collection, _, _ in
-            let name = collection.localizedTitle?.lowercased() ?? ""
-            if keywords.contains(where: { name.contains($0.lowercased()) }) {
-                let assets = PHAsset.fetchAssets(in: collection, options: options)
-                assets.enumerateObjects { asset, _, _ in
-                    if asset.mediaType == .image { results.append(asset) }
-                }
-            }
+        // Named seasons
+        let seasonRanges: [String: (Int, Int)] = [
+            "spring": (3, 5), "summer": (6, 8),
+            "autumn": (9, 11), "fall": (9, 11), "winter": (12, 2)
+        ]
+        for (name, (startMonth, endMonth)) in seasonRanges where lower.contains(name) {
+            let (sy, ey) = name == "winter" ? (year, year + 1) : (year, year)
+            guard let start = cal.date(from: DateComponents(year: sy, month: startMonth, day: 1)),
+                  let endMonth0 = cal.date(from: DateComponents(year: ey, month: endMonth, day: 1)),
+                  let end = cal.date(byAdding: DateComponents(month: 1), to: endMonth0) else { return nil }
+            return (start, end)
         }
 
-        // Also search user albums
-        let userAlbums = PHAssetCollection.fetchAssetCollections(
-            with: .album, subtype: .any, options: nil
+        // Named months
+        let months = ["january":1,"february":2,"march":3,"april":4,"may":5,"june":6,
+                      "july":7,"august":8,"september":9,"october":10,"november":11,"december":12]
+        for (name, month) in months where lower.contains(name) {
+            guard let start = cal.date(from: DateComponents(year: year, month: month, day: 1)),
+                  let end = cal.date(byAdding: DateComponents(month: 1), to: start) else { return nil }
+            return (start, end)
+        }
+
+        // Just a year — return the whole year
+        guard let start = cal.date(from: DateComponents(year: year, month: 1, day: 1)),
+              let end = cal.date(from: DateComponents(year: year + 1, month: 1, day: 1)) else { return nil }
+        return (start, end)
+    }
+
+    // MARK: - PHAsset fetch strategies
+
+    private func fetchByDateRange(from start: Date, to end: Date, limit: Int = 30) -> [PHAsset] {
+        let options = PHFetchOptions()
+        options.predicate = NSPredicate(
+            format: "mediaType = %d AND creationDate >= %@ AND creationDate < %@",
+            PHAssetMediaType.image.rawValue, start as NSDate, end as NSDate
         )
-        userAlbums.enumerateObjects { collection, _, _ in
-            let name = collection.localizedTitle?.lowercased() ?? ""
-            if keywords.contains(where: { name.contains($0.lowercased()) }) {
-                let assets = PHAsset.fetchAssets(in: collection, options: options)
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.fetchLimit = limit
+
+        var assets: [PHAsset] = []
+        let result = PHAsset.fetchAssets(with: options)
+        result.enumerateObjects { asset, _, _ in assets.append(asset) }
+        return assets
+    }
+
+    private func fetchByAlbumKeywords(_ keywords: [String], limit: Int = 20) -> [PHAsset] {
+        var results: [PHAsset] = []
+        let fetchOpts = PHFetchOptions()
+        fetchOpts.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOpts.fetchLimit = limit
+
+        for collectionType: PHAssetCollectionType in [.smartAlbum, .album] {
+            let albums = PHAssetCollection.fetchAssetCollections(with: collectionType, subtype: .any, options: nil)
+            albums.enumerateObjects { collection, _, _ in
+                let name = collection.localizedTitle?.lowercased() ?? ""
+                guard keywords.contains(where: { name.contains($0.lowercased()) }) else { return }
+                let assets = PHAsset.fetchAssets(in: collection, options: fetchOpts)
                 assets.enumerateObjects { asset, _, _ in
-                    if asset.mediaType == .image && !results.contains(where: { $0.localIdentifier == asset.localIdentifier }) {
+                    if asset.mediaType == .image &&
+                       !results.contains(where: { $0.localIdentifier == asset.localIdentifier }) {
                         results.append(asset)
                     }
                 }
             }
         }
+        return Array(results.prefix(limit))
+    }
 
-        return Array(results.prefix(20))
+    private func fetchByFilenameKeywords(_ keywords: [String], limit: Int = 20) -> [PHAsset] {
+        // Build OR predicate matching filename against each keyword
+        let predicates = keywords.map {
+            NSPredicate(format: "filename CONTAINS[cd] %@", $0)
+        }
+        guard !predicates.isEmpty else { return [] }
+
+        let options = PHFetchOptions()
+        options.predicate = NSCompoundPredicate(orPredicateWithSubpredicates: predicates)
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.fetchLimit = limit
+
+        var assets: [PHAsset] = []
+        let result = PHAsset.fetchAssets(with: options)
+        result.enumerateObjects { asset, _, _ in
+            if asset.mediaType == .image { assets.append(asset) }
+        }
+        return assets
     }
 
     private func fetchRecent(limit: Int) -> [PHAsset] {
@@ -112,6 +170,17 @@ final class MemoryCarouselViewModel: ObservableObject {
         let result = PHAsset.fetchAssets(with: .image, options: options)
         result.enumerateObjects { asset, _, _ in assets.append(asset) }
         return assets
+    }
+
+    // MARK: - Keyword extraction
+
+    private func searchKeywords(for memory: Memory) -> [String] {
+        // Split title into significant words (3+ chars), plus category
+        var words = memory.title
+            .components(separatedBy: .whitespaces)
+            .filter { $0.count >= 3 }
+        words.append(memory.category.rawValue)
+        return words
     }
 
     // MARK: - Image loading
