@@ -7,35 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
-		E4046ED6A3074741AC694A39 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B71E72C11464A6798CA4FC3 /* ContentView.swift */; };
-		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
-		F353BBAF955D422496144B7C /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */; };
-		8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7259413FA8F24BA9950D9980 /* PlaybackView.swift */; };
-		27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */; };
-		E969761872CB48C986337B81 /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7AC45DE64420D84C56C35 /* FamilyView.swift */; };
-		F00D1E1EFFED4B138C82C702 /* MusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B61E8E07414909ABD6DA65 /* MusicView.swift */; };
-		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
-		38ABF02D442148B7AD863466 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76343AB596AD4B76B1119451 /* Colors.swift */; };
-		BDE30EA8963E4970B93DF40F /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70108CE7B4714B598E18371E /* Memory.swift */; };
-		D5902CCD9A4B40B681B9E5F6 /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE8C6810B365488E95EE918D /* FamilyMember.swift */; };
 		150F7B3F557940EA90CA8901 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */; };
 		1F7BD671EB4442D0AEF5D8CE /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06FA49070CC404EA37C543E /* AppViewModel.swift */; };
-		CD08A9AB62BF4F9797B044D6 /* PlaybackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29100E5723B2440287B86994 /* PlaybackViewModel.swift */; };
+		27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */; };
+		38ABF02D442148B7AD863466 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76343AB596AD4B76B1119451 /* Colors.swift */; };
 		45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BA50C87DF43E190C6BF96 /* GeminiService.swift */; };
 		7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */; };
+		8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7259413FA8F24BA9950D9980 /* PlaybackView.swift */; };
 		966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E2AADFDDECE49C2847688B6 /* Assets.xcassets */; };
-		/* Test file references in Sources */
+		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
+		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
+		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
+		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
+		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
+		BDE30EA8963E4970B93DF40F /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70108CE7B4714B598E18371E /* Memory.swift */; };
+		CD08A9AB62BF4F9797B044D6 /* PlaybackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29100E5723B2440287B86994 /* PlaybackViewModel.swift */; };
+		D5902CCD9A4B40B681B9E5F6 /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE8C6810B365488E95EE918D /* FamilyMember.swift */; };
+		E4046ED6A3074741AC694A39 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B71E72C11464A6798CA4FC3 /* ContentView.swift */; };
+		E969761872CB48C986337B81 /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7AC45DE64420D84C56C35 /* FamilyView.swift */; };
+		F00D1E1EFFED4B138C82C702 /* MusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B61E8E07414909ABD6DA65 /* MusicView.swift */; };
+		F353BBAF955D422496144B7C /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */; };
 		T001AA0000000000000000001 /* MemoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000001 /* MemoryTests.swift */; };
 		T001AA0000000000000000002 /* FamilyMemberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000002 /* FamilyMemberTests.swift */; };
 		T001AA0000000000000000003 /* UserProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000003 /* UserProfileTests.swift */; };
 		T001AA0000000000000000004 /* AppViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000004 /* AppViewModelTests.swift */; };
 		T001AA0000000000000000005 /* GeminiServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000005 /* GeminiServiceTests.swift */; };
 		T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000006 /* PlaybackViewModelTests.swift */; };
-		/* WelcomeBack.app linked into test target */
-		T001AA0000000000000000010 /* WelcomeBack.app in Frameworks */ = {isa = PBXBuildFile; fileRef = AFFB626B53B843ABACAD5923 /* WelcomeBack.app */; };
-		BB001MUSICKIT0000002 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MediaPlayer.framework */; };
-		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,36 +46,35 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackApp.swift; sourceTree = "<group>"; };
-		3B71E72C11464A6798CA4FC3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		E003D2E11731416396E5E3C8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
-		7259413FA8F24BA9950D9980 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
-		CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesView.swift; sourceTree = "<group>"; };
-		B1A7AC45DE64420D84C56C35 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
-		E4B61E8E07414909ABD6DA65 /* MusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicView.swift; sourceTree = "<group>"; };
-		5042CD26087445D78D12F05E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		76343AB596AD4B76B1119451 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
-		70108CE7B4714B598E18371E /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
-		AE8C6810B365488E95EE918D /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
 		26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
-		A06FA49070CC404EA37C543E /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
 		29100E5723B2440287B86994 /* PlaybackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModel.swift; sourceTree = "<group>"; };
-		983BA50C87DF43E190C6BF96 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
-		C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
+		3B71E72C11464A6798CA4FC3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3E2AADFDDECE49C2847688B6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5042CD26087445D78D12F05E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		70108CE7B4714B598E18371E /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
+		7259413FA8F24BA9950D9980 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
+		76343AB596AD4B76B1119451 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		983BA50C87DF43E190C6BF96 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
+		A06FA49070CC404EA37C543E /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		AE8C6810B365488E95EE918D /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
 		AFFB626B53B843ABACAD5923 /* WelcomeBack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WelcomeBack.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		/* Test target product and source files */
-		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A7AC45DE64420D84C56C35 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
+		BB001MUSICKIT0000001 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
+		BB001MUSICVM0000001 /* MusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicViewModel.swift; sourceTree = "<group>"; };
+		C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesView.swift; sourceTree = "<group>"; };
+		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E003D2E11731416396E5E3C8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		E4B61E8E07414909ABD6DA65 /* MusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicView.swift; sourceTree = "<group>"; };
+		F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackApp.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000001 /* MemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000002 /* FamilyMemberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000003 /* UserProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000004 /* AppViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModelTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
-		BB001MUSICKIT0000001 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
-		BB001MUSICVM0000001 /* MusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicViewModel.swift; sourceTree = "<group>"; };
+		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -86,11 +82,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB001MUSICKIT0000002 /* MediaPlayer.framework in Frameworks */,
+				BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		T005AA0000000000000000001 /* Frameworks (Tests) */ = {
+		T005AA0000000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -100,6 +96,34 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0AC5CE7B3F224A4A8C503639 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A06FA49070CC404EA37C543E /* AppViewModel.swift */,
+				29100E5723B2440287B86994 /* PlaybackViewModel.swift */,
+				BB001MUSICVM0000001 /* MusicViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		0B822AB8ABC64A07BA47C3B4 = {
+			isa = PBXGroup;
+			children = (
+				2057BA6F46724B71A613E6DB /* WelcomeBack */,
+				T006AA0000000000000000001 /* WelcomeBackTests */,
+				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
+				BB001FRAMEWORKS0000001 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		0F8AC098900C481F8F3F4B83 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				76343AB596AD4B76B1119451 /* Colors.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		2057BA6F46724B71A613E6DB /* WelcomeBack */ = {
 			isa = PBXGroup;
 			children = (
@@ -114,24 +138,53 @@
 			path = WelcomeBack;
 			sourceTree = "<group>";
 		};
-		CDE33D5DD1A34B418B2E6D36 /* Models */ = {
+		292412A7699B4FA78D2F9763 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				70108CE7B4714B598E18371E /* Memory.swift */,
-				AE8C6810B365488E95EE918D /* FamilyMember.swift */,
-				26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */,
+				3E2AADFDDECE49C2847688B6 /* Assets.xcassets */,
 			);
-			path = Models;
+			path = Resources;
 			sourceTree = "<group>";
 		};
-		0AC5CE7B3F224A4A8C503639 /* ViewModels */ = {
+		292412A7699B4FA78D2F9763X /* Home */ = {
 			isa = PBXGroup;
 			children = (
-				A06FA49070CC404EA37C543E /* AppViewModel.swift */,
-				29100E5723B2440287B86994 /* PlaybackViewModel.swift */,
-				BB001MUSICVM0000001 /* MusicViewModel.swift */,
+				E003D2E11731416396E5E3C8 /* HomeView.swift */,
 			);
-			path = ViewModels;
+			path = Home;
+			sourceTree = "<group>";
+		};
+		478B5530EE284291BB0BFE96 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				5042CD26087445D78D12F05E /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		4DB4CCA7AFE54C2C8ABC05AF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AFFB626B53B843ABACAD5923 /* WelcomeBack.app */,
+				T004AA0000000000000000001 /* WelcomeBackTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		50B68D6E252C4BD796CF26B3 /* Supporting */ = {
+			isa = PBXGroup;
+			children = (
+				DE297EACA8384C47815D0178 /* Info.plist */,
+			);
+			path = Supporting;
+			sourceTree = "<group>";
+		};
+		50B68D6E252C4BD796CF26B3X /* Listening */ = {
+			isa = PBXGroup;
+			children = (
+				2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */,
+			);
+			path = Listening;
 			sourceTree = "<group>";
 		};
 		5AA4BFAEF10046B7969992FE /* Services */ = {
@@ -141,6 +194,14 @@
 				C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		BB001FRAMEWORKS0000001 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BB001MUSICKIT0000001 /* MusicKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		C6BFC52C67974DCBB461A633 /* Views */ = {
@@ -159,36 +220,14 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		292412A7699B4FA78D2F9763X /* Home */ = {
+		CDE33D5DD1A34B418B2E6D36 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				E003D2E11731416396E5E3C8 /* HomeView.swift */,
+				70108CE7B4714B598E18371E /* Memory.swift */,
+				AE8C6810B365488E95EE918D /* FamilyMember.swift */,
+				26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */,
 			);
-			path = Home;
-			sourceTree = "<group>";
-		};
-		50B68D6E252C4BD796CF26B3X /* Listening */ = {
-			isa = PBXGroup;
-			children = (
-				2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */,
-			);
-			path = Listening;
-			sourceTree = "<group>";
-		};
-		E097C7719B164255B4F41849 /* Playback */ = {
-			isa = PBXGroup;
-			children = (
-				7259413FA8F24BA9950D9980 /* PlaybackView.swift */,
-			);
-			path = Playback;
-			sourceTree = "<group>";
-		};
-		D9CADD94AE354277BC7B304E /* Memories */ = {
-			isa = PBXGroup;
-			children = (
-				CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */,
-			);
-			path = Memories;
+			path = Models;
 			sourceTree = "<group>";
 		};
 		D0AB60D89F744121884585C0 /* Family */ = {
@@ -199,6 +238,14 @@
 			path = Family;
 			sourceTree = "<group>";
 		};
+		D9CADD94AE354277BC7B304E /* Memories */ = {
+			isa = PBXGroup;
+			children = (
+				CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */,
+			);
+			path = Memories;
+			sourceTree = "<group>";
+		};
 		DCA935EA9F3D4C24809CA7ED /* Music */ = {
 			isa = PBXGroup;
 			children = (
@@ -207,45 +254,12 @@
 			path = Music;
 			sourceTree = "<group>";
 		};
-		478B5530EE284291BB0BFE96 /* Settings */ = {
+		E097C7719B164255B4F41849 /* Playback */ = {
 			isa = PBXGroup;
 			children = (
-				5042CD26087445D78D12F05E /* SettingsView.swift */,
+				7259413FA8F24BA9950D9980 /* PlaybackView.swift */,
 			);
-			path = Settings;
-			sourceTree = "<group>";
-		};
-		0F8AC098900C481F8F3F4B83 /* Components */ = {
-			isa = PBXGroup;
-			children = (
-				76343AB596AD4B76B1119451 /* Colors.swift */,
-			);
-			path = Components;
-			sourceTree = "<group>";
-		};
-		292412A7699B4FA78D2F9763 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				3E2AADFDDECE49C2847688B6 /* Assets.xcassets */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
-		50B68D6E252C4BD796CF26B3 /* Supporting */ = {
-			isa = PBXGroup;
-			children = (
-				DE297EACA8384C47815D0178 /* Info.plist */,
-			);
-			path = Supporting;
-			sourceTree = "<group>";
-		};
-		4DB4CCA7AFE54C2C8ABC05AF /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				AFFB626B53B843ABACAD5923 /* WelcomeBack.app */,
-				T004AA0000000000000000001 /* WelcomeBackTests.xctest */,
-			);
-			name = Products;
+			path = Playback;
 			sourceTree = "<group>";
 		};
 		T006AA0000000000000000001 /* WelcomeBackTests */ = {
@@ -259,24 +273,6 @@
 				T002AA0000000000000000006 /* PlaybackViewModelTests.swift */,
 			);
 			path = WelcomeBackTests;
-			sourceTree = "<group>";
-		};
-		0B822AB8ABC64A07BA47C3B4 = {
-			isa = PBXGroup;
-			children = (
-				2057BA6F46724B71A613E6DB /* WelcomeBack */,
-				T006AA0000000000000000001 /* WelcomeBackTests */,
-				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
-				BB001FRAMEWORKS0000001 /* Frameworks */,
-			);
-			sourceTree = "<group>";
-		};
-		BB001FRAMEWORKS0000001 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				BB001MUSICKIT0000001 /* MediaPlayer.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -391,7 +387,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		T009AA0000000000000000001 /* Sources (Tests) */ = {
+		T009AA0000000000000000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -477,6 +473,58 @@
 			};
 			name = Debug;
 		};
+		591463A43A7347799042A51X /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 647W3RAYL3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WelcomeBack/Supporting/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		AFFB626B53B843ABACAD592X /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 647W3RAYL3;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WelcomeBack/Supporting/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		DE297EACA8384C47815D017X /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -531,57 +579,7 @@
 			};
 			name = Release;
 		};
-		AFFB626B53B843ABACAD592X /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WelcomeBack/Supporting/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		591463A43A7347799042A51X /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WelcomeBack/Supporting/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Release;
-		};
-		T011AA0000000000000000001 /* Debug (Tests) */ = {
+		T011AA0000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -599,7 +597,7 @@
 			};
 			name = Debug;
 		};
-		T011AA0000000000000000002 /* Release (Tests) */ = {
+		T011AA0000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -648,7 +646,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = FB72992900FF436E8131F682 /* Project object */;
 }
