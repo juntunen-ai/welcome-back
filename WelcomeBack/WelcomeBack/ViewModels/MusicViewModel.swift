@@ -1,4 +1,5 @@
 import MusicKit
+import MediaPlayer
 import SwiftUI
 
 @MainActor
@@ -13,6 +14,8 @@ final class MusicViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
 
+    private var playbackObserver: NSObjectProtocol?
+
     // MARK: - Init
 
     init() {
@@ -20,6 +23,12 @@ final class MusicViewModel: ObservableObject {
             Task { await loadRecentlyPlayed() }
         }
         observePlaybackState()
+    }
+
+    deinit {
+        if let observer = playbackObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Authorization
@@ -35,6 +44,7 @@ final class MusicViewModel: ObservableObject {
     // MARK: - Load Content
 
     func loadRecentlyPlayed() async {
+        guard #available(iOS 16, *) else { return }
         isLoading = true
         errorMessage = nil
         do {
@@ -81,16 +91,21 @@ final class MusicViewModel: ObservableObject {
     // MARK: - Observe Player State
 
     private func observePlaybackState() {
-        Task { @MainActor in
-            while !Task.isCancelled {
-                withObservationTracking {
-                    let status = ApplicationMusicPlayer.shared.state.playbackStatus
-                    self.isPlaying = (status == .playing)
-                } onChange: {
-                    // Loop body re-runs on next iteration to pick up the new value
-                }
-                try? await Task.sleep(for: .milliseconds(250))
+        // Use NotificationCenter to observe playback state — available on iOS 15+
+        playbackObserver = NotificationCenter.default.addObserver(
+            forName: .MPMusicPlayerControllerPlaybackStateDidChange,
+            object: MPMusicPlayerController.applicationMusicPlayer,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                let status = ApplicationMusicPlayer.shared.state.playbackStatus
+                self?.isPlaying = (status == .playing)
             }
         }
+        MPMusicPlayerController.applicationMusicPlayer.beginGeneratingPlaybackNotifications()
+
+        // Set initial state
+        let status = ApplicationMusicPlayer.shared.state.playbackStatus
+        isPlaying = (status == .playing)
     }
 }
