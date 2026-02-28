@@ -15,10 +15,14 @@ struct FamilyMemberDetailView: View {
     // Local draft — committed on Save
     @State private var draft: FamilyMember
 
-    // Photo picker
+    // Profile photo picker
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var photoImage: Image?
-    @State private var pickedUIImage: UIImage?   // held for saving to disk on Save
+    @State private var pickedUIImage: UIImage?
+
+    // Gallery photo picker (multi-select, incremental)
+    @State private var galleryPickerItems: [PhotosPickerItem] = []
+    @State private var newGalleryImages: [(id: String, image: UIImage)] = []
 
     // MARK: - Init
 
@@ -28,10 +32,6 @@ struct FamilyMemberDetailView: View {
             id: UUID().uuidString,
             name: "",
             relationship: "",
-            phone: "",
-            biography: "",
-            memory1: "",
-            memory2: "",
             imageURL: "",
             isVoiceCloned: false
         )
@@ -50,6 +50,7 @@ struct FamilyMemberDetailView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         photoSection
+                        gallerySection
                         basicSection
                         biographySection
                         memoriesSection
@@ -83,14 +84,25 @@ struct FamilyMemberDetailView: View {
                     }
                 }
             }
+            .onChange(of: galleryPickerItems) { _, items in
+                guard !items.isEmpty else { return }
+                Task {
+                    for item in items {
+                        if let data = try? await item.loadTransferable(type: Data.self),
+                           let ui = UIImage(data: data) {
+                            newGalleryImages.append((id: UUID().uuidString, image: ui))
+                        }
+                    }
+                    galleryPickerItems = []
+                }
+            }
         }
     }
 
-    // MARK: - Photo section
+    // MARK: - Profile photo section
 
     private var photoSection: some View {
         VStack(spacing: 12) {
-            // Preview
             ZStack {
                 RoundedRectangle(cornerRadius: 28)
                     .fill(Color.surfaceVariant.opacity(0.5))
@@ -116,7 +128,7 @@ struct FamilyMemberDetailView: View {
             }
 
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                Label("Choose Photo", systemImage: "photo.on.rectangle")
+                Label("Choose Profile Photo", systemImage: "person.crop.circle.badge.plus")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentYellow)
             }
@@ -127,6 +139,89 @@ struct FamilyMemberDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
+    // MARK: - Gallery section
+
+    private var gallerySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader("Photo Gallery")
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    // Existing saved photos
+                    ForEach(draft.additionalPhotoURLs, id: \.self) { url in
+                        galleryThumb(image: PersistenceService.loadImage(imageURL: url)) {
+                            draft.additionalPhotoURLs.removeAll { $0 == url }
+                        }
+                    }
+
+                    // Newly picked (not yet saved to disk)
+                    ForEach(newGalleryImages, id: \.id) { item in
+                        galleryThumb(image: item.image) {
+                            newGalleryImages.removeAll { $0.id == item.id }
+                        }
+                    }
+
+                    // Add button
+                    PhotosPicker(
+                        selection: $galleryPickerItems,
+                        maxSelectionCount: 10,
+                        matching: .images
+                    ) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.surfaceVariant.opacity(0.5))
+                                .frame(width: 80, height: 80)
+                            VStack(spacing: 4) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundColor(.accentYellow)
+                                Text("Add")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundColor(.onSurface.opacity(0.5))
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+            .background(Color.surfaceVariant.opacity(0.25))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private func galleryThumb(image: UIImage?, onRemove: @escaping () -> Void) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Group {
+                if let ui = image {
+                    Image(uiImage: ui)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Color.surfaceVariant
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.onSurface.opacity(0.3))
+                        )
+                }
+            }
+            .frame(width: 80, height: 80)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+
+            Button(action: onRemove) {
+                Circle()
+                    .fill(Color.black.opacity(0.7))
+                    .frame(width: 22, height: 22)
+                    .overlay(
+                        Image(systemName: "xmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                    )
+            }
+            .offset(x: 6, y: -6)
+        }
+    }
+
     // MARK: - Basic info
 
     private var basicSection: some View {
@@ -134,16 +229,16 @@ struct FamilyMemberDetailView: View {
             sectionHeader("About")
 
             VStack(spacing: 0) {
-                formField(icon: "person.fill",        iconColor: .blue,
-                          label: "Name",             placeholder: "Full name",
+                formField(icon: "person.fill",   iconColor: .blue,
+                          label: "Name",          placeholder: "Full name",
                           binding: $draft.name)
                 divider
-                formField(icon: "heart.fill",         iconColor: .pink,
-                          label: "Relationship",     placeholder: "e.g. Daughter, Son, Wife",
+                formField(icon: "heart.fill",    iconColor: .pink,
+                          label: "Relationship",  placeholder: "e.g. Daughter, Son, Wife",
                           binding: $draft.relationship)
                 divider
-                formField(icon: "phone.fill",         iconColor: .green,
-                          label: "Phone",            placeholder: "+358 …",
+                formField(icon: "phone.fill",    iconColor: .green,
+                          label: "Phone",         placeholder: "+358 …",
                           binding: $draft.phone,
                           keyboardType: .phonePad)
             }
@@ -278,9 +373,18 @@ struct FamilyMemberDetailView: View {
     // MARK: - Save
 
     private func save() {
-        // If the user picked a new photo, write it to disk and update the imageURL
+        // Save profile photo
         if let ui = pickedUIImage {
             draft.imageURL = PersistenceService.savePhoto(ui, memberID: draft.id)
+        }
+
+        // Save new gallery photos
+        for item in newGalleryImages {
+            let url = PersistenceService.savePhoto(
+                item.image,
+                memberID: "\(draft.id)_g\(item.id.prefix(8))"
+            )
+            draft.additionalPhotoURLs.append(url)
         }
 
         if let index = memberIndex {

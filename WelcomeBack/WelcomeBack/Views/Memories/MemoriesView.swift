@@ -4,95 +4,162 @@ import Photos
 struct MemoriesView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
-    @State private var navPath: [Memory] = []
+    @StateObject private var photoService = PhotoLibraryService()
 
     var body: some View {
-        NavigationStack(path: $navPath) {
+        NavigationStack {
             ZStack {
                 Color.backgroundDark.ignoresSafeArea()
 
-                if appVM.memories.isEmpty {
-                    emptyState
-                } else {
-                    ScrollView {
-                        mosaicGrid
-                            .padding(.horizontal, 16)
-                            .padding(.top, 8)
-
-                        Text("End of Memories")
-                            .font(.system(size: 11, weight: .bold))
-                            .tracking(2)
-                            .foregroundColor(.onSurface.opacity(0.3))
-                            .padding(.vertical, 24)
-                    }
-                }
+                content
             }
             .navigationTitle("Memories")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        // Filter action (future)
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
-                            .foregroundColor(.onSurface)
-                            .frame(width: 44, height: 44)
-                            .background(Color.surfaceVariant)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
+            .task { await photoService.requestAuthorizationAndLoad() }
+        }
+    }
+
+    // MARK: - Content routing
+
+    @ViewBuilder
+    private var content: some View {
+        switch photoService.authorizationStatus {
+        case .notDetermined:
+            permissionPromptView
+        case .denied, .restricted:
+            permissionDeniedView
+        default:
+            if photoService.isLoading {
+                loadingView
+            } else if photoService.moments.isEmpty {
+                emptyState
+            } else {
+                ScrollView {
+                    mosaicGrid
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+
+                    Text("End of Memories")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(2)
+                        .foregroundColor(.onSurface.opacity(0.3))
+                        .padding(.vertical, 24)
                 }
-            }
-            // Push to carousel via NavigationLink — no global state needed
-            .navigationDestination(for: Memory.self) { memory in
-                MemoryCarouselView(memory: memory)
-            }
-            // Request photo permission early so it never fires mid-navigation
-            .task {
-                _ = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
             }
         }
     }
 
-    // MARK: - Grid
+    // MARK: - Mosaic grid
     // Layout pattern (repeating every 4):
     //   [0] full-width hero (tall)
     //   [1] [2] side-by-side (medium)
-    //   [3] full-width (short)
+    //   [3] full-width (shorter)
 
     private var mosaicGrid: some View {
-        let items = appVM.memories
+        let items = photoService.moments
         return VStack(spacing: 12) {
             ForEach(Array(stride(from: 0, to: items.count, by: 4)), id: \.self) { base in
-                // Row A: full-width hero
                 if base < items.count {
-                    MemoryTileView(memory: items[base], height: 220)
-                        .onTapGesture { navPath.append(items[base]) }
+                    NavigationLink(destination: MomentCarouselView(moment: items[base], service: photoService)) {
+                        MomentTileView(moment: items[base], height: 220)
+                    }
+                    .buttonStyle(.plain)
                 }
-                // Row B: two side-by-side
+
                 let b1 = base + 1, b2 = base + 2
                 if b1 < items.count {
                     HStack(spacing: 12) {
-                        MemoryTileView(memory: items[b1], height: 160)
-                            .onTapGesture { navPath.append(items[b1]) }
+                        NavigationLink(destination: MomentCarouselView(moment: items[b1], service: photoService)) {
+                            MomentTileView(moment: items[b1], height: 160)
+                        }
+                        .buttonStyle(.plain)
+
                         if b2 < items.count {
-                            MemoryTileView(memory: items[b2], height: 160)
-                                .onTapGesture { navPath.append(items[b2]) }
+                            NavigationLink(destination: MomentCarouselView(moment: items[b2], service: photoService)) {
+                                MomentTileView(moment: items[b2], height: 160)
+                            }
+                            .buttonStyle(.plain)
                         } else {
                             Color.clear
                         }
                     }
                 }
-                // Row C: full-width shorter
+
                 let b3 = base + 3
                 if b3 < items.count {
-                    MemoryTileView(memory: items[b3], height: 160)
-                        .onTapGesture { navPath.append(items[b3]) }
+                    NavigationLink(destination: MomentCarouselView(moment: items[b3], service: photoService)) {
+                        MomentTileView(moment: items[b3], height: 160)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
     }
 
-    // MARK: - Empty State
+    // MARK: - State views
+
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .tint(.accentYellow)
+                .scaleEffect(1.4)
+            Text("Loading memories…")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.onSurface.opacity(0.6))
+        }
+    }
+
+    private var permissionPromptView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "photo.on.rectangle.angled")
+                .font(.system(size: 56))
+                .foregroundColor(.accentYellow.opacity(0.8))
+
+            VStack(spacing: 8) {
+                Text("Your Photo Memories")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.onSurface)
+                Text("Allow access to your photos so memories from important moments in your life can be shown here.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.onSurface.opacity(0.6))
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                Task { await photoService.requestAuthorizationAndLoad() }
+            } label: {
+                Text("Allow Photo Access")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.backgroundDark)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.accentYellow)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 32)
+        }
+        .padding(40)
+    }
+
+    private var permissionDeniedView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "lock.slash")
+                .font(.system(size: 48))
+                .foregroundColor(.onSurface.opacity(0.3))
+
+            VStack(spacing: 6) {
+                Text("Photo access denied")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.onSurface)
+                Text("Go to Settings → Privacy & Security → Photos → Welcome Back and allow access.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.onSurface.opacity(0.6))
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(40)
+    }
 
     private var emptyState: some View {
         VStack(spacing: 16) {
@@ -101,11 +168,10 @@ struct MemoriesView: View {
                 .foregroundColor(.onSurface.opacity(0.3))
 
             VStack(spacing: 6) {
-                Text("No memories yet")
+                Text("No photos found")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.onSurface)
-
-                Text("Your memories will appear here once added")
+                Text("Your photo library appears to be empty.")
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -115,16 +181,16 @@ struct MemoriesView: View {
     }
 }
 
-// MARK: - Memory Tile
+// MARK: - Moment Tile
 
-struct MemoryTileView: View {
+struct MomentTileView: View {
 
-    let memory: Memory
+    let moment: PhotoMoment
     var height: CGFloat = 160
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Gradient — strong at bottom so text is always legible
+            // Gradient overlay so text is always legible
             LinearGradient(
                 stops: [
                     .init(color: .black.opacity(0.75), location: 0),
@@ -135,21 +201,18 @@ struct MemoryTileView: View {
                 endPoint: .top
             )
 
-            // Labels
             VStack(alignment: .leading, spacing: 2) {
-                Text(memory.title)
+                Text(moment.title)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
                     .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
 
-                if !memory.date.isEmpty {
-                    Text(memory.date.uppercased())
-                        .font(.system(size: 10, weight: .semibold))
-                        .tracking(1)
-                        .foregroundColor(.accentYellow)
-                        .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
-                }
+                Text(moment.subtitle.uppercased())
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(1)
+                    .foregroundColor(.accentYellow)
+                    .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 12)
@@ -157,9 +220,8 @@ struct MemoryTileView: View {
         .frame(maxWidth: .infinity)
         .frame(height: height)
         .background {
-            // Image as background so it fills without disrupting ZStack alignment
-            if let uiImage = UIImage(named: memory.imageURL) {
-                Image(uiImage: uiImage)
+            if let thumbnail = moment.thumbnail {
+                Image(uiImage: thumbnail)
                     .resizable()
                     .scaledToFill()
                     .clipped()

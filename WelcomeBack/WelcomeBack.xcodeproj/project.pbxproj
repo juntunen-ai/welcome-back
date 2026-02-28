@@ -21,6 +21,8 @@
 		45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BA50C87DF43E190C6BF96 /* GeminiService.swift */; };
 		7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */; };
 		200C83C9A503458A865318BC /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */; };
+		PLS001000000000000000001 /* PhotoLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLS002000000000000000001 /* PhotoLibraryService.swift */; };
+		MCR001000000000000000001 /* MomentCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = MCR002000000000000000001 /* MomentCarouselView.swift */; };
 		887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4479220ADE43DFB121488F /* MemberImageView.swift */; };
 		8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7259413FA8F24BA9950D9980 /* PlaybackView.swift */; };
 		966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E2AADFDDECE49C2847688B6 /* Assets.xcassets */; };
@@ -97,6 +99,8 @@
 		BB001MUSICVM0000001 /* MusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicViewModel.swift; sourceTree = "<group>"; };
 		C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		PLS002000000000000000001 /* PhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryService.swift; sourceTree = "<group>"; };
+		MCR002000000000000000001 /* MomentCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentCarouselView.swift; sourceTree = "<group>"; };
 		BF4479220ADE43DFB121488F /* MemberImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberImageView.swift; sourceTree = "<group>"; };
 		CAR002000000000000000001 /* MemoryCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCarouselView.swift; sourceTree = "<group>"; };
 		CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesView.swift; sourceTree = "<group>"; };
@@ -260,6 +264,7 @@
 				2AD2663102EF4682ACD4795F /* LiveSessionState.swift */,
 				C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */,
 				91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */,
+				PLS002000000000000000001 /* PhotoLibraryService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -327,6 +332,7 @@
 			children = (
 				CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */,
 				CAR002000000000000000001 /* MemoryCarouselView.swift */,
+				MCR002000000000000000001 /* MomentCarouselView.swift */,
 			);
 			path = Memories;
 			sourceTree = "<group>";
@@ -500,6 +506,7 @@
 				8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */,
 				27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */,
 				CAR001000000000000000001 /* MemoryCarouselView.swift in Sources */,
+				MCR001000000000000000001 /* MomentCarouselView.swift in Sources */,
 				E969761872CB48C986337B81 /* FamilyView.swift in Sources */,
 				FM001000000000000000001 /* FamilyMemberDetailView.swift in Sources */,
 				072B65D522534519B10231D7 /* FamilyMemberProfileView.swift in Sources */,
@@ -522,6 +529,7 @@
 				C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */,
 				7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */,
 				200C83C9A503458A865318BC /* PersistenceService.swift in Sources */,
+				PLS001000000000000000001 /* PhotoLibraryService.swift in Sources */,
 				887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

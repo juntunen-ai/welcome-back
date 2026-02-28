@@ -39,6 +39,11 @@ struct FamilyMemberProfileView: View {
     let member: FamilyMember
 
     @StateObject private var speech = SpeechController()
+    @State private var photoPageIndex = 0
+
+    private var allPhotoURLs: [String] {
+        ([member.imageURL] + member.additionalPhotoURLs).filter { !$0.isEmpty }
+    }
 
     private var speechText: String {
         [member.biography, member.memory1, member.memory2]
@@ -56,7 +61,7 @@ struct FamilyMemberProfileView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    heroImage
+                    photoPager
                     nameSection
                     biographySection
                     memoriesSection
@@ -65,21 +70,19 @@ struct FamilyMemberProfileView: View {
                 .padding(.bottom, 16)
             }
 
-            // Floating play button (always visible)
-            if true {
-                VStack(spacing: 0) {
-                    LinearGradient(
-                        colors: [Color.backgroundDark.opacity(0), Color.backgroundDark],
-                        startPoint: .top, endPoint: .bottom
-                    )
-                    .frame(height: 48)
-                    .allowsHitTesting(false)
+            // Floating play button with fade
+            VStack(spacing: 0) {
+                LinearGradient(
+                    colors: [Color.backgroundDark.opacity(0), Color.backgroundDark],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 48)
+                .allowsHitTesting(false)
 
-                    playButton
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 32)
-                        .background(Color.backgroundDark)
-                }
+                playButton
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 32)
+                    .background(Color.backgroundDark)
             }
         }
         .navigationTitle(member.name)
@@ -87,29 +90,67 @@ struct FamilyMemberProfileView: View {
         .onDisappear { speech.stop() }
     }
 
-    // MARK: - Hero image
+    // MARK: - Photo pager
 
-    private var heroImage: some View {
-        Group {
-            if let ui = PersistenceService.loadImage(imageURL: member.imageURL) {
-                Image(uiImage: ui)
-                    .resizable()
-                    .scaledToFill()
-            } else {
+    private var photoPager: some View {
+        VStack(spacing: 8) {
+            if allPhotoURLs.isEmpty {
+                // Placeholder when no photos
                 Color.surfaceVariant
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 300)
                     .overlay(
                         Image(systemName: "person.fill")
                             .font(.system(size: 80))
                             .foregroundColor(.onSurface.opacity(0.15))
                     )
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+            } else {
+                TabView(selection: $photoPageIndex) {
+                    ForEach(Array(allPhotoURLs.enumerated()), id: \.offset) { i, url in
+                        Group {
+                            if let ui = PersistenceService.loadImage(imageURL: url) {
+                                Image(uiImage: ui)
+                                    .resizable()
+                                    .scaledToFill()
+                            } else {
+                                Color.surfaceVariant
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .font(.system(size: 80))
+                                            .foregroundColor(.onSurface.opacity(0.15))
+                                    )
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 300)
+                        .clipped()
+                        .clipShape(RoundedRectangle(cornerRadius: 28))
+                        .padding(.horizontal, 16)
+                        .tag(i)
+                    }
+                }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .frame(height: 316)
+                .padding(.top, 8)
+
+                // Dot indicators (only when more than 1 photo)
+                if allPhotoURLs.count > 1 {
+                    HStack(spacing: 6) {
+                        ForEach(allPhotoURLs.indices, id: \.self) { i in
+                            Circle()
+                                .fill(i == photoPageIndex ? Color.accentYellow : Color.white.opacity(0.25))
+                                .frame(width: i == photoPageIndex ? 8 : 6,
+                                       height: i == photoPageIndex ? 8 : 6)
+                                .animation(.spring(response: 0.3), value: photoPageIndex)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: 300)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 28))
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
     }
 
     // MARK: - Name / relationship
@@ -147,7 +188,9 @@ struct FamilyMemberProfileView: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("About \(firstName)")
 
-            Text(member.biography.isEmpty ? "No biography added yet. Edit in Settings → Family Members." : member.biography)
+            Text(member.biography.isEmpty
+                 ? "No biography added yet. Edit in Settings → Family Members."
+                 : member.biography)
                 .font(.system(size: 16))
                 .foregroundColor(member.biography.isEmpty ? .onSurface.opacity(0.35) : .onSurface.opacity(0.85))
                 .lineSpacing(4)
