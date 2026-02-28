@@ -134,22 +134,7 @@ struct PersonalInfoView: View {
     private func familyRow(index: Int, member: FamilyMember) -> some View {
         Button { editingMemberIndex = index } label: {
             HStack(spacing: 14) {
-                // Photo thumbnail
-                Group {
-                    if let uiImage = UIImage(named: member.imageURL) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 36, height: 36)
-                            .clipped()
-                    } else {
-                        Color.surfaceVariant
-                            .frame(width: 36, height: 36)
-                            .overlay(Image(systemName: "person.fill")
-                                .foregroundColor(.onSurface.opacity(0.4)))
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                MemberImageView(imageURL: member.imageURL, size: 36, cornerRadius: 10)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(member.name.isEmpty ? "Unnamed" : member.name)

@@ -81,23 +81,7 @@ struct RecordVoiceMemberRow: View {
         Button { onTap() } label: {
             HStack(spacing: 16) {
                 // Photo
-                Group {
-                    if let uiImage = UIImage(named: member.imageURL) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 64, height: 64)
-                            .clipped()
-                    } else {
-                        Color.surfaceVariant
-                            .frame(width: 64, height: 64)
-                            .overlay(
-                                Image(systemName: "person.fill")
-                                    .foregroundColor(.onSurface.opacity(0.4))
-                            )
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                MemberImageView(imageURL: member.imageURL, size: 64, cornerRadius: 16)
                 .overlay(alignment: .bottomTrailing) {
                     if isRecorded {
                         Circle()

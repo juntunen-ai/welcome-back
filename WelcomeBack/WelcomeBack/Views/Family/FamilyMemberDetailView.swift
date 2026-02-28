@@ -18,6 +18,7 @@ struct FamilyMemberDetailView: View {
     // Photo picker
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var photoImage: Image?
+    @State private var pickedUIImage: UIImage?   // held for saving to disk on Save
 
     // MARK: - Init
 
@@ -77,6 +78,7 @@ struct FamilyMemberDetailView: View {
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
                        let ui = UIImage(data: data) {
+                        pickedUIImage = ui
                         photoImage = Image(uiImage: ui)
                     }
                 }
@@ -100,7 +102,7 @@ struct FamilyMemberDetailView: View {
                         .scaledToFill()
                         .frame(width: 120, height: 120)
                         .clipShape(RoundedRectangle(cornerRadius: 28))
-                } else if let ui = UIImage(named: draft.imageURL) {
+                } else if let ui = PersistenceService.loadImage(imageURL: draft.imageURL) {
                     Image(uiImage: ui)
                         .resizable()
                         .scaledToFill()
@@ -276,6 +278,11 @@ struct FamilyMemberDetailView: View {
     // MARK: - Save
 
     private func save() {
+        // If the user picked a new photo, write it to disk and update the imageURL
+        if let ui = pickedUIImage {
+            draft.imageURL = PersistenceService.savePhoto(ui, memberID: draft.id)
+        }
+
         if let index = memberIndex {
             appVM.userProfile.familyMembers[index] = draft
         } else {

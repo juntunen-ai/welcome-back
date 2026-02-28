@@ -35,6 +35,16 @@ struct SettingsView: View {
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
+            NavigationLink(destination: FamilyManagementView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "person.3.fill",
+                    iconColor: .green,
+                    title: "Family Members",
+                    subtitle: "\(appVM.userProfile.familyMembers.count) member\(appVM.userProfile.familyMembers.count == 1 ? "" : "s")"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
             NavigationLink(destination: NotificationsSettingsView().environmentObject(appVM)) {
                 SettingsRowView(icon: "bell.fill", iconColor: .red,
                                 title: "Notifications",

@@ -14,8 +14,17 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Data
 
-    @Published var userProfile: UserProfile = .default
+    @Published var userProfile: UserProfile {
+        didSet { PersistenceService.save(userProfile) }
+    }
     @Published var selectedFamilyMember: FamilyMember?
+
+    // MARK: - Init
+
+    init() {
+        // Load from disk if a saved profile exists, otherwise use defaults
+        userProfile = PersistenceService.load() ?? .default
+    }
 
     // MARK: - Computed
 
