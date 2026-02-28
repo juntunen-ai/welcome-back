@@ -8,9 +8,9 @@ final class AppViewModel: ObservableObject {
 
     @Published var selectedTab: AppTab = .home
     @Published var listeningSheetPresented = false
-    /// True while a Gemini Live session is active — used to suppress
-    /// the PlaybackView sheet auto-launching during a live conversation.
+    /// True while a Gemini Live session is active — suppresses PlaybackView auto-launch.
     @Published var isLiveSessionActive = false
+    @Published var showPaywall = false
 
     // MARK: - Data
 
@@ -19,10 +19,14 @@ final class AppViewModel: ObservableObject {
     }
     @Published var selectedFamilyMember: FamilyMember?
 
+    // MARK: - Services (shared singletons)
+
+    let subscriptionService = SubscriptionService.shared
+    let notificationService = NotificationService.shared
+
     // MARK: - Init
 
     init() {
-        // Load from disk if a saved profile exists, otherwise use defaults
         userProfile = PersistenceService.load() ?? .default
     }
 
@@ -31,21 +35,59 @@ final class AppViewModel: ObservableObject {
     var userName: String { userProfile.name }
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
+    var isPremium: Bool { subscriptionService.isPremium }
 
-    // MARK: - Navigation Helpers
+    // MARK: - Onboarding
+
+    func completeOnboarding() {
+        userProfile.isOnboardingComplete = true
+    }
+
+    // MARK: - Listening / Conversation
 
     func startListening() {
+        // Gate free-tier users once the monthly limit is reached
+        if subscriptionService.hasReachedFreeLimit {
+            showPaywall = true
+            return
+        }
+        subscriptionService.incrementConversationCount()
         listeningSheetPresented = true
     }
 
     func doneSpeaking() {
         listeningSheetPresented = false
-        // Pick a random family member to respond (prototype behaviour)
         selectedFamilyMember = userProfile.familyMembers.randomElement()
     }
 
     func selectFamilyMember(_ member: FamilyMember) {
         selectedFamilyMember = member
+    }
+
+    // MARK: - Notifications
+
+    /// Call after the user toggles notifications on/off in Settings.
+    func rescheduleNotifications() {
+        Task {
+            // Gate: notifications require Premium
+            if userProfile.notificationsEnabled && !isPremium {
+                showPaywall = true
+                userProfile.notificationsEnabled = false
+                return
+            }
+
+            if userProfile.notificationsEnabled {
+                let granted = await notificationService.requestAuthorization()
+                if granted {
+                    await notificationService.reschedule(profile: userProfile)
+                } else {
+                    // System denied — revert toggle, user can allow in iOS Settings
+                    userProfile.notificationsEnabled = false
+                }
+            } else {
+                notificationService.cancelAll()
+            }
+        }
     }
 }
 

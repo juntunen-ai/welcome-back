@@ -25,6 +25,15 @@ struct NotificationsSettingsView: View {
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.large)
         .scrollDismissesKeyboard(.interactively)
+        // Reschedule whenever enabled/times change
+        .onChange(of: appVM.userProfile.notificationsEnabled) { _, _ in
+            appVM.rescheduleNotifications()
+        }
+        .onChange(of: appVM.userProfile.notificationTimes) { _, _ in
+            if appVM.userProfile.notificationsEnabled {
+                Task { await appVM.notificationService.reschedule(profile: appVM.userProfile) }
+            }
+        }
     }
 
     // MARK: - Sections

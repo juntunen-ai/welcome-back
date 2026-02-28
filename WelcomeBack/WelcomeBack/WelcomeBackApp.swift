@@ -7,9 +7,21 @@ struct WelcomeBackApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(appViewModel)
-                .preferredColorScheme(.dark)
+            Group {
+                if appViewModel.userProfile.isOnboardingComplete {
+                    ContentView()
+                } else {
+                    OnboardingContainerView()
+                }
+            }
+            .environmentObject(appViewModel)
+            .preferredColorScheme(.dark)
+            // Paywall sheet — presented on top of whichever root view is active
+            .sheet(isPresented: $appViewModel.showPaywall) {
+                PaywallView()
+            }
+            .animation(.easeInOut(duration: 0.45),
+                       value: appViewModel.userProfile.isOnboardingComplete)
         }
     }
 }

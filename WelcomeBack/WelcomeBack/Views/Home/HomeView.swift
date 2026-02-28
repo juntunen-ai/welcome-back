@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var pulseScale1: CGFloat = 1.0
     @State private var pulseScale2: CGFloat = 1.0
@@ -36,7 +37,11 @@ struct HomeView: View {
         VStack(spacing: 16) {
             // Profile photo — falls back to initials if image not yet added
             Group {
-                if let uiImage = UIImage(named: "user_harri") {
+                if let uiImage = PersistenceService.loadImage(imageURL: "photo:user_profile.jpg") {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                } else if let uiImage = UIImage(named: "user_harri") {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
@@ -44,7 +49,7 @@ struct HomeView: View {
                 } else {
                     Color.surfaceVariant
                         .overlay(
-                            Text(appVM.userName.prefix(1))
+                            Text(appVM.userName.prefix(1).uppercased())
                                 .font(.system(size: 36, weight: .black))
                                 .foregroundColor(.onSurface.opacity(0.5))
                         )
@@ -54,11 +59,16 @@ struct HomeView: View {
             .clipShape(Circle())
             .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 3))
             .shadow(color: Color.accentYellow.opacity(0.3), radius: 12, y: 4)
+            .accessibilityLabel("Your profile photo")
+            .accessibilityHidden(true)
 
             VStack(spacing: 4) {
-                Text("Welcome Back, \(appVM.userName)!")
+                Text(appVM.userName.isEmpty
+                     ? "Welcome Back!"
+                     : "Welcome Back, \(appVM.userName)!")
                     .font(.system(size: 32, weight: .black))
                     .foregroundColor(.onSurface)
+                    .minimumScaleFactor(0.7)
 
                 Text("Remember who you are.")
                     .font(.system(size: 18, weight: .medium))
@@ -69,17 +79,21 @@ struct HomeView: View {
 
     private var micButton: some View {
         ZStack {
-            Circle()
-                .fill(Color.accentYellow.opacity(0.1))
-                .frame(width: 288, height: 288)
-                .scaleEffect(pulseScale1)
-                .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: pulseScale1)
+            if !reduceMotion {
+                Circle()
+                    .fill(Color.accentYellow.opacity(0.1))
+                    .frame(width: 288, height: 288)
+                    .scaleEffect(pulseScale1)
+                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true),
+                               value: pulseScale1)
 
-            Circle()
-                .fill(Color.accentYellow.opacity(0.2))
-                .frame(width: 240, height: 240)
-                .scaleEffect(pulseScale2)
-                .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true).delay(1), value: pulseScale2)
+                Circle()
+                    .fill(Color.accentYellow.opacity(0.2))
+                    .frame(width: 240, height: 240)
+                    .scaleEffect(pulseScale2)
+                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true).delay(1),
+                               value: pulseScale2)
+            }
 
             Button(action: appVM.startListening) {
                 ZStack {
@@ -98,6 +112,8 @@ struct HomeView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Start listening")
+            .accessibilityHint("Double-tap to begin a voice conversation about your memories")
         }
     }
 
@@ -110,6 +126,7 @@ struct HomeView: View {
                     Image(systemName: "lightbulb")
                         .foregroundColor(.accentYellow)
                 )
+                .accessibilityHidden(true)
 
             Text("Say something like \"Tell me about my wedding day\" or \"Who is Anna?\"")
                 .font(.system(size: 14, weight: .medium))
@@ -123,11 +140,14 @@ struct HomeView: View {
             RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Color.white.opacity(0.05))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Hint: say something like 'Tell me about my wedding day' or 'Who is Anna'")
     }
 
     // MARK: - Animation
 
     private func startPulse() {
+        guard !reduceMotion else { return }
         pulseScale1 = 1.08
         pulseScale2 = 1.08
     }

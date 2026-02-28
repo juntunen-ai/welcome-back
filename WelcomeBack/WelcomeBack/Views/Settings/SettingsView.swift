@@ -61,12 +61,12 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         Section {
-            NavigationLink(destination: RecordVoiceView().environmentObject(appVM)) {
+            NavigationLink(destination: RecordVoiceView()) {
                 SettingsRowView(
                     icon: "waveform.badge.mic",
                     iconColor: .accentYellow,
-                    title: "Record Voice",
-                    subtitle: "\(appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count) recorded"
+                    title: "Voice Cloning",
+                    subtitle: "Coming Soon"
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
