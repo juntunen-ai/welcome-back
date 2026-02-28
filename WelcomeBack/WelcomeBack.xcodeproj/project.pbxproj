@@ -26,6 +26,7 @@
 		887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4479220ADE43DFB121488F /* MemberImageView.swift */; };
 		8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7259413FA8F24BA9950D9980 /* PlaybackView.swift */; };
 		966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E2AADFDDECE49C2847688B6 /* Assets.xcassets */; };
+		PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRI002000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
 		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
 		SE001000000000000000001 /* PersonalInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000001 /* PersonalInfoView.swift */; };
@@ -100,6 +101,9 @@
 		C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
 		91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
 		PLS002000000000000000001 /* PhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryService.swift; sourceTree = "<group>"; };
+		PRI002000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CFG001000000000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		CFG001000000000000000002 /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
 		MCR002000000000000000001 /* MomentCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MomentCarouselView.swift; sourceTree = "<group>"; };
 		BF4479220ADE43DFB121488F /* MemberImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberImageView.swift; sourceTree = "<group>"; };
 		CAR002000000000000000001 /* MemoryCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryCarouselView.swift; sourceTree = "<group>"; };
@@ -166,6 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				2057BA6F46724B71A613E6DB /* WelcomeBack */,
+				CFG000000000000000000001 /* Config */,
 				WGT004000000000000000001 /* WelcomeBackWidget */,
 				T006AA0000000000000000001 /* WelcomeBackTests */,
 				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
@@ -199,8 +204,18 @@
 				C6BFC52C67974DCBB461A633 /* Views */,
 				292412A7699B4FA78D2F9763 /* Resources */,
 				50B68D6E252C4BD796CF26B3 /* Supporting */,
+				PRI002000000000000000001 /* PrivacyInfo.xcprivacy */,
 			);
 			path = WelcomeBack;
+			sourceTree = "<group>";
+		};
+		CFG000000000000000000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				CFG001000000000000000001 /* Secrets.xcconfig */,
+				CFG001000000000000000002 /* Secrets.xcconfig.template */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		292412A7699B4FA78D2F9763 /* Resources */ = {
@@ -481,6 +496,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */,
+				PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -663,6 +679,7 @@
 		};
 		AFFB626B53B843ABACAD592X /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CFG001000000000000000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -689,6 +706,7 @@
 		};
 		DE297EACA8384C47815D017X /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CFG001000000000000000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

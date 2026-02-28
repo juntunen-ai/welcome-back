@@ -31,8 +31,8 @@ xcuserdata/
 .env.local
 *.env
 
-# API key lives in Info.plist for prototype — keep it local only
-WelcomeBack/WelcomeBack/Supporting/Info.plist
+# API key lives in Secrets.xcconfig — never commit it
+WelcomeBack/Config/Secrets.xcconfig
 
 # Prototype artefacts (kept locally only)
 prototype.zip

@@ -51,11 +51,6 @@ struct PersonalInfoView: View {
                           label: "Current Location",
                           binding: $appVM.userProfile.currentLocation)
                 divider
-                infoField(icon: "creditcard.fill",    iconColor: .gray,
-                          label: "Social Security Number",
-                          binding: $appVM.userProfile.socialSecurityNumber,
-                          isSecure: true)
-                divider
                 bioField
             }
             .background(Color.surfaceVariant.opacity(0.4))
@@ -83,7 +78,7 @@ struct PersonalInfoView: View {
     // MARK: - Row helpers
 
     private func infoField(icon: String, iconColor: Color, label: String,
-                           binding: Binding<String>, isSecure: Bool = false) -> some View {
+                           binding: Binding<String>) -> some View {
         HStack(spacing: 14) {
             iconBadge(icon, color: iconColor)
 
@@ -94,15 +89,9 @@ struct PersonalInfoView: View {
                     .textCase(.uppercase)
                     .tracking(0.6)
 
-                if isSecure {
-                    SecureField("—", text: binding)
-                        .font(.system(size: 15))
-                        .foregroundColor(.onSurface)
-                } else {
-                    TextField("—", text: binding)
-                        .font(.system(size: 15))
-                        .foregroundColor(.onSurface)
-                }
+                TextField("—", text: binding)
+                    .font(.system(size: 15))
+                    .foregroundColor(.onSurface)
             }
         }
         .padding(.horizontal, 16)
