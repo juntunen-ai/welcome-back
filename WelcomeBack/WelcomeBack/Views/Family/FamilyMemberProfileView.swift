@@ -58,15 +58,15 @@ struct FamilyMemberProfileView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     heroImage
                     nameSection
-                    if !member.biography.isEmpty { biographySection }
-                    if !member.memory1.isEmpty || !member.memory2.isEmpty { memoriesSection }
+                    biographySection
+                    memoriesSection
                     Spacer(minLength: 110)
                 }
                 .padding(.bottom, 16)
             }
 
-            // Floating play button with fade
-            if !speechText.isEmpty {
+            // Floating play button (always visible)
+            if true {
                 VStack(spacing: 0) {
                     LinearGradient(
                         colors: [Color.backgroundDark.opacity(0), Color.backgroundDark],
@@ -147,9 +147,9 @@ struct FamilyMemberProfileView: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("About \(firstName)")
 
-            Text(member.biography)
+            Text(member.biography.isEmpty ? "No biography added yet. Edit in Settings → Family Members." : member.biography)
                 .font(.system(size: 16))
-                .foregroundColor(.onSurface.opacity(0.85))
+                .foregroundColor(member.biography.isEmpty ? .onSurface.opacity(0.35) : .onSurface.opacity(0.85))
                 .lineSpacing(4)
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -166,32 +166,36 @@ struct FamilyMemberProfileView: View {
             sectionLabel("Shared Memories")
 
             VStack(spacing: 12) {
-                if !member.memory1.isEmpty {
-                    memoryCard(text: member.memory1, accentColor: .accentYellow)
-                }
-                if !member.memory2.isEmpty {
-                    memoryCard(text: member.memory2, accentColor: Color(red: 1, green: 0.6, blue: 0))
-                }
+                memoryCard(
+                    text: member.memory1.isEmpty ? "No memory added yet." : member.memory1,
+                    accentColor: .accentYellow,
+                    isEmpty: member.memory1.isEmpty
+                )
+                memoryCard(
+                    text: member.memory2.isEmpty ? "No memory added yet." : member.memory2,
+                    accentColor: Color(red: 1, green: 0.6, blue: 0),
+                    isEmpty: member.memory2.isEmpty
+                )
             }
         }
         .padding(.horizontal, 16)
     }
 
-    private func memoryCard(text: String, accentColor: Color) -> some View {
+    private func memoryCard(text: String, accentColor: Color, isEmpty: Bool = false) -> some View {
         HStack(alignment: .top, spacing: 14) {
             RoundedRectangle(cornerRadius: 10)
-                .fill(accentColor)
+                .fill(isEmpty ? accentColor.opacity(0.3) : accentColor)
                 .frame(width: 36, height: 36)
                 .overlay(
                     Image(systemName: "star.fill")
                         .font(.system(size: 16))
-                        .foregroundColor(.white)
+                        .foregroundColor(.white.opacity(isEmpty ? 0.5 : 1))
                 )
                 .padding(.top, 2)
 
             Text(text)
                 .font(.system(size: 15))
-                .foregroundColor(.onSurface.opacity(0.85))
+                .foregroundColor(isEmpty ? .onSurface.opacity(0.35) : .onSurface.opacity(0.85))
                 .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -204,20 +208,24 @@ struct FamilyMemberProfileView: View {
     // MARK: - Play button
 
     private var playButton: some View {
-        Button { speech.toggle(text: speechText) } label: {
+        let hasContent = !speechText.isEmpty
+        return Button {
+            if hasContent { speech.toggle(text: speechText) }
+        } label: {
             HStack(spacing: 12) {
                 Image(systemName: speech.isPlaying ? "stop.circle.fill" : "play.circle.fill")
                     .font(.system(size: 22))
                 Text(speech.isPlaying ? "Stop" : "Hear \(firstName)'s Story")
                     .font(.system(size: 17, weight: .semibold))
             }
-            .foregroundColor(.backgroundDark)
+            .foregroundColor(hasContent ? .backgroundDark : .onSurface.opacity(0.4))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.accentYellow)
+            .background(hasContent ? Color.accentYellow : Color.surfaceVariant.opacity(0.5))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain)
+        .disabled(!hasContent)
     }
 
     // MARK: - Utility
