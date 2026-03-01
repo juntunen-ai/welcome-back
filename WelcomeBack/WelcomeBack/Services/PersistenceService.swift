@@ -75,6 +75,16 @@ enum PersistenceService {
         return UIImage(named: imageURL)
     }
 
+    // MARK: - Reset
+
+    /// Deletes all persisted data: the user profile JSON and all saved photos.
+    /// After calling this, the next app launch will show the onboarding flow.
+    static func deleteAll() {
+        let fm = FileManager.default
+        try? fm.removeItem(at: profileURL)
+        try? fm.removeItem(at: photosDirectoryURL)
+    }
+
     // MARK: - Private
 
     private static func createPhotosDirectoryIfNeeded() {

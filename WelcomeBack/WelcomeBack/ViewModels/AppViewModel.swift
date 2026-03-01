@@ -43,6 +43,16 @@ final class AppViewModel: ObservableObject {
         userProfile.isOnboardingComplete = true
     }
 
+    /// Wipes all saved data and restarts the onboarding flow.
+    /// Use this when setting up the app for a new person, or for testing.
+    func resetToNewUser() {
+        PersistenceService.deleteAll()
+        notificationService.cancelAll()
+        selectedFamilyMember = nil
+        selectedTab = .home
+        userProfile = .default   // didSet saves the empty profile; isOnboardingComplete = false → onboarding shows
+    }
+
     // MARK: - Listening / Conversation
 
     func startListening() {

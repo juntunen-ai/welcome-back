@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @State private var showResetConfirm = false
 
     var body: some View {
         NavigationStack {
@@ -13,6 +14,7 @@ struct SettingsView: View {
                     generalSection
                     aiSection
                     systemSection
+                    resetSection
                     footerSection
                 }
                 .scrollContentBackground(.hidden)
@@ -21,6 +23,18 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
+            .confirmationDialog(
+                "Reset to New User?",
+                isPresented: $showResetConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Reset Everything", role: .destructive) {
+                    appVM.resetToNewUser()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will erase all profile data, family members, and saved photos. The onboarding flow will restart. This cannot be undone.")
+            }
         }
     }
 
@@ -88,6 +102,25 @@ struct SettingsView: View {
                 .tracking(1.5)
         }
         .listRowBackground(Color.surfaceVariant.opacity(0.4))
+    }
+
+    private var resetSection: some View {
+        Section {
+            Button {
+                showResetConfirm = true
+            } label: {
+                SettingsRowView(icon: "arrow.counterclockwise", iconColor: .red,
+                                title: "Reset to New User",
+                                subtitle: "Erase all data and restart onboarding")
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+        } header: {
+            Text("Reset")
+                .foregroundColor(.accentYellow)
+                .font(.system(size: 12, weight: .bold))
+                .tracking(1.5)
+        }
     }
 
     private var footerSection: some View {
