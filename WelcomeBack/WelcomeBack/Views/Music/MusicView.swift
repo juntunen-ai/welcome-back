@@ -61,7 +61,7 @@ struct MusicView: View {
 
             // Inspirational copy
             VStack(spacing: 4) {
-                Text("Harri")
+                Text(appVM.userProfile.name.isEmpty ? "Your songs" : appVM.userProfile.name)
                     .font(.system(size: 32, weight: .black))
                     .foregroundColor(.white)
 

@@ -119,10 +119,7 @@ struct OnboardingProfileView: View {
 
         if let img = profileImage {
             let url = PersistenceService.savePhoto(img, memberID: "user_profile")
-            // Store in UserProfile — we'll use this as the user's profile photo
-            // For now save it; HomeView will load it via PersistenceService
-            appVM.userProfile.biography = appVM.userProfile.biography   // trigger save
-            _ = url  // saved; HomeView picks it up via PersistenceService
+            appVM.userProfile.profileImageURL = url
         }
 
         nameFieldFocused = false

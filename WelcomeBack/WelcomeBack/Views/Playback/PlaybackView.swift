@@ -175,6 +175,15 @@ struct PlaybackView: View {
 }
 
 #Preview {
-    PlaybackView(member: FamilyMember.mockData[0])
-        .environmentObject(AppViewModel())
+    PlaybackView(member: FamilyMember(
+        id: "preview-1",
+        name: "Anna",
+        relationship: "Wife",
+        biography: "Anna is the heart of our family.",
+        memory1: "Our first date was a walk along the river.",
+        memory2: "Every summer we spend a week at the cottage.",
+        imageURL: "",
+        isVoiceCloned: false
+    ))
+    .environmentObject(AppViewModel())
 }

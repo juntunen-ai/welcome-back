@@ -37,15 +37,11 @@ struct HomeView: View {
         VStack(spacing: 16) {
             // Profile photo — falls back to initials if image not yet added
             Group {
-                if let uiImage = PersistenceService.loadImage(imageURL: "photo:user_profile.jpg") {
+                if !appVM.userProfile.profileImageURL.isEmpty,
+                   let uiImage = PersistenceService.loadImage(imageURL: appVM.userProfile.profileImageURL) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                } else if let uiImage = UIImage(named: "user_harri") {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .rotationEffect(.degrees(180))
                 } else {
                     Color.surfaceVariant
                         .overlay(

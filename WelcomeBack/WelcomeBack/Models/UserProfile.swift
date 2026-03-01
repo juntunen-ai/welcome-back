@@ -2,6 +2,7 @@ import Foundation
 
 struct UserProfile: Codable {
     var name: String
+    var profileImageURL: String      // "photo:user_profile.jpg" or "" if not set
     var address: String
     var biography: String
     var currentLocation: String
@@ -21,7 +22,7 @@ struct UserProfile: Codable {
     // MARK: - Migration-safe Codable
 
     enum CodingKeys: String, CodingKey {
-        case name, address, biography, currentLocation
+        case name, profileImageURL, address, biography, currentLocation
         case familyMembers, memories
         case preferredAIModel, isVoiceCloningEnabled
         case notificationsEnabled, notificationTimes, notificationTopics
@@ -31,6 +32,7 @@ struct UserProfile: Codable {
 
     init(
         name: String,
+        profileImageURL: String = "",
         address: String = "",
         biography: String = "",
         currentLocation: String = "",
@@ -44,6 +46,7 @@ struct UserProfile: Codable {
         isOnboardingComplete: Bool = false
     ) {
         self.name = name
+        self.profileImageURL = profileImageURL
         self.address = address
         self.biography = biography
         self.currentLocation = currentLocation
@@ -60,6 +63,7 @@ struct UserProfile: Codable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         name                 = (try? c.decode(String.self,            forKey: .name))                 ?? ""
+        profileImageURL      = (try? c.decode(String.self,            forKey: .profileImageURL))      ?? ""
         address              = (try? c.decode(String.self,            forKey: .address))              ?? ""
         biography            = (try? c.decode(String.self,            forKey: .biography))            ?? ""
         currentLocation      = (try? c.decode(String.self,            forKey: .currentLocation))      ?? ""
@@ -76,6 +80,7 @@ struct UserProfile: Codable {
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(name,                  forKey: .name)
+        try c.encode(profileImageURL,       forKey: .profileImageURL)
         try c.encode(address,               forKey: .address)
         try c.encode(biography,             forKey: .biography)
         try c.encode(currentLocation,       forKey: .currentLocation)
