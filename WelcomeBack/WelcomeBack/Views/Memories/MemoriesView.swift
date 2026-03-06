@@ -251,12 +251,13 @@ struct MemoriesView: View {
 struct AlbumCardView: View {
 
     let album: MemoryAlbum
+    @State private var lazyThumbnail: UIImage? = nil
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Background thumbnail
             Group {
-                if let thumbnail = album.thumbnail {
+                if let thumbnail = lazyThumbnail ?? album.thumbnail {
                     Image(uiImage: thumbnail)
                         .resizable()
                         .scaledToFill()
@@ -305,6 +306,27 @@ struct AlbumCardView: View {
             RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Color.white.opacity(0.08))
         )
+        .task(id: album.id) {
+            guard lazyThumbnail == nil, album.thumbnail == nil,
+                  let firstID = album.assetLocalIDs.first else { return }
+            let result = PHAsset.fetchAssets(withLocalIdentifiers: [firstID], options: nil)
+            guard let asset = result.firstObject else { return }
+            let opts = PHImageRequestOptions()
+            opts.deliveryMode = .fastFormat
+            opts.isSynchronous = false
+            opts.isNetworkAccessAllowed = false
+            lazyThumbnail = await withCheckedContinuation { cont in
+                nonisolated(unsafe) var resumed = false
+                PHImageManager.default().requestImage(
+                    for: asset, targetSize: CGSize(width: 400, height: 400),
+                    contentMode: .aspectFill, options: opts
+                ) { img, _ in
+                    guard !resumed else { return }
+                    resumed = true
+                    cont.resume(returning: img)
+                }
+            }
+        }
         .accessibilityLabel("\(album.title), \(album.subtitle)")
     }
 }

@@ -98,18 +98,16 @@ final class PhotoLibraryService: ObservableObject {
             groups[name, default: []].append(asset)
         }
 
-        let thumbOpts = syncThumbOptions()
         return groups.compactMap { name, assets -> MemoryAlbum? in
             guard assets.count >= 3 else { return nil }
             let sorted = assets.sorted { ($0.creationDate ?? .distantPast) > ($1.creationDate ?? .distantPast) }
-            let thumbnail = loadThumbnail(for: sorted.first, options: thumbOpts)
             return MemoryAlbum(
                 id: "holiday-\(name.lowercased().replacingOccurrences(of: " ", with: "-"))",
                 title: name,
                 subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s")",
                 theme: .holiday(name: name),
                 assetLocalIDs: sorted.map { $0.localIdentifier },
-                thumbnail: thumbnail
+                thumbnail: nil
             )
         }.sorted { $0.title < $1.title }
     }
@@ -189,7 +187,6 @@ final class PhotoLibraryService: ObservableObject {
         }
         guard !valid.isEmpty else { return [] }
 
-        let thumbOpts = syncThumbOptions()
         var albums: [MemoryAlbum] = []
 
         for (index, cluster) in valid.enumerated() {
@@ -200,7 +197,7 @@ final class PhotoLibraryService: ObservableObject {
             let sorted = cluster.sorted {
                 ($0.0.creationDate ?? .distantPast) > ($1.0.creationDate ?? .distantPast)
             }
-            let thumbnail = loadThumbnail(for: sorted.first?.0, options: thumbOpts)
+            let thumbnail = await loadThumbnailAsync(for: sorted.first?.0)
             let title = locationName.map { "Trip to \($0)" } ?? "Trip \(index + 1)"
             let dates  = cluster.compactMap { $0.0.creationDate }.sorted()
             let subtitle = dateRangeSubtitle(from: dates.first, count: cluster.count)
@@ -278,14 +275,12 @@ final class PhotoLibraryService: ObservableObject {
         var assets: [PHAsset] = []
         result.enumerateObjects { a, _, _ in assets.append(a) }
 
-        let thumbOpts = syncThumbOptions(size: CGSize(width: 300, height: 300))
-
         for asset in assets {
             if Task.isCancelled { break }
             let assetID = asset.localIdentifier
             guard !cache.processedIDs.contains(assetID) else { continue }
 
-            let photoImage = loadThumbnail(for: asset, options: thumbOpts)
+            let photoImage = await loadThumbnailAsync(for: asset, size: CGSize(width: 300, height: 300))
             cache.processedIDs.insert(assetID)
             guard let img = photoImage else { continue }
 
@@ -308,29 +303,32 @@ final class PhotoLibraryService: ObservableObject {
         }
 
         let memberNameByID = Dictionary(uniqueKeysWithValues: memberPrints.map { ($0.id, $0.name) })
-        let thumbOpts2 = syncThumbOptions()
 
-        return memberAssets.compactMap { memberID, assets -> MemoryAlbum? in
-            guard assets.count >= 2, let name = memberNameByID[memberID] else { return nil }
+        var result2: [MemoryAlbum] = []
+        for (memberID, assets) in memberAssets {
+            guard assets.count >= 2, let name = memberNameByID[memberID] else { continue }
             let sorted = assets.sorted { ($0.creationDate ?? .distantPast) > ($1.creationDate ?? .distantPast) }
 
-            // Prefer the member's own profile photo as the album cover
+            // Prefer the member's own profile photo as album cover (file-system read, safe)
             var thumbnail: UIImage?
             if let member = familyMembers.first(where: { $0.id == memberID }),
                !member.imageURL.isEmpty {
                 thumbnail = PersistenceService.loadImage(imageURL: member.imageURL)
             }
-            if thumbnail == nil { thumbnail = loadThumbnail(for: sorted.first, options: thumbOpts2) }
+            if thumbnail == nil {
+                thumbnail = await loadThumbnailAsync(for: sorted.first)
+            }
 
-            return MemoryAlbum(
+            result2.append(MemoryAlbum(
                 id: "person-\(memberID)",
                 title: name,
                 subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s") with \(name)",
                 theme: .person(familyMemberID: memberID, name: name),
                 assetLocalIDs: sorted.map { $0.localIdentifier },
                 thumbnail: thumbnail
-            )
-        }.sorted { $0.title < $1.title }
+            ))
+        }
+        return result2.sorted { $0.title < $1.title }
     }
 
     /// Generate a face-based feature print from a UIImage (crops to largest detected face).
@@ -405,8 +403,6 @@ final class PhotoLibraryService: ObservableObject {
         var assets: [PHAsset] = []
         result.enumerateObjects { a, _, _ in assets.append(a) }
 
-        let thumbOpts = syncThumbOptions(size: CGSize(width: 224, height: 224))
-
         let sceneMap: [(keywords: [String], tag: String)] = [
             (["beach", "ocean", "sea", "coast", "shore"], "beach"),
             (["mountain", "cliff", "canyon", "alpine"],   "mountain"),
@@ -419,7 +415,7 @@ final class PhotoLibraryService: ObservableObject {
             let assetID = asset.localIdentifier
             guard !cache.processedIDs.contains(assetID) else { continue }
 
-            guard let img = loadThumbnail(for: asset, options: thumbOpts),
+            guard let img = await loadThumbnailAsync(for: asset, size: CGSize(width: 224, height: 224)),
                   let cgImage = img.cgImage else {
                 cache.processedIDs.insert(assetID)
                 continue
@@ -459,20 +455,21 @@ final class PhotoLibraryService: ObservableObject {
             "winter":   "Winter Adventures",
             "forest":   "Nature Walks",
         ]
-        let thumbOpts2 = syncThumbOptions()
-        return tagGroups.compactMap { tag, assets -> MemoryAlbum? in
-            guard assets.count >= 3, let title = titleForTag[tag] else { return nil }
+        var sceneAlbums: [MemoryAlbum] = []
+        for (tag, assets) in tagGroups {
+            guard assets.count >= 3, let title = titleForTag[tag] else { continue }
             let sorted = assets.sorted { ($0.creationDate ?? .distantPast) > ($1.creationDate ?? .distantPast) }
-            let thumbnail = loadThumbnail(for: sorted.first, options: thumbOpts2)
-            return MemoryAlbum(
+            let thumbnail = await loadThumbnailAsync(for: sorted.first)
+            sceneAlbums.append(MemoryAlbum(
                 id: "scene-\(tag)",
                 title: title,
                 subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s")",
                 theme: .scene(tag: tag),
                 assetLocalIDs: sorted.map { $0.localIdentifier },
                 thumbnail: thumbnail
-            )
+            ))
         }
+        return sceneAlbums
     }
 
     // MARK: - Full-resolution PhotoItem loading
@@ -517,27 +514,28 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Shared helpers
 
-    private nonisolated static func syncThumbOptions(size: CGSize = CGSize(width: 400, height: 400))
-    -> PHImageRequestOptions {
-        let o = PHImageRequestOptions()
-        o.isSynchronous = true
-        o.deliveryMode = .fastFormat
-        o.isNetworkAccessAllowed = false
-        return o
-    }
-
-    private nonisolated static func loadThumbnail(
+    /// Async thumbnail loader — uses isSynchronous = false so the cooperative thread pool is never blocked.
+    /// deliveryMode = .fastFormat guarantees exactly one callback, preventing continuation leaks.
+    private nonisolated static func loadThumbnailAsync(
         for asset: PHAsset?,
-        options: PHImageRequestOptions,
         size: CGSize = CGSize(width: 400, height: 400)
-    ) -> UIImage? {
+    ) async -> UIImage? {
         guard let asset else { return nil }
-        var result: UIImage?
-        PHImageManager.default().requestImage(
-            for: asset, targetSize: size,
-            contentMode: .aspectFill, options: options
-        ) { img, _ in result = img }
-        return result
+        let opts = PHImageRequestOptions()
+        opts.deliveryMode = .fastFormat
+        opts.isSynchronous = false
+        opts.isNetworkAccessAllowed = false
+        return await withCheckedContinuation { cont in
+            nonisolated(unsafe) var resumed = false
+            PHImageManager.default().requestImage(
+                for: asset, targetSize: size,
+                contentMode: .aspectFill, options: opts
+            ) { img, _ in
+                guard !resumed else { return }
+                resumed = true
+                cont.resume(returning: img)
+            }
+        }
     }
 
     // MARK: - Face cache (Documents/face_match_cache.json)
