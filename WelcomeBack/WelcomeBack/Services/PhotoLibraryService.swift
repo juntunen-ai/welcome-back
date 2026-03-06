@@ -151,7 +151,7 @@ final class PhotoLibraryService: ObservableObject {
 
     private nonisolated static func buildTripAlbums() async -> [MemoryAlbum] {
         let opts = PHFetchOptions()
-        opts.predicate = NSPredicate(format: "mediaType = %d AND location != nil",
+        opts.predicate = NSPredicate(format: "mediaType = %d",
                                      PHAssetMediaType.image.rawValue)
         opts.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
         opts.fetchLimit = 3000
