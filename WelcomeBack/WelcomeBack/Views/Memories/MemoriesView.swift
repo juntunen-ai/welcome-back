@@ -309,12 +309,28 @@ struct AlbumCardView: View {
                 .strokeBorder(Color.white.opacity(0.1))
         )
         .task(id: album.id) {
-            guard lazyThumbnail == nil, album.thumbnail == nil,
-                  let firstID = album.assetLocalIDs.first else { return }
-            let result = PHAsset.fetchAssets(withLocalIdentifiers: [firstID], options: nil)
-            guard let asset = result.firstObject else { return }
-            // Request at full display resolution to avoid blur on wide cards.
-            // highQualityFormat guarantees exactly one callback.
+            // Always load a high-quality cover — album.thumbnail is only a low-res
+            // placeholder from the background scan and will appear blurry at full width.
+            guard lazyThumbnail == nil,
+                  !album.assetLocalIDs.isEmpty else { return }
+
+            // Fetch all assets in the album so we can pick the best cover photo.
+            // Prefer non-screenshots; fall back to the first asset if all are screenshots.
+            let result = PHAsset.fetchAssets(
+                withLocalIdentifiers: album.assetLocalIDs, options: nil)
+            guard result.count > 0 else { return }
+
+            var assetsByID: [String: PHAsset] = [:]
+            result.enumerateObjects { a, _, _ in assetsByID[a.localIdentifier] = a }
+
+            let coverAsset = album.assetLocalIDs
+                .compactMap { assetsByID[$0] }
+                .first { !$0.mediaSubtypes.contains(.photoScreenshot) }
+                ?? result.firstObject
+            guard let asset = coverAsset else { return }
+
+            // Request at display resolution — 800 pt × screen scale gives sharp results
+            // on all Retina devices. highQualityFormat guarantees exactly one callback.
             let scale = UIScreen.main.scale
             let targetSize = CGSize(width: 800 * scale, height: 440 * scale)
             let opts = PHImageRequestOptions()
