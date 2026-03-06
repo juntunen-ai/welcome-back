@@ -88,46 +88,42 @@ struct AlbumCarouselView: View {
         }
     }
 
-    // MARK: - Photo page with overlay
+    // MARK: - Photo page
 
     private func photoPage(_ item: PhotoItem) -> some View {
-        ZStack(alignment: .bottom) {
+        VStack(spacing: 16) {
             Image(uiImage: item.image)
                 .resizable()
                 .scaledToFit()
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .padding(.horizontal, 16)
 
-            if hasOverlayContent(item) {
-                metadataOverlay(item)
-            }
+            metadataRow(item)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func hasOverlayContent(_ item: PhotoItem) -> Bool {
-        locationCache[item.id] != nil || item.date != nil
-    }
-
-    private func metadataOverlay(_ item: PhotoItem) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if let locationName = locationCache[item.id],
-               !locationName.isEmpty, locationName != "—" {
-                Label(locationName, systemImage: "mappin.and.ellipse")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white)
-            }
-            if let date = item.date {
-                Label(Self.dateFormatter.string(from: date), systemImage: "calendar")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white.opacity(0.8))
-            }
+    @ViewBuilder
+    private func metadataRow(_ item: PhotoItem) -> some View {
+        let locationName = locationCache[item.id].flatMap {
+            $0.isEmpty || $0 == "—" ? nil : $0
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .padding(.horizontal, 32)
-        .padding(.bottom, 32)
+        if locationName != nil || item.date != nil {
+            VStack(alignment: .leading, spacing: 6) {
+                if let loc = locationName {
+                    Label(loc, systemImage: "mappin.and.ellipse")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                if let date = item.date {
+                    Label(Self.dateFormatter.string(from: date), systemImage: "calendar")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 32)
+        }
     }
 
     // MARK: - Geocoding

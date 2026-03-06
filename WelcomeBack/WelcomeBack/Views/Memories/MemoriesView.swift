@@ -124,18 +124,16 @@ struct MemoriesView: View {
             }
             .padding(.horizontal, 16)
 
-            // Horizontal scroll of album cards
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(albums) { album in
-                        NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
-                            AlbumCardView(album: album)
-                        }
-                        .buttonStyle(.plain)
+            // Vertical stack of album cards
+            VStack(spacing: 12) {
+                ForEach(albums) { album in
+                    NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
+                        AlbumCardView(album: album)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 16)
             }
+            .padding(.horizontal, 16)
         }
     }
 
@@ -302,7 +300,8 @@ struct AlbumCardView: View {
             .padding(.bottom, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 190, height: 240)
+        .frame(maxWidth: .infinity)
+        .frame(height: 220)
         .clipShape(RoundedRectangle(cornerRadius: 22))
         .overlay(
             RoundedRectangle(cornerRadius: 22)
