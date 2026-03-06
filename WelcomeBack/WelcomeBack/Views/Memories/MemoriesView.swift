@@ -263,63 +263,68 @@ struct AlbumCardView: View {
                     ZStack {
                         Color.surfaceVariant
                         Image(systemName: album.theme.sectionIcon)
-                            .font(.system(size: 32))
+                            .font(.system(size: 40))
                             .foregroundColor(.onSurface.opacity(0.2))
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
-            // Gradient overlay — tall enough to always cover both text lines
+            // Gradient — covers the bottom third solidly so text is always legible
             LinearGradient(
                 stops: [
-                    .init(color: .black.opacity(0.85), location: 0),
-                    .init(color: .black.opacity(0.45), location: 0.45),
-                    .init(color: .clear,               location: 0.75),
+                    .init(color: .black.opacity(0.88), location: 0),
+                    .init(color: .black.opacity(0.55), location: 0.40),
+                    .init(color: .clear,               location: 0.70),
                 ],
                 startPoint: .bottom,
                 endPoint: .top
             )
 
-            // Text pinned to bottom-leading
+            // Text pinned to bottom
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .shadow(color: .black.opacity(0.9), radius: 3, y: 1)
+                    .multilineTextAlignment(.leading)
+                    .shadow(color: .black, radius: 4, y: 1)
 
                 Text(album.subtitle)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.accentYellow)
                     .lineLimit(1)
-                    .shadow(color: .black.opacity(0.9), radius: 3, y: 1)
+                    .shadow(color: .black, radius: 4, y: 1)
             }
-            .padding(.horizontal, 14)
-            .padding(.bottom, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 220)
         .clipShape(RoundedRectangle(cornerRadius: 22))
         .overlay(
             RoundedRectangle(cornerRadius: 22)
-                .strokeBorder(Color.white.opacity(0.08))
+                .strokeBorder(Color.white.opacity(0.1))
         )
         .task(id: album.id) {
             guard lazyThumbnail == nil, album.thumbnail == nil,
                   let firstID = album.assetLocalIDs.first else { return }
             let result = PHAsset.fetchAssets(withLocalIdentifiers: [firstID], options: nil)
             guard let asset = result.firstObject else { return }
+            // Request at full display resolution to avoid blur on wide cards.
+            // highQualityFormat guarantees exactly one callback.
+            let scale = UIScreen.main.scale
+            let targetSize = CGSize(width: 800 * scale, height: 440 * scale)
             let opts = PHImageRequestOptions()
-            opts.deliveryMode = .fastFormat
+            opts.deliveryMode = .highQualityFormat
             opts.isSynchronous = false
             opts.isNetworkAccessAllowed = false
             lazyThumbnail = await withCheckedContinuation { cont in
                 nonisolated(unsafe) var resumed = false
                 PHImageManager.default().requestImage(
-                    for: asset, targetSize: CGSize(width: 400, height: 400),
+                    for: asset, targetSize: targetSize,
                     contentMode: .aspectFill, options: opts
                 ) { img, _ in
                     guard !resumed else { return }
