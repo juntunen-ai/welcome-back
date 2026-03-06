@@ -3,8 +3,6 @@ import UIKit
 import Vision
 import CoreLocation
 
-// MARK: - Service
-
 /// Scans the photo library for family members using on-device face recognition
 /// and builds one MemoryAlbum per person.
 @MainActor
@@ -12,7 +10,6 @@ final class PhotoLibraryService: ObservableObject {
 
     @Published var authorizationStatus: PHAuthorizationStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
     @Published var albums: [MemoryAlbum] = []
-    @Published var isLoading = false
     @Published var isScanningInBackground = false
 
     private var backgroundScanTask: Task<Void, Never>?
@@ -23,10 +20,9 @@ final class PhotoLibraryService: ObservableObject {
         let status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         authorizationStatus = status
         guard status == .authorized || status == .limited else { return }
-        await loadAlbums(familyMembers: familyMembers)
+        loadAlbums(familyMembers: familyMembers)
     }
 
-    /// Load full-resolution PhotoItems for an album (carries date + location metadata).
     func loadPhotos(for album: MemoryAlbum) async -> [PhotoItem] {
         let assets: [PHAsset] = await Task.detached(priority: .userInitiated) {
             let result = PHAsset.fetchAssets(withLocalIdentifiers: album.assetLocalIDs, options: nil)
@@ -39,28 +35,40 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Album loading
 
-    private func loadAlbums(familyMembers: [FamilyMember]) async {
+    /// Creates one placeholder album per family member immediately (non-async),
+    /// then runs face recognition in the background and replaces albums when done.
+    private func loadAlbums(familyMembers: [FamilyMember]) {
         guard !familyMembers.isEmpty else {
             albums = []
-            isLoading = false
             return
         }
 
+        // Show tiles right away — profile photo as cover, photos populated later.
+        albums = familyMembers.map { member in
+            MemoryAlbum(
+                id: "person-\(member.id)",
+                title: member.name,
+                subtitle: "",
+                theme: .person(familyMemberID: member.id, name: member.name),
+                assetLocalIDs: [],
+                thumbnail: member.imageURL.isEmpty
+                    ? nil
+                    : PersistenceService.loadImage(imageURL: member.imageURL)
+            )
+        }.sorted { $0.title < $1.title }
+
+        // Background face-recognition scan — doesn't block the UI.
         backgroundScanTask?.cancel()
-        isLoading = true
         isScanningInBackground = true
-        let capturedMembers = familyMembers
+        let captured = familyMembers
 
         backgroundScanTask = Task { [weak self] in
             guard let self else { return }
-
-            let personAlbums = await Task.detached(priority: .background) {
-                await PhotoLibraryService.buildPersonAlbums(familyMembers: capturedMembers)
+            let result = await Task.detached(priority: .background) {
+                await PhotoLibraryService.buildPersonAlbums(familyMembers: captured)
             }.value
-
             guard !Task.isCancelled else { return }
-            self.albums = personAlbums
-            self.isLoading = false
+            self.albums = result
             self.isScanningInBackground = false
         }
     }
@@ -68,51 +76,51 @@ final class PhotoLibraryService: ObservableObject {
     // MARK: - Person Albums (face feature print matching)
 
     private nonisolated static func buildPersonAlbums(familyMembers: [FamilyMember]) async -> [MemoryAlbum] {
-        // Build feature prints from each family member's profile photo
-        var memberPrints: [(id: String, name: String, print: VNFeaturePrintObservation)] = []
+        // Build feature prints from each family member's profile photo.
+        var memberPrints: [(id: String, print: VNFeaturePrintObservation)] = []
         for member in familyMembers {
             guard !member.imageURL.isEmpty,
                   let img = PersistenceService.loadImage(imageURL: member.imageURL),
                   let fp  = faceFeaturePrint(from: img) else { continue }
-            memberPrints.append((id: member.id, name: member.name, print: fp))
+            memberPrints.append((id: member.id, print: fp))
         }
-        guard !memberPrints.isEmpty else { return [] }
 
         var cache = loadFaceCache()
 
-        // Fetch up to 500 most-recent non-screenshot images
-        let opts = PHFetchOptions()
-        opts.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        opts.fetchLimit = 500
-        opts.predicate = NSPredicate(
-            format: "mediaType = %d AND NOT (mediaSubtype & %d) != 0",
-            PHAssetMediaType.image.rawValue,
-            PHAssetMediaSubtype.photoScreenshot.rawValue
-        )
-        let result = PHAsset.fetchAssets(with: .image, options: opts)
-        var assets: [PHAsset] = []
-        result.enumerateObjects { a, _, _ in assets.append(a) }
+        if !memberPrints.isEmpty {
+            // Fetch up to 500 most-recent non-screenshot images.
+            let opts = PHFetchOptions()
+            opts.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            opts.fetchLimit = 500
+            opts.predicate = NSPredicate(
+                format: "mediaType = %d AND NOT (mediaSubtype & %d) != 0",
+                PHAssetMediaType.image.rawValue,
+                PHAssetMediaSubtype.photoScreenshot.rawValue
+            )
+            let result = PHAsset.fetchAssets(with: .image, options: opts)
+            var assets: [PHAsset] = []
+            result.enumerateObjects { a, _, _ in assets.append(a) }
 
-        for asset in assets {
-            if Task.isCancelled { break }
-            let assetID = asset.localIdentifier
-            guard !cache.processedIDs.contains(assetID) else { continue }
+            for asset in assets {
+                if Task.isCancelled { break }
+                let assetID = asset.localIdentifier
+                guard !cache.processedIDs.contains(assetID) else { continue }
 
-            let photoImage = await loadThumbnailAsync(for: asset, size: CGSize(width: 300, height: 300))
-            cache.processedIDs.insert(assetID)
-            guard let img = photoImage else { continue }
+                let img = await loadThumbnailAsync(for: asset, size: CGSize(width: 300, height: 300))
+                cache.processedIDs.insert(assetID)
+                guard let img else { continue }
 
-            let matched = matchFaces(in: img, against: memberPrints)
-            if !matched.isEmpty { cache.matches[assetID] = matched }
+                let matched = matchFaces(in: img, against: memberPrints)
+                if !matched.isEmpty { cache.matches[assetID] = matched }
+            }
+            saveFaceCache(cache)
         }
-        saveFaceCache(cache)
 
-        // Build one album per family member from cached matches
-        let assetByID: [String: PHAsset] = {
-            var d: [String: PHAsset] = [:]
-            result.enumerateObjects { a, _, _ in d[a.localIdentifier] = a }
-            return d
-        }()
+        // Collect matched assets per member.
+        let allIDs = Array(Set(cache.matches.keys))
+        let fetchResult = PHAsset.fetchAssets(withLocalIdentifiers: allIDs, options: nil)
+        var assetByID: [String: PHAsset] = [:]
+        fetchResult.enumerateObjects { a, _, _ in assetByID[a.localIdentifier] = a }
 
         var memberAssets: [String: [PHAsset]] = [:]
         for (assetID, memberIDs) in cache.matches {
@@ -120,38 +128,38 @@ final class PhotoLibraryService: ObservableObject {
             for mid in memberIDs { memberAssets[mid, default: []].append(asset) }
         }
 
-        let memberNameByID = Dictionary(uniqueKeysWithValues: memberPrints.map { ($0.id, $0.name) })
+        // Build one album per family member — always, even if no photos matched yet.
+        var albums: [MemoryAlbum] = []
+        for member in familyMembers {
+            let matched = (memberAssets[member.id] ?? [])
+                .sorted { ($0.creationDate ?? .distantPast) > ($1.creationDate ?? .distantPast) }
 
-        var result2: [MemoryAlbum] = []
-        for (memberID, assets) in memberAssets {
-            guard assets.count >= 2, let name = memberNameByID[memberID] else { continue }
-            let sorted = assets.sorted { ($0.creationDate ?? .distantPast) > ($1.creationDate ?? .distantPast) }
-
-            // Prefer the member's own profile photo as album cover
+            // Cover: member profile photo preferred; fall back to best matched photo.
             var thumbnail: UIImage?
-            if let member = familyMembers.first(where: { $0.id == memberID }),
-               !member.imageURL.isEmpty {
+            if !member.imageURL.isEmpty {
                 thumbnail = PersistenceService.loadImage(imageURL: member.imageURL)
             }
-            if thumbnail == nil {
-                thumbnail = await loadThumbnailAsync(for: sorted.first)
+            if thumbnail == nil, let first = matched.first {
+                thumbnail = await loadThumbnailAsync(for: first)
             }
 
-            result2.append(MemoryAlbum(
-                id: "person-\(memberID)",
-                title: name,
-                subtitle: seasonYear(from: sorted.first?.creationDate),
-                theme: .person(familyMemberID: memberID, name: name),
-                assetLocalIDs: sorted.prefix(10).map { $0.localIdentifier },
+            albums.append(MemoryAlbum(
+                id: "person-\(member.id)",
+                title: member.name,
+                subtitle: seasonYear(from: matched.first?.creationDate),
+                theme: .person(familyMemberID: member.id, name: member.name),
+                assetLocalIDs: matched.prefix(10).map { $0.localIdentifier },
                 thumbnail: thumbnail
             ))
         }
-        return result2.sorted { $0.title < $1.title }
+        return albums.sorted { $0.title < $1.title }
     }
+
+    // MARK: - Season subtitle
 
     private nonisolated static func seasonYear(from date: Date?) -> String {
         guard let date else { return "" }
-        let cal = Calendar.current
+        let cal   = Calendar.current
         let month = cal.component(.month, from: date)
         let year  = cal.component(.year,  from: date)
         let season: String
@@ -171,9 +179,7 @@ final class PhotoLibraryService: ObservableObject {
         let handler = VNImageRequestHandler(cgImage: cg, options: [:])
         let faceReq = VNDetectFaceRectanglesRequest()
         try? handler.perform([faceReq])
-
         let cropCG = faceReq.results?.first.flatMap { cropFace(from: cg, obs: $0) } ?? cg
-
         let printReq = VNGenerateImageFeaturePrintRequest()
         let printHandler = VNImageRequestHandler(cgImage: cropCG, options: [:])
         try? printHandler.perform([printReq])
@@ -196,14 +202,13 @@ final class PhotoLibraryService: ObservableObject {
 
     private nonisolated static func matchFaces(
         in image: UIImage,
-        against members: [(id: String, name: String, print: VNFeaturePrintObservation)]
+        against members: [(id: String, print: VNFeaturePrintObservation)]
     ) -> [String] {
         guard let cg = image.cgImage else { return [] }
         let handler = VNImageRequestHandler(cgImage: cg, options: [:])
         let faceReq = VNDetectFaceRectanglesRequest()
         guard (try? handler.perform([faceReq])) != nil,
               let faces = faceReq.results, !faces.isEmpty else { return [] }
-
         var matched = Set<String>()
         for face in faces {
             guard let faceCG = cropFace(from: cg, obs: face) else { continue }
@@ -283,11 +288,11 @@ final class PhotoLibraryService: ObservableObject {
         }
     }
 
-    // MARK: - Face cache (Documents/face_match_cache.json)
+    // MARK: - Face cache
 
     private struct FaceMatchCache: Codable {
         var processedIDs: Set<String> = []
-        var matches: [String: [String]] = [:]   // assetLocalIdentifier → [familyMemberID]
+        var matches: [String: [String]] = [:]
     }
 
     nonisolated static var faceCacheURL: URL {
@@ -297,9 +302,8 @@ final class PhotoLibraryService: ObservableObject {
 
     private nonisolated static func loadFaceCache() -> FaceMatchCache {
         guard let data  = try? Data(contentsOf: faceCacheURL),
-              let cache = try? JSONDecoder().decode(FaceMatchCache.self, from: data) else {
-            return FaceMatchCache()
-        }
+              let cache = try? JSONDecoder().decode(FaceMatchCache.self, from: data)
+        else { return FaceMatchCache() }
         return cache
     }
 

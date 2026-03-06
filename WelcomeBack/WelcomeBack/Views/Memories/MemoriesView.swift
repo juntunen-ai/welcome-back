@@ -32,98 +32,97 @@ struct MemoriesView: View {
         case .denied, .restricted:
             permissionDeniedView
         default:
-            if photoService.isLoading || photoService.isScanningInBackground {
-                loadingView
-            } else if appVM.userProfile.familyMembers.isEmpty {
+            if appVM.userProfile.familyMembers.isEmpty {
                 noFamilyMembersView
-            } else if photoService.albums.isEmpty {
-                emptyState
             } else {
-                albumGrid
+                albumGrid   // Always show tiles — scan runs in background
             }
         }
     }
 
-    // MARK: - Alternating grid  (full-width → pair → full-width → pair …)
+    // MARK: - Alternating grid (full → pair → full → pair …)
 
-    /// Albums grouped into display rows.
-    /// Even-index rows get one full-width card; odd-index rows get up to two half-width cards.
     private var gridRows: [[MemoryAlbum]] {
         var rows: [[MemoryAlbum]] = []
+        let items = photoService.albums
         var i = 0
-        var fullWidth = true
-        let albums = photoService.albums
-        while i < albums.count {
-            if fullWidth {
-                rows.append([albums[i]])
-                i += 1
+        while i < items.count {
+            // Full-width row
+            rows.append([items[i]]); i += 1
+            guard i < items.count else { break }
+            // Pair row
+            if i + 1 < items.count {
+                rows.append([items[i], items[i + 1]]); i += 2
             } else {
-                let end = min(i + 2, albums.count)
-                rows.append(Array(albums[i..<end]))
-                i = end
+                rows.append([items[i]]); i += 1
             }
-            fullWidth.toggle()
         }
         return rows
     }
 
     private var albumGrid: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                ForEach(gridRows.indices, id: \.self) { rowIndex in
-                    let row = gridRows[rowIndex]
-                    if row.count == 1 {
-                        albumTile(row[0], height: 300)
-                    } else {
-                        HStack(spacing: 12) {
-                            ForEach(row) { album in
-                                albumTile(album, height: 210)
+        GeometryReader { proxy in
+            let hPad: CGFloat = 16
+            let gap:  CGFloat = 12
+            let total = proxy.size.width - hPad * 2
+            let half  = (total - gap) / 2
+
+            ScrollView {
+                VStack(spacing: gap) {
+
+                    // Small scanning indicator — doesn't block the tiles
+                    if photoService.isScanningInBackground {
+                        HStack(spacing: 8) {
+                            ProgressView().tint(.accentYellow).scaleEffect(0.75)
+                            Text("Scanning for photos…")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.onSurface.opacity(0.5))
+                            Spacer()
+                        }
+                        .padding(.horizontal, 6)
+                    }
+
+                    ForEach(gridRows.indices, id: \.self) { i in
+                        let row = gridRows[i]
+                        if row.count == 1 {
+                            tile(row[0], width: total, height: 300)
+                        } else {
+                            HStack(spacing: gap) {
+                                ForEach(row) { album in
+                                    tile(album, width: half, height: 220)
+                                }
                             }
                         }
                     }
-                }
 
-                Text("End of Memories")
-                    .font(.system(size: 11, weight: .bold))
-                    .tracking(2)
-                    .foregroundColor(.onSurface.opacity(0.3))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
+                    Text("End of Memories")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(2)
+                        .foregroundColor(.onSurface.opacity(0.3))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                }
+                .padding(.horizontal, hPad)
+                .padding(.top, 8)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-            .padding(.bottom, 32)
         }
     }
 
-    private func albumTile(_ album: MemoryAlbum, height: CGFloat) -> some View {
+    private func tile(_ album: MemoryAlbum, width: CGFloat, height: CGFloat) -> some View {
         NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
-            AlbumCardView(album: album, height: height)
+            AlbumCardView(album: album, width: width, height: height)
         }
         .buttonStyle(.plain)
     }
 
     // MARK: - State views
 
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .tint(.accentYellow)
-                .scaleEffect(1.4)
-            Text("Scanning photos for family members…")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.onSurface.opacity(0.6))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-        }
-    }
-
     private var noFamilyMembersView: some View {
         VStack(spacing: 20) {
             Image(systemName: "person.2.fill")
                 .font(.system(size: 56))
                 .foregroundColor(.accentYellow.opacity(0.8))
-
             VStack(spacing: 8) {
                 Text("No family members added")
                     .font(.system(size: 20, weight: .bold))
@@ -137,31 +136,11 @@ struct MemoriesView: View {
         .padding(40)
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 56))
-                .foregroundColor(.onSurface.opacity(0.3))
-
-            VStack(spacing: 6) {
-                Text("No photos found")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.onSurface)
-                Text("No photos of your family members were detected in your library yet.")
-                    .font(.system(size: 14))
-                    .foregroundColor(.onSurface.opacity(0.6))
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(40)
-    }
-
     private var permissionPromptView: some View {
         VStack(spacing: 20) {
             Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 56))
                 .foregroundColor(.accentYellow.opacity(0.8))
-
             VStack(spacing: 8) {
                 Text("Your Photo Memories")
                     .font(.system(size: 20, weight: .bold))
@@ -171,7 +150,6 @@ struct MemoriesView: View {
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
-
             Button {
                 Task {
                     await photoService.requestAuthorizationAndLoad(
@@ -198,7 +176,6 @@ struct MemoriesView: View {
             Image(systemName: "lock.slash")
                 .font(.system(size: 48))
                 .foregroundColor(.onSurface.opacity(0.3))
-
             VStack(spacing: 6) {
                 Text("Photo access denied")
                     .font(.system(size: 18, weight: .bold))
@@ -218,11 +195,13 @@ struct MemoriesView: View {
 struct AlbumCardView: View {
 
     let album: MemoryAlbum
+    let width: CGFloat
     let height: CGFloat
     @State private var lazyThumbnail: UIImage? = nil
 
-    init(album: MemoryAlbum, height: CGFloat = 300) {
+    init(album: MemoryAlbum, width: CGFloat = 300, height: CGFloat = 300) {
         self.album = album
+        self.width = width
         self.height = height
     }
 
@@ -245,7 +224,7 @@ struct AlbumCardView: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: width, height: height)
             .clipped()
 
             // Gradient
@@ -276,12 +255,10 @@ struct AlbumCardView: View {
                         .shadow(color: .black.opacity(0.8), radius: 3, y: 1)
                 }
             }
-            .padding(.horizontal, isLarge ? 18 : 14)
-            .padding(.bottom, isLarge ? 18 : 14)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .padding(.horizontal, isLarge ? 18 : 13)
+            .padding(.bottom,    isLarge ? 18 : 13)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: height)
+        .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
@@ -304,7 +281,7 @@ struct AlbumCardView: View {
             guard let asset = cover else { return }
 
             let scale = UIScreen.main.scale
-            let targetSize = CGSize(width: 800 * scale, height: CGFloat(height) * scale * 1.2)
+            let targetSize = CGSize(width: width * scale, height: height * scale)
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .highQualityFormat
             opts.isSynchronous = false
