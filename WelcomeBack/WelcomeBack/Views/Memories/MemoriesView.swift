@@ -272,38 +272,40 @@ struct AlbumCardView: View {
             }
             .clipped()
 
-            // Gradient overlay
+            // Gradient overlay — tall enough to always cover both text lines
             LinearGradient(
                 stops: [
-                    .init(color: .black.opacity(0.8), location: 0),
-                    .init(color: .black.opacity(0.3), location: 0.55),
-                    .init(color: .clear,              location: 1),
+                    .init(color: .black.opacity(0.85), location: 0),
+                    .init(color: .black.opacity(0.45), location: 0.45),
+                    .init(color: .clear,               location: 0.75),
                 ],
                 startPoint: .bottom,
                 endPoint: .top
             )
 
-            // Text
-            VStack(alignment: .leading, spacing: 3) {
+            // Text pinned to bottom-leading
+            VStack(alignment: .leading, spacing: 4) {
                 Text(album.title)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
-                    .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .shadow(color: .black.opacity(0.9), radius: 3, y: 1)
 
                 Text(album.subtitle)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.accentYellow)
                     .lineLimit(1)
-                    .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
+                    .shadow(color: .black.opacity(0.9), radius: 3, y: 1)
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 160, height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .frame(width: 190, height: 240)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 22)
                 .strokeBorder(Color.white.opacity(0.08))
         )
         .task(id: album.id) {
