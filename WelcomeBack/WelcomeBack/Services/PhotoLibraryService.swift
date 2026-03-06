@@ -84,7 +84,7 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Phase 1a: Holiday Albums (calendar-based, instant)
 
-    private static func buildHolidayAlbums() -> [MemoryAlbum] {
+    private nonisolated static func buildHolidayAlbums() -> [MemoryAlbum] {
         let opts = PHFetchOptions()
         opts.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         opts.fetchLimit = 5000
@@ -151,7 +151,7 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Phase 1b: Trip Albums (GPS clustering + geocoding)
 
-    private static func buildTripAlbums() async -> [MemoryAlbum] {
+    private nonisolated static func buildTripAlbums() async -> [MemoryAlbum] {
         let opts = PHFetchOptions()
         opts.predicate = NSPredicate(format: "mediaType = %d AND location != nil",
                                      PHAssetMediaType.image.rawValue)
@@ -228,7 +228,7 @@ final class PhotoLibraryService: ObservableObject {
         return CLLocation(latitude: lat, longitude: lon)
     }
 
-    private static func haversineKm(_ a: CLLocation, _ b: CLLocation) -> Double {
+    private nonisolated static func haversineKm(_ a: CLLocation, _ b: CLLocation) -> Double {
         let R = 6371.0
         let lat1 = a.coordinate.latitude * .pi / 180
         let lat2 = b.coordinate.latitude * .pi / 180
@@ -256,7 +256,7 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Phase 2a: Person Albums (face feature print matching, background)
 
-    private static func buildPersonAlbums(familyMembers: [FamilyMember]) async -> [MemoryAlbum] {
+    private nonisolated static func buildPersonAlbums(familyMembers: [FamilyMember]) async -> [MemoryAlbum] {
         // Build feature prints from each family member's profile photo
         var memberPrints: [(id: String, name: String, print: VNFeaturePrintObservation)] = []
         for member in familyMembers {
@@ -394,7 +394,7 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Phase 2b: Scene Albums (VNClassifyImageRequest, background)
 
-    private static func buildSceneAlbums() async -> [MemoryAlbum] {
+    private nonisolated static func buildSceneAlbums() async -> [MemoryAlbum] {
         var cache = loadSceneCache()
 
         let opts = PHFetchOptions()
@@ -526,7 +526,7 @@ final class PhotoLibraryService: ObservableObject {
         return o
     }
 
-    private static func loadThumbnail(
+    private nonisolated static func loadThumbnail(
         for asset: PHAsset?,
         options: PHImageRequestOptions,
         size: CGSize = CGSize(width: 400, height: 400)
@@ -547,12 +547,12 @@ final class PhotoLibraryService: ObservableObject {
         var matches: [String: [String]] = [:]   // assetLocalIdentifier → [familyMemberID]
     }
 
-    static var faceCacheURL: URL {
+    nonisolated static var faceCacheURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("face_match_cache.json")
     }
 
-    private static func loadFaceCache() -> FaceMatchCache {
+    private nonisolated static func loadFaceCache() -> FaceMatchCache {
         guard let data  = try? Data(contentsOf: faceCacheURL),
               let cache = try? JSONDecoder().decode(FaceMatchCache.self, from: data) else {
             return FaceMatchCache()
@@ -560,7 +560,7 @@ final class PhotoLibraryService: ObservableObject {
         return cache
     }
 
-    private static func saveFaceCache(_ cache: FaceMatchCache) {
+    private nonisolated static func saveFaceCache(_ cache: FaceMatchCache) {
         guard let data = try? JSONEncoder().encode(cache) else { return }
         try? data.write(to: faceCacheURL, options: .atomic)
     }
@@ -572,12 +572,12 @@ final class PhotoLibraryService: ObservableObject {
         var scenes: [String: [String]] = [:]    // assetLocalIdentifier → [tag]
     }
 
-    static var sceneCacheURL: URL {
+    nonisolated static var sceneCacheURL: URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("scene_cache.json")
     }
 
-    private static func loadSceneCache() -> SceneCache {
+    private nonisolated static func loadSceneCache() -> SceneCache {
         guard let data  = try? Data(contentsOf: sceneCacheURL),
               let cache = try? JSONDecoder().decode(SceneCache.self, from: data) else {
             return SceneCache()
@@ -585,7 +585,7 @@ final class PhotoLibraryService: ObservableObject {
         return cache
     }
 
-    private static func saveSceneCache(_ cache: SceneCache) {
+    private nonisolated static func saveSceneCache(_ cache: SceneCache) {
         guard let data = try? JSONEncoder().encode(cache) else { return }
         try? data.write(to: sceneCacheURL, options: .atomic)
     }
