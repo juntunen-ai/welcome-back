@@ -140,13 +140,28 @@ final class PhotoLibraryService: ObservableObject {
             result2.append(MemoryAlbum(
                 id: "person-\(memberID)",
                 title: name,
-                subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s") with \(name)",
+                subtitle: seasonYear(from: sorted.first?.creationDate),
                 theme: .person(familyMemberID: memberID, name: name),
                 assetLocalIDs: sorted.prefix(10).map { $0.localIdentifier },
                 thumbnail: thumbnail
             ))
         }
         return result2.sorted { $0.title < $1.title }
+    }
+
+    private nonisolated static func seasonYear(from date: Date?) -> String {
+        guard let date else { return "" }
+        let cal = Calendar.current
+        let month = cal.component(.month, from: date)
+        let year  = cal.component(.year,  from: date)
+        let season: String
+        switch month {
+        case 3...5:  season = "Spring"
+        case 6...8:  season = "Summer"
+        case 9...11: season = "Autumn"
+        default:     season = "Winter"
+        }
+        return "\(season) \(year)"
     }
 
     // MARK: - Face helpers

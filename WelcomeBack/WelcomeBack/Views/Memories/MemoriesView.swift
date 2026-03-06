@@ -39,21 +39,48 @@ struct MemoriesView: View {
             } else if photoService.albums.isEmpty {
                 emptyState
             } else {
-                albumList
+                albumGrid
             }
         }
     }
 
-    // MARK: - Album list
+    // MARK: - Alternating grid  (full-width → pair → full-width → pair …)
 
-    private var albumList: some View {
+    /// Albums grouped into display rows.
+    /// Even-index rows get one full-width card; odd-index rows get up to two half-width cards.
+    private var gridRows: [[MemoryAlbum]] {
+        var rows: [[MemoryAlbum]] = []
+        var i = 0
+        var fullWidth = true
+        let albums = photoService.albums
+        while i < albums.count {
+            if fullWidth {
+                rows.append([albums[i]])
+                i += 1
+            } else {
+                let end = min(i + 2, albums.count)
+                rows.append(Array(albums[i..<end]))
+                i = end
+            }
+            fullWidth.toggle()
+        }
+        return rows
+    }
+
+    private var albumGrid: some View {
         ScrollView {
-            VStack(spacing: 14) {
-                ForEach(photoService.albums) { album in
-                    NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
-                        AlbumCardView(album: album)
+            VStack(spacing: 12) {
+                ForEach(gridRows.indices, id: \.self) { rowIndex in
+                    let row = gridRows[rowIndex]
+                    if row.count == 1 {
+                        albumTile(row[0], height: 300)
+                    } else {
+                        HStack(spacing: 12) {
+                            ForEach(row) { album in
+                                albumTile(album, height: 210)
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
 
                 Text("End of Memories")
@@ -67,6 +94,13 @@ struct MemoriesView: View {
             .padding(.top, 8)
             .padding(.bottom, 32)
         }
+    }
+
+    private func albumTile(_ album: MemoryAlbum, height: CGFloat) -> some View {
+        NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
+            AlbumCardView(album: album, height: height)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - State views
@@ -184,21 +218,29 @@ struct MemoriesView: View {
 struct AlbumCardView: View {
 
     let album: MemoryAlbum
+    let height: CGFloat
     @State private var lazyThumbnail: UIImage? = nil
+
+    init(album: MemoryAlbum, height: CGFloat = 300) {
+        self.album = album
+        self.height = height
+    }
+
+    private var isLarge: Bool { height >= 260 }
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Background thumbnail
+            // Photo
             Group {
-                if let thumbnail = lazyThumbnail ?? album.thumbnail {
-                    Image(uiImage: thumbnail)
+                if let img = lazyThumbnail ?? album.thumbnail {
+                    Image(uiImage: img)
                         .resizable()
                         .scaledToFill()
                 } else {
                     ZStack {
                         Color.surfaceVariant
                         Image(systemName: "person.fill")
-                            .font(.system(size: 48))
+                            .font(.system(size: isLarge ? 52 : 36))
                             .foregroundColor(.onSurface.opacity(0.15))
                     }
                 }
@@ -206,68 +248,68 @@ struct AlbumCardView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
-            // Gradient — covers the bottom third solidly so text is always legible
+            // Gradient
             LinearGradient(
                 stops: [
-                    .init(color: .black.opacity(0.88), location: 0),
-                    .init(color: .black.opacity(0.55), location: 0.40),
-                    .init(color: .clear,               location: 0.70),
+                    .init(color: .black.opacity(0.85), location: 0),
+                    .init(color: .black.opacity(0.40), location: 0.45),
+                    .init(color: .clear,               location: 0.72),
                 ],
                 startPoint: .bottom,
                 endPoint: .top
             )
 
-            // Text pinned to bottom
-            VStack(alignment: .leading, spacing: 4) {
+            // Text
+            VStack(alignment: .leading, spacing: 3) {
                 Text(album.title)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: isLarge ? 20 : 15, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(1)
-                    .shadow(color: .black, radius: 4, y: 1)
+                    .shadow(color: .black.opacity(0.8), radius: 3, y: 1)
 
-                Text(album.subtitle)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.accentYellow)
-                    .lineLimit(1)
-                    .shadow(color: .black, radius: 4, y: 1)
+                if !album.subtitle.isEmpty {
+                    Text(album.subtitle.uppercased())
+                        .font(.system(size: isLarge ? 11 : 10, weight: .bold))
+                        .tracking(1.5)
+                        .foregroundColor(.accentYellow)
+                        .lineLimit(1)
+                        .shadow(color: .black.opacity(0.8), radius: 3, y: 1)
+                }
             }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 18)
+            .padding(.horizontal, isLarge ? 18 : 14)
+            .padding(.bottom, isLarge ? 18 : 14)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 240)
-        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .frame(height: height)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .strokeBorder(Color.white.opacity(0.1))
+            RoundedRectangle(cornerRadius: 20)
+                .strokeBorder(Color.white.opacity(0.08))
         )
         .task(id: album.id) {
-            // Always load a high-quality cover — album.thumbnail is a low-res
-            // placeholder from the background scan and appears blurry at full width.
-            guard lazyThumbnail == nil,
-                  !album.assetLocalIDs.isEmpty else { return }
+            guard lazyThumbnail == nil, !album.assetLocalIDs.isEmpty else { return }
 
-            // Prefer a non-screenshot photo as the card cover.
             let result = PHAsset.fetchAssets(
                 withLocalIdentifiers: album.assetLocalIDs, options: nil)
             guard result.count > 0 else { return }
 
-            var assetsByID: [String: PHAsset] = [:]
-            result.enumerateObjects { a, _, _ in assetsByID[a.localIdentifier] = a }
+            var byID: [String: PHAsset] = [:]
+            result.enumerateObjects { a, _, _ in byID[a.localIdentifier] = a }
 
-            let coverAsset = album.assetLocalIDs
-                .compactMap { assetsByID[$0] }
+            let cover = album.assetLocalIDs
+                .compactMap { byID[$0] }
                 .first { !$0.mediaSubtypes.contains(.photoScreenshot) }
                 ?? result.firstObject
-            guard let asset = coverAsset else { return }
+            guard let asset = cover else { return }
 
             let scale = UIScreen.main.scale
-            let targetSize = CGSize(width: 800 * scale, height: 480 * scale)
+            let targetSize = CGSize(width: 800 * scale, height: CGFloat(height) * scale * 1.2)
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .highQualityFormat
             opts.isSynchronous = false
             opts.isNetworkAccessAllowed = false
+
             lazyThumbnail = await withCheckedContinuation { cont in
                 nonisolated(unsafe) var resumed = false
                 PHImageManager.default().requestImage(
