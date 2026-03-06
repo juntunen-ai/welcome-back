@@ -32,34 +32,28 @@ struct MemoriesView: View {
         case .denied, .restricted:
             permissionDeniedView
         default:
-            if photoService.isLoading {
+            if photoService.isLoading || photoService.isScanningInBackground {
                 loadingView
-            } else if photoService.albums.isEmpty && !photoService.isScanningInBackground {
+            } else if appVM.userProfile.familyMembers.isEmpty {
+                noFamilyMembersView
+            } else if photoService.albums.isEmpty {
                 emptyState
             } else {
-                albumSections
+                albumList
             }
         }
     }
 
-    // MARK: - Section layout
+    // MARK: - Album list
 
-    private var albumSections: some View {
+    private var albumList: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-
-                if photoService.isScanningInBackground {
-                    scanningBanner
-                        .padding(.horizontal, 16)
-                }
-
-                ForEach(AlbumSection.allCases) { section in
-                    let sectionAlbums = albums(for: section)
-                    if !sectionAlbums.isEmpty {
-                        albumSection(title: section.title,
-                                     icon: section.icon,
-                                     albums: sectionAlbums)
+            VStack(spacing: 14) {
+                ForEach(photoService.albums) { album in
+                    NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
+                        AlbumCardView(album: album)
                     }
+                    .buttonStyle(.plain)
                 }
 
                 Text("End of Memories")
@@ -69,90 +63,10 @@ struct MemoriesView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
             }
+            .padding(.horizontal, 16)
             .padding(.top, 8)
             .padding(.bottom, 32)
         }
-    }
-
-    // MARK: - Section helpers
-
-    private enum AlbumSection: String, CaseIterable, Identifiable {
-        case family   = "Family"
-        case trips    = "Trips"
-        case holidays = "Holidays"
-        case moments  = "Moments"
-
-        var id: String { rawValue }
-
-        var title: String { rawValue }
-
-        var icon: String {
-            switch self {
-            case .family:   return "person.2.fill"
-            case .trips:    return "airplane"
-            case .holidays: return "star.fill"
-            case .moments:  return "sparkles"
-            }
-        }
-    }
-
-    private func albums(for section: AlbumSection) -> [MemoryAlbum] {
-        photoService.albums.filter { album in
-            switch (section, album.theme) {
-            case (.family,   .person):  return true
-            case (.trips,    .trip):    return true
-            case (.holidays, .holiday): return true
-            case (.moments,  .scene):   return true
-            default: return false
-            }
-        }
-    }
-
-    // MARK: - Section view
-
-    private func albumSection(title: String, icon: String, albums: [MemoryAlbum]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Section header
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.accentYellow)
-                Text(title.uppercased())
-                    .font(.system(size: 12, weight: .bold))
-                    .tracking(1.5)
-                    .foregroundColor(.onSurface.opacity(0.5))
-            }
-            .padding(.horizontal, 16)
-
-            // Vertical stack of album cards
-            VStack(spacing: 12) {
-                ForEach(albums) { album in
-                    NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
-                        AlbumCardView(album: album)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 16)
-        }
-    }
-
-    // MARK: - Scanning banner
-
-    private var scanningBanner: some View {
-        HStack(spacing: 10) {
-            ProgressView()
-                .tint(.accentYellow)
-                .scaleEffect(0.8)
-            Text("Scanning for faces and scenes…")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(.onSurface.opacity(0.6))
-            Spacer()
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(Color.surfaceVariant.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - State views
@@ -162,10 +76,50 @@ struct MemoriesView: View {
             ProgressView()
                 .tint(.accentYellow)
                 .scaleEffect(1.4)
-            Text("Loading memories…")
+            Text("Scanning photos for family members…")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.onSurface.opacity(0.6))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
         }
+    }
+
+    private var noFamilyMembersView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "person.2.fill")
+                .font(.system(size: 56))
+                .foregroundColor(.accentYellow.opacity(0.8))
+
+            VStack(spacing: 8) {
+                Text("No family members added")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.onSurface)
+                Text("Add family members in the Family tab so their photos can appear here.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.onSurface.opacity(0.6))
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(40)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "photo.on.rectangle.angled")
+                .font(.system(size: 56))
+                .foregroundColor(.onSurface.opacity(0.3))
+
+            VStack(spacing: 6) {
+                Text("No photos found")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.onSurface)
+                Text("No photos of your family members were detected in your library yet.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.onSurface.opacity(0.6))
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(40)
     }
 
     private var permissionPromptView: some View {
@@ -178,7 +132,7 @@ struct MemoriesView: View {
                 Text("Your Photo Memories")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.onSurface)
-                Text("Allow access to your photos so memories from important moments in your life can be shown here.")
+                Text("Allow access to your photos so memories of your family members can be shown here.")
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -223,25 +177,6 @@ struct MemoriesView: View {
         }
         .padding(40)
     }
-
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 56))
-                .foregroundColor(.onSurface.opacity(0.3))
-
-            VStack(spacing: 6) {
-                Text("No memories yet")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.onSurface)
-                Text("Photos will be organised by people, trips, and special moments.")
-                    .font(.system(size: 14))
-                    .foregroundColor(.onSurface.opacity(0.6))
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(40)
-    }
 }
 
 // MARK: - Album Card
@@ -262,9 +197,9 @@ struct AlbumCardView: View {
                 } else {
                     ZStack {
                         Color.surfaceVariant
-                        Image(systemName: album.theme.sectionIcon)
-                            .font(.system(size: 40))
-                            .foregroundColor(.onSurface.opacity(0.2))
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(.onSurface.opacity(0.15))
                     }
                 }
             }
@@ -285,37 +220,35 @@ struct AlbumCardView: View {
             // Text pinned to bottom
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title)
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
+                    .lineLimit(1)
                     .shadow(color: .black, radius: 4, y: 1)
 
                 Text(album.subtitle)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.accentYellow)
                     .lineLimit(1)
                     .shadow(color: .black, radius: 4, y: 1)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 18)
+            .padding(.bottom, 18)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 220)
+        .frame(height: 240)
         .clipShape(RoundedRectangle(cornerRadius: 22))
         .overlay(
             RoundedRectangle(cornerRadius: 22)
                 .strokeBorder(Color.white.opacity(0.1))
         )
         .task(id: album.id) {
-            // Always load a high-quality cover — album.thumbnail is only a low-res
-            // placeholder from the background scan and will appear blurry at full width.
+            // Always load a high-quality cover — album.thumbnail is a low-res
+            // placeholder from the background scan and appears blurry at full width.
             guard lazyThumbnail == nil,
                   !album.assetLocalIDs.isEmpty else { return }
 
-            // Fetch all assets in the album so we can pick the best cover photo.
-            // Prefer non-screenshots; fall back to the first asset if all are screenshots.
+            // Prefer a non-screenshot photo as the card cover.
             let result = PHAsset.fetchAssets(
                 withLocalIdentifiers: album.assetLocalIDs, options: nil)
             guard result.count > 0 else { return }
@@ -329,10 +262,8 @@ struct AlbumCardView: View {
                 ?? result.firstObject
             guard let asset = coverAsset else { return }
 
-            // Request at display resolution — 800 pt × screen scale gives sharp results
-            // on all Retina devices. highQualityFormat guarantees exactly one callback.
             let scale = UIScreen.main.scale
-            let targetSize = CGSize(width: 800 * scale, height: 440 * scale)
+            let targetSize = CGSize(width: 800 * scale, height: 480 * scale)
             let opts = PHImageRequestOptions()
             opts.deliveryMode = .highQualityFormat
             opts.isSynchronous = false
