@@ -77,12 +77,14 @@ enum PersistenceService {
 
     // MARK: - Reset
 
-    /// Deletes all persisted data: the user profile JSON and all saved photos.
+    /// Deletes all persisted data: user profile JSON, saved photos, and ML caches.
     /// After calling this, the next app launch will show the onboarding flow.
     static func deleteAll() {
         let fm = FileManager.default
         try? fm.removeItem(at: profileURL)
         try? fm.removeItem(at: photosDirectoryURL)
+        try? fm.removeItem(at: documentsURL.appendingPathComponent("face_match_cache.json"))
+        try? fm.removeItem(at: documentsURL.appendingPathComponent("scene_cache.json"))
     }
 
     // MARK: - Private

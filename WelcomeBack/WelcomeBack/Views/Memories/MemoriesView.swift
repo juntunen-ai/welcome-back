@@ -10,12 +10,15 @@ struct MemoriesView: View {
         NavigationStack {
             ZStack {
                 Color.backgroundDark.ignoresSafeArea()
-
                 content
             }
             .navigationTitle("Memories")
             .navigationBarTitleDisplayMode(.large)
-            .task { await photoService.requestAuthorizationAndLoad() }
+            .task {
+                await photoService.requestAuthorizationAndLoad(
+                    familyMembers: appVM.userProfile.familyMembers
+                )
+            }
         }
     }
 
@@ -31,69 +34,127 @@ struct MemoriesView: View {
         default:
             if photoService.isLoading {
                 loadingView
-            } else if photoService.moments.isEmpty {
+            } else if photoService.albums.isEmpty && !photoService.isScanningInBackground {
                 emptyState
             } else {
-                ScrollView {
-                    mosaicGrid
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-
-                    Text("End of Memories")
-                        .font(.system(size: 11, weight: .bold))
-                        .tracking(2)
-                        .foregroundColor(.onSurface.opacity(0.3))
-                        .padding(.vertical, 24)
-                }
+                albumSections
             }
         }
     }
 
-    // MARK: - Mosaic grid
-    // Layout pattern (repeating every 4):
-    //   [0] full-width hero (tall)
-    //   [1] [2] side-by-side (medium)
-    //   [3] full-width (shorter)
+    // MARK: - Section layout
 
-    private var mosaicGrid: some View {
-        let items = photoService.moments
-        return VStack(spacing: 12) {
-            ForEach(Array(stride(from: 0, to: items.count, by: 4)), id: \.self) { base in
-                if base < items.count {
-                    NavigationLink(destination: MomentCarouselView(moment: items[base], service: photoService)) {
-                        MomentTileView(moment: items[base], height: 220)
-                    }
-                    .buttonStyle(.plain)
+    private var albumSections: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 32) {
+
+                if photoService.isScanningInBackground {
+                    scanningBanner
+                        .padding(.horizontal, 16)
                 }
 
-                let b1 = base + 1, b2 = base + 2
-                if b1 < items.count {
-                    HStack(spacing: 12) {
-                        NavigationLink(destination: MomentCarouselView(moment: items[b1], service: photoService)) {
-                            MomentTileView(moment: items[b1], height: 160)
-                        }
-                        .buttonStyle(.plain)
-
-                        if b2 < items.count {
-                            NavigationLink(destination: MomentCarouselView(moment: items[b2], service: photoService)) {
-                                MomentTileView(moment: items[b2], height: 160)
-                            }
-                            .buttonStyle(.plain)
-                        } else {
-                            Color.clear
-                        }
+                ForEach(AlbumSection.allCases) { section in
+                    let sectionAlbums = albums(for: section)
+                    if !sectionAlbums.isEmpty {
+                        albumSection(title: section.title,
+                                     icon: section.icon,
+                                     albums: sectionAlbums)
                     }
                 }
 
-                let b3 = base + 3
-                if b3 < items.count {
-                    NavigationLink(destination: MomentCarouselView(moment: items[b3], service: photoService)) {
-                        MomentTileView(moment: items[b3], height: 160)
-                    }
-                    .buttonStyle(.plain)
-                }
+                Text("End of Memories")
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(2)
+                    .foregroundColor(.onSurface.opacity(0.3))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+            }
+            .padding(.top, 8)
+            .padding(.bottom, 32)
+        }
+    }
+
+    // MARK: - Section helpers
+
+    private enum AlbumSection: String, CaseIterable, Identifiable {
+        case family   = "Family"
+        case trips    = "Trips"
+        case holidays = "Holidays"
+        case moments  = "Moments"
+
+        var id: String { rawValue }
+
+        var title: String { rawValue }
+
+        var icon: String {
+            switch self {
+            case .family:   return "person.2.fill"
+            case .trips:    return "airplane"
+            case .holidays: return "star.fill"
+            case .moments:  return "sparkles"
             }
         }
+    }
+
+    private func albums(for section: AlbumSection) -> [MemoryAlbum] {
+        photoService.albums.filter { album in
+            switch (section, album.theme) {
+            case (.family,   .person):  return true
+            case (.trips,    .trip):    return true
+            case (.holidays, .holiday): return true
+            case (.moments,  .scene):   return true
+            default: return false
+            }
+        }
+    }
+
+    // MARK: - Section view
+
+    private func albumSection(title: String, icon: String, albums: [MemoryAlbum]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.accentYellow)
+                Text(title.uppercased())
+                    .font(.system(size: 12, weight: .bold))
+                    .tracking(1.5)
+                    .foregroundColor(.onSurface.opacity(0.5))
+            }
+            .padding(.horizontal, 16)
+
+            // Horizontal scroll of album cards
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(albums) { album in
+                        NavigationLink(destination: AlbumCarouselView(album: album, service: photoService)) {
+                            AlbumCardView(album: album)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+        }
+    }
+
+    // MARK: - Scanning banner
+
+    private var scanningBanner: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .tint(.accentYellow)
+                .scaleEffect(0.8)
+            Text("Scanning for faces and scenes…")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.onSurface.opacity(0.6))
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.surfaceVariant.opacity(0.3))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     // MARK: - State views
@@ -126,7 +187,11 @@ struct MemoriesView: View {
             }
 
             Button {
-                Task { await photoService.requestAuthorizationAndLoad() }
+                Task {
+                    await photoService.requestAuthorizationAndLoad(
+                        familyMembers: appVM.userProfile.familyMembers
+                    )
+                }
             } label: {
                 Text("Allow Photo Access")
                     .font(.system(size: 16, weight: .semibold))
@@ -168,10 +233,10 @@ struct MemoriesView: View {
                 .foregroundColor(.onSurface.opacity(0.3))
 
             VStack(spacing: 6) {
-                Text("No photos found")
+                Text("No memories yet")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.onSurface)
-                Text("Your photo library appears to be empty.")
+                Text("Photos will be organised by people, trips, and special moments.")
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -181,64 +246,66 @@ struct MemoriesView: View {
     }
 }
 
-// MARK: - Moment Tile
+// MARK: - Album Card
 
-struct MomentTileView: View {
+struct AlbumCardView: View {
 
-    let moment: PhotoMoment
-    var height: CGFloat = 160
+    let album: MemoryAlbum
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Gradient overlay so text is always legible
+            // Background thumbnail
+            Group {
+                if let thumbnail = album.thumbnail {
+                    Image(uiImage: thumbnail)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    ZStack {
+                        Color.surfaceVariant
+                        Image(systemName: album.theme.sectionIcon)
+                            .font(.system(size: 32))
+                            .foregroundColor(.onSurface.opacity(0.2))
+                    }
+                }
+            }
+            .clipped()
+
+            // Gradient overlay
             LinearGradient(
                 stops: [
-                    .init(color: .black.opacity(0.75), location: 0),
-                    .init(color: .black.opacity(0.45), location: 0.5),
-                    .init(color: .clear, location: 1),
+                    .init(color: .black.opacity(0.8), location: 0),
+                    .init(color: .black.opacity(0.3), location: 0.55),
+                    .init(color: .clear,              location: 1),
                 ],
                 startPoint: .bottom,
                 endPoint: .top
             )
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(moment.title)
+            // Text
+            VStack(alignment: .leading, spacing: 3) {
+                Text(album.title)
                     .font(.system(size: 14, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(2)
-                    .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
+                    .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
 
-                Text(moment.subtitle.uppercased())
-                    .font(.system(size: 10, weight: .semibold))
-                    .tracking(1)
+                Text(album.subtitle)
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.accentYellow)
-                    .shadow(color: .black.opacity(0.9), radius: 2, y: 1)
+                    .lineLimit(1)
+                    .shadow(color: .black.opacity(0.8), radius: 2, y: 1)
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 12)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: height)
-        .background {
-            if let thumbnail = moment.thumbnail {
-                Image(uiImage: thumbnail)
-                    .resizable()
-                    .scaledToFill()
-                    .clipped()
-            } else {
-                ZStack {
-                    Color.surfaceVariant
-                    Image(systemName: "photo")
-                        .font(.system(size: 28))
-                        .foregroundColor(.onSurface.opacity(0.2))
-                }
-            }
-        }
+        .frame(width: 160, height: 200)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(Color.white.opacity(0.05))
+                .strokeBorder(Color.white.opacity(0.08))
         )
+        .accessibilityLabel("\(album.title), \(album.subtitle)")
     }
 }
 
