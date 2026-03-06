@@ -479,8 +479,10 @@ final class PhotoLibraryService: ObservableObject {
 
     private func loadFullPhotoItems(from assets: [PHAsset]) async -> [PhotoItem] {
         let size = CGSize(width: 1080, height: 1080)
+        // .highQualityFormat guarantees exactly one callback per request,
+        // preventing withCheckedContinuation from being abandoned.
         let opts = PHImageRequestOptions()
-        opts.deliveryMode = .opportunistic
+        opts.deliveryMode = .highQualityFormat
         opts.isSynchronous = false
         opts.isNetworkAccessAllowed = true
 
@@ -495,9 +497,7 @@ final class PhotoLibraryService: ObservableObject {
                         PHImageManager.default().requestImage(
                             for: asset, targetSize: size,
                             contentMode: .aspectFill, options: opts
-                        ) { image, info in
-                            let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
-                            if isDegraded { return }
+                        ) { image, _ in
                             guard !resumed else { return }
                             resumed = true
                             cont.resume(returning: (index, assetID, image, date, location))

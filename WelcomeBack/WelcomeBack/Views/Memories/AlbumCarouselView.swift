@@ -110,7 +110,8 @@ struct AlbumCarouselView: View {
 
     private func metadataOverlay(_ item: PhotoItem) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let locationName = locationCache[item.id] {
+            if let locationName = locationCache[item.id],
+               !locationName.isEmpty, locationName != "—" {
                 Label(locationName, systemImage: "mappin.and.ellipse")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.white)
@@ -139,11 +140,15 @@ struct AlbumCarouselView: View {
         locationCache[item.id] = ""
 
         Task {
-            guard let placemark = try? await CLGeocoder().reverseGeocodeLocation(location).first else { return }
+            guard let placemark = try? await CLGeocoder().reverseGeocodeLocation(location).first else {
+                // Use sentinel so we don't retry on every swipe
+                locationCache[item.id] = "—"
+                return
+            }
             let city    = placemark.locality ?? placemark.administrativeArea ?? ""
             let country = placemark.country ?? ""
             let name    = [city, country].filter { !$0.isEmpty }.joined(separator: ", ")
-            locationCache[item.id] = name.isEmpty ? nil : name
+            locationCache[item.id] = name.isEmpty ? "—" : name
         }
     }
 
