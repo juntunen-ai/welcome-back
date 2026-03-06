@@ -114,7 +114,7 @@ final class PhotoLibraryService: ObservableObject {
         }.sorted { $0.title < $1.title }
     }
 
-    private static func holidayName(for date: Date) -> String? {
+    private nonisolated static func holidayName(for date: Date) -> String? {
         let cal = Calendar.current
         let month = cal.component(.month, from: date)
         let day   = cal.component(.day,   from: date)
@@ -133,7 +133,7 @@ final class PhotoLibraryService: ObservableObject {
     }
 
     /// Anonymous Gregorian algorithm for Easter Sunday ± adjacent days.
-    private static func easterRange(year: Int) -> [Date] {
+    private nonisolated static func easterRange(year: Int) -> [Date] {
         let a = year % 19, b = year / 100, c = year % 100
         let d = b / 4, e = b % 4, f = (b + 8) / 25
         let g = (b - f + 1) / 3
@@ -222,7 +222,7 @@ final class PhotoLibraryService: ObservableObject {
         return albums
     }
 
-    private static func clusterCentroid(_ locs: [CLLocation]) -> CLLocation {
+    private nonisolated static func clusterCentroid(_ locs: [CLLocation]) -> CLLocation {
         let lat = locs.map { $0.coordinate.latitude }.reduce(0, +) / Double(locs.count)
         let lon = locs.map { $0.coordinate.longitude }.reduce(0, +) / Double(locs.count)
         return CLLocation(latitude: lat, longitude: lon)
@@ -238,7 +238,7 @@ final class PhotoLibraryService: ObservableObject {
         return R * 2 * atan2(sqrt(x), sqrt(1 - x))
     }
 
-    private static func geocode(_ location: CLLocation) async -> String? {
+    private nonisolated static func geocode(_ location: CLLocation) async -> String? {
         do {
             let placemarks = try await CLGeocoder().reverseGeocodeLocation(location)
             guard let p = placemarks.first else { return nil }
@@ -246,7 +246,7 @@ final class PhotoLibraryService: ObservableObject {
         } catch { return nil }
     }
 
-    private static func dateRangeSubtitle(from start: Date?, count: Int) -> String {
+    private nonisolated static func dateRangeSubtitle(from start: Date?, count: Int) -> String {
         let countStr = "\(count) photo\(count == 1 ? "" : "s")"
         guard let s = start else { return countStr }
         let fmt = DateFormatter()
@@ -337,7 +337,7 @@ final class PhotoLibraryService: ObservableObject {
     /// NOTE: VNGenerateImageFeaturePrintRequest is a general visual similarity metric.
     /// When applied to face crops from both reference and query images it gives
     /// reasonable face-matching accuracy for this use case.
-    private static func faceFeaturePrint(from image: UIImage) -> VNFeaturePrintObservation? {
+    private nonisolated static func faceFeaturePrint(from image: UIImage) -> VNFeaturePrintObservation? {
         guard let cg = image.cgImage else { return nil }
         let handler = VNImageRequestHandler(cgImage: cg, options: [:])
         let faceReq = VNDetectFaceRectanglesRequest()
@@ -351,7 +351,7 @@ final class PhotoLibraryService: ObservableObject {
         return printReq.results?.first
     }
 
-    private static func cropFace(from cg: CGImage, obs: VNFaceObservation) -> CGImage? {
+    private nonisolated static func cropFace(from cg: CGImage, obs: VNFaceObservation) -> CGImage? {
         let w = CGFloat(cg.width), h = CGFloat(cg.height)
         let bb = obs.boundingBox          // normalized, origin = bottom-left
         let padX = bb.width  * w * 0.3
@@ -365,7 +365,7 @@ final class PhotoLibraryService: ObservableObject {
         return cg.cropping(to: rect)
     }
 
-    private static func matchFaces(
+    private nonisolated static func matchFaces(
         in image: UIImage,
         against members: [(id: String, name: String, print: VNFeaturePrintObservation)]
     ) -> [String] {
@@ -517,7 +517,7 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Shared helpers
 
-    private static func syncThumbOptions(size: CGSize = CGSize(width: 400, height: 400))
+    private nonisolated static func syncThumbOptions(size: CGSize = CGSize(width: 400, height: 400))
     -> PHImageRequestOptions {
         let o = PHImageRequestOptions()
         o.isSynchronous = true
