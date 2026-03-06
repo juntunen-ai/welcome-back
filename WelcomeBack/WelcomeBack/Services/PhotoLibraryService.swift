@@ -106,7 +106,7 @@ final class PhotoLibraryService: ObservableObject {
                 title: name,
                 subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s")",
                 theme: .holiday(name: name),
-                assetLocalIDs: sorted.map { $0.localIdentifier },
+                assetLocalIDs: sorted.prefix(10).map { $0.localIdentifier },
                 thumbnail: nil
             )
         }.sorted { $0.title < $1.title }
@@ -207,7 +207,7 @@ final class PhotoLibraryService: ObservableObject {
                 title: title,
                 subtitle: subtitle,
                 theme: .trip(primaryLocation: locationName ?? ""),
-                assetLocalIDs: sorted.map { $0.0.localIdentifier },
+                assetLocalIDs: sorted.prefix(10).map { $0.0.localIdentifier },
                 thumbnail: thumbnail
             ))
 
@@ -324,7 +324,7 @@ final class PhotoLibraryService: ObservableObject {
                 title: name,
                 subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s") with \(name)",
                 theme: .person(familyMemberID: memberID, name: name),
-                assetLocalIDs: sorted.map { $0.localIdentifier },
+                assetLocalIDs: sorted.prefix(10).map { $0.localIdentifier },
                 thumbnail: thumbnail
             ))
         }
@@ -465,7 +465,7 @@ final class PhotoLibraryService: ObservableObject {
                 title: title,
                 subtitle: "\(sorted.count) photo\(sorted.count == 1 ? "" : "s")",
                 theme: .scene(tag: tag),
-                assetLocalIDs: sorted.map { $0.localIdentifier },
+                assetLocalIDs: sorted.prefix(10).map { $0.localIdentifier },
                 thumbnail: thumbnail
             ))
         }
