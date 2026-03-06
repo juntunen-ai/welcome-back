@@ -569,7 +569,7 @@ final class PhotoLibraryService: ObservableObject {
 
     private struct SceneCache: Codable {
         var processedIDs: Set<String> = []
-        var scenes: [String: [String]] = []     // assetLocalIdentifier → [tag]
+        var scenes: [String: [String]] = [:]    // assetLocalIdentifier → [tag]
     }
 
     static var sceneCacheURL: URL {
