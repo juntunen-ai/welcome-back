@@ -72,26 +72,6 @@ struct MemoriesView: View {
             ScrollView {
                 VStack(spacing: gap) {
 
-                    // ── Personal memory stories (UserProfile.memories) ─────────────
-                    if !appVM.userProfile.memories.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("YOUR STORIES")
-                                .font(.system(size: 12, weight: .bold))
-                                .tracking(1.5)
-                                .foregroundColor(.accentYellow)
-                                .padding(.horizontal, 6)
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(appVM.userProfile.memories) { memory in
-                                        MemoryStoryCard(memory: memory)
-                                    }
-                                }
-                                .padding(.horizontal, hPad)
-                            }
-                        }
-                    }
-
                     // Small scanning indicator — doesn't block the tiles
                     if photoService.isScanningInBackground {
                         HStack(spacing: 8) {
@@ -124,6 +104,22 @@ struct MemoriesView: View {
                             .foregroundColor(.onSurface.opacity(0.3))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 24)
+                    }
+
+                    // ── Personal memory stories (UserProfile.memories) ─────────────
+                    if !appVM.userProfile.memories.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("YOUR STORIES")
+                                .font(.system(size: 12, weight: .bold))
+                                .tracking(1.5)
+                                .foregroundColor(.accentYellow)
+                                .padding(.horizontal, 6)
+
+                            ForEach(appVM.userProfile.memories) { memory in
+                                MemoryStoryCard(memory: memory)
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal, hPad)
@@ -399,15 +395,15 @@ struct MemoryStoryCard: View {
                     .shadow(color: .black.opacity(0.6), radius: 3, y: 1)
 
                 Text(memory.description)
-                    .font(.system(size: 11))
+                    .font(.system(size: 12))
                     .foregroundColor(.white.opacity(0.80))
-                    .lineLimit(2)
+                    .lineLimit(3)
                     .shadow(color: .black.opacity(0.5), radius: 2)
             }
             .padding(.horizontal, 14)
             .padding(.bottom, 14)
         }
-        .frame(width: 200, height: 180)
+        .frame(maxWidth: .infinity, minHeight: 160)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
             RoundedRectangle(cornerRadius: 18)
