@@ -24,15 +24,20 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Init
 
+    /// Bump this number any time the sample data content changes.
+    /// Every device that has an older stamp will reload fresh sample data on next launch.
+    private static let sampleDataVersion = 2
+    private static let sampleDataVersionKey = "loadedSampleDataVersion"
+
     init() {
-        let saved = PersistenceService.load()
-        // Use sample data when nothing meaningful has been saved yet
-        // (covers first launch AND leftover empty profiles from earlier test runs).
-        // A "real" profile always has at least a name set via onboarding.
-        if let saved, !saved.name.isEmpty || !(saved.familyMembers.isEmpty) {
-            userProfile = saved
-        } else {
+        let loadedVersion = UserDefaults.standard.integer(forKey: Self.sampleDataVersionKey)
+        if loadedVersion < Self.sampleDataVersion {
+            // Sample data is newer than what's on device — reload it.
+            PersistenceService.deleteAll()
             userProfile = .sampleData
+            UserDefaults.standard.set(Self.sampleDataVersion, forKey: Self.sampleDataVersionKey)
+        } else {
+            userProfile = PersistenceService.load() ?? .sampleData
         }
     }
 
