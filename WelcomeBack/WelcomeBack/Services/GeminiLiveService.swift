@@ -314,8 +314,8 @@ final class GeminiLiveService: @unchecked Sendable {
         let captureFormat = self.captureFormat
 
         inputNode.installTap(onBus: 0, bufferSize: 16_384, format: nativeFormat) { [weak self] buffer, _ in
-            guard let self,
-                  let pcmBuffer = buffer as? AVAudioPCMBuffer else { return }
+            guard let self else { return }
+            let pcmBuffer = buffer
 
             let inputFrames = pcmBuffer.frameLength
             let ratio = captureFormat.sampleRate / nativeFormat.sampleRate

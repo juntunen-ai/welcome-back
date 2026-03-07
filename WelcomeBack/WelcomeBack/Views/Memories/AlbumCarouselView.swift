@@ -41,9 +41,10 @@ struct AlbumCarouselView: View {
         .task {
             await loadPhotos()
         }
-        // Re-load when the background scan finishes and updates this album's photos.
-        .onChange(of: service.albums) { _, _ in
-            guard photoItems.isEmpty else { return }
+        // Re-load when the background scan finishes (isScanningInBackground → false).
+        // Using isScanningInBackground instead of albums avoids requiring MemoryAlbum: Equatable.
+        .onChange(of: service.isScanningInBackground) { _, isScanning in
+            guard !isScanning, photoItems.isEmpty else { return }
             Task { await loadPhotos() }
         }
     }
