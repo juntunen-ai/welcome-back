@@ -65,7 +65,7 @@ struct RecordVoiceView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "info.circle")
                             .foregroundColor(.accentYellow)
-                        Text("Currently, the AI uses a warm, natural voice for all stories. Voice cloning will be available in a future Premium update.")
+                        Text("Currently, the AI uses a warm, natural voice for all stories. Voice cloning will be available in a future update.")
                             .font(.system(size: 13))
                             .foregroundColor(.onSurface.opacity(0.55))
                             .fixedSize(horizontal: false, vertical: true)

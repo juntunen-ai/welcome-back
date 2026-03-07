@@ -10,7 +10,6 @@ final class AppViewModel: ObservableObject {
     @Published var listeningSheetPresented = false
     /// True while a Gemini Live session is active — suppresses PlaybackView auto-launch.
     @Published var isLiveSessionActive = false
-    @Published var showPaywall = false
 
     // MARK: - Data
 
@@ -21,7 +20,6 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Services (shared singletons)
 
-    let subscriptionService = SubscriptionService.shared
     let notificationService = NotificationService.shared
 
     // MARK: - Init
@@ -35,7 +33,6 @@ final class AppViewModel: ObservableObject {
     var userName: String { userProfile.name }
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
-    var isPremium: Bool { subscriptionService.isPremium }
 
     // MARK: - Onboarding
 
@@ -56,12 +53,6 @@ final class AppViewModel: ObservableObject {
     // MARK: - Listening / Conversation
 
     func startListening() {
-        // Gate free-tier users once the monthly limit is reached
-        if subscriptionService.hasReachedFreeLimit {
-            showPaywall = true
-            return
-        }
-        subscriptionService.incrementConversationCount()
         listeningSheetPresented = true
     }
 
@@ -79,13 +70,6 @@ final class AppViewModel: ObservableObject {
     /// Call after the user toggles notifications on/off in Settings.
     func rescheduleNotifications() {
         Task {
-            // Gate: notifications require Premium
-            if userProfile.notificationsEnabled && !isPremium {
-                showPaywall = true
-                userProfile.notificationsEnabled = false
-                return
-            }
-
             if userProfile.notificationsEnabled {
                 let granted = await notificationService.requestAuthorization()
                 if granted {
