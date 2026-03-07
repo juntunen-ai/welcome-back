@@ -77,12 +77,14 @@ final class PhotoLibraryService: ObservableObject {
 
     private nonisolated static func buildPersonAlbums(familyMembers: [FamilyMember]) async -> [MemoryAlbum] {
         // Build feature prints from each family member's profile photo.
-        var memberPrints: [(id: String, print: VNFeaturePrintObservation)] = []
+        // isFaceBased = true  → profile photo had a detectable face → match against face crops
+        // isFaceBased = false → profile photo had no face (pet/object) → match against full image
+        var memberPrints: [(id: String, print: VNFeaturePrintObservation, isFaceBased: Bool)] = []
         for member in familyMembers {
             guard !member.imageURL.isEmpty,
                   let img = PersistenceService.loadImage(imageURL: member.imageURL),
-                  let fp  = faceFeaturePrint(from: img) else { continue }
-            memberPrints.append((id: member.id, print: fp))
+                  let (fp, isFaceBased) = faceFeaturePrint(from: img) else { continue }
+            memberPrints.append((id: member.id, print: fp, isFaceBased: isFaceBased))
         }
 
         var cache = loadFaceCache()
@@ -174,16 +176,31 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Face helpers
 
-    private nonisolated static func faceFeaturePrint(from image: UIImage) -> VNFeaturePrintObservation? {
+    /// Generates a feature print for a profile photo.
+    /// Returns `(print, isFaceBased)` where `isFaceBased` is true when a face was
+    /// detected and the print was generated from the face crop rather than the full image.
+    /// Returns nil when the image cannot be processed at all.
+    private nonisolated static func faceFeaturePrint(from image: UIImage) -> (VNFeaturePrintObservation, Bool)? {
         guard let cg = image.cgImage else { return nil }
         let handler = VNImageRequestHandler(cgImage: cg, options: [:])
         let faceReq = VNDetectFaceRectanglesRequest()
         try? handler.perform([faceReq])
-        let cropCG = faceReq.results?.first.flatMap { cropFace(from: cg, obs: $0) } ?? cg
+
+        let isFaceBased: Bool
+        let targetCG: CGImage
+        if let face = faceReq.results?.first, let faceCG = cropFace(from: cg, obs: face) {
+            targetCG  = faceCG
+            isFaceBased = true
+        } else {
+            targetCG  = cg
+            isFaceBased = false
+        }
+
         let printReq = VNGenerateImageFeaturePrintRequest()
-        let printHandler = VNImageRequestHandler(cgImage: cropCG, options: [:])
+        let printHandler = VNImageRequestHandler(cgImage: targetCG, options: [:])
         try? printHandler.perform([printReq])
-        return printReq.results?.first
+        guard let fp = printReq.results?.first else { return nil }
+        return (fp, isFaceBased)
     }
 
     private nonisolated static func cropFace(from cg: CGImage, obs: VNFaceObservation) -> CGImage? {
@@ -200,29 +217,59 @@ final class PhotoLibraryService: ObservableObject {
         return cg.cropping(to: rect)
     }
 
+    /// Matches a library photo against member feature prints.
+    /// - Face-based members (humans): detected face crops are compared → threshold 0.85
+    /// - Full-image members (pets/objects): the whole image print is compared → threshold 0.60
     private nonisolated static func matchFaces(
         in image: UIImage,
-        against members: [(id: String, print: VNFeaturePrintObservation)]
+        against members: [(id: String, print: VNFeaturePrintObservation, isFaceBased: Bool)]
     ) -> [String] {
         guard let cg = image.cgImage else { return [] }
-        let handler = VNImageRequestHandler(cgImage: cg, options: [:])
-        let faceReq = VNDetectFaceRectanglesRequest()
-        guard (try? handler.perform([faceReq])) != nil,
-              let faces = faceReq.results, !faces.isEmpty else { return [] }
         var matched = Set<String>()
-        for face in faces {
-            guard let faceCG = cropFace(from: cg, obs: face) else { continue }
-            let printReq = VNGenerateImageFeaturePrintRequest()
-            let ph = VNImageRequestHandler(cgImage: faceCG, options: [:])
-            guard (try? ph.perform([printReq])) != nil,
-                  let fp = printReq.results?.first else { continue }
-            for member in members {
-                var dist: Float = 0
-                if (try? fp.computeDistance(&dist, to: member.print)) != nil, dist < 0.85 {
-                    matched.insert(member.id)
+
+        let faceMembers  = members.filter {  $0.isFaceBased }
+        let imageMembers = members.filter { !$0.isFaceBased }
+
+        // ── Path A: face-based members ──────────────────────────────────────────
+        // Detect faces in the library photo and compare each face crop to the member's face print.
+        if !faceMembers.isEmpty {
+            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            let faceReq = VNDetectFaceRectanglesRequest()
+            if (try? handler.perform([faceReq])) != nil,
+               let faces = faceReq.results, !faces.isEmpty {
+                for face in faces {
+                    guard let faceCG = cropFace(from: cg, obs: face) else { continue }
+                    let printReq = VNGenerateImageFeaturePrintRequest()
+                    let ph = VNImageRequestHandler(cgImage: faceCG, options: [:])
+                    guard (try? ph.perform([printReq])) != nil,
+                          let fp = printReq.results?.first else { continue }
+                    for member in faceMembers {
+                        var dist: Float = 0
+                        if (try? fp.computeDistance(&dist, to: member.print)) != nil, dist < 0.85 {
+                            matched.insert(member.id)
+                        }
+                    }
                 }
             }
         }
+
+        // ── Path B: full-image members (pets, objects) ──────────────────────────
+        // Generate a feature print for the entire library photo and compare it to
+        // the member's full-image print. This finds photos that look like the pet/object.
+        if !imageMembers.isEmpty {
+            let printReq = VNGenerateImageFeaturePrintRequest()
+            let handler  = VNImageRequestHandler(cgImage: cg, options: [:])
+            if (try? handler.perform([printReq])) != nil,
+               let fp = printReq.results?.first {
+                for member in imageMembers {
+                    var dist: Float = 0
+                    if (try? fp.computeDistance(&dist, to: member.print)) != nil, dist < 0.60 {
+                        matched.insert(member.id)
+                    }
+                }
+            }
+        }
+
         return Array(matched)
     }
 
@@ -291,6 +338,9 @@ final class PhotoLibraryService: ObservableObject {
     // MARK: - Face cache
 
     private struct FaceMatchCache: Codable {
+        /// Bump this integer whenever the matching algorithm changes so that stale
+        /// caches from older algorithm versions are automatically discarded.
+        var version: Int = 2
         var processedIDs: Set<String> = []
         var matches: [String: [String]] = [:]
     }
@@ -302,7 +352,8 @@ final class PhotoLibraryService: ObservableObject {
 
     private nonisolated static func loadFaceCache() -> FaceMatchCache {
         guard let data  = try? Data(contentsOf: faceCacheURL),
-              let cache = try? JSONDecoder().decode(FaceMatchCache.self, from: data)
+              let cache = try? JSONDecoder().decode(FaceMatchCache.self, from: data),
+              cache.version == FaceMatchCache().version   // reject caches built by old algorithm versions
         else { return FaceMatchCache() }
         return cache
     }
