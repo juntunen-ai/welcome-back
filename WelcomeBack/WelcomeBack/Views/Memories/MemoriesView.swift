@@ -32,7 +32,9 @@ struct MemoriesView: View {
         case .denied, .restricted:
             permissionDeniedView
         default:
-            if appVM.userProfile.familyMembers.isEmpty {
+            // Show the grid whenever there is something to show —
+            // either family members (for photo albums) or saved memory stories.
+            if appVM.userProfile.familyMembers.isEmpty && appVM.userProfile.memories.isEmpty {
                 noFamilyMembersView
             } else {
                 albumGrid   // Always show tiles — scan runs in background
@@ -70,6 +72,26 @@ struct MemoriesView: View {
             ScrollView {
                 VStack(spacing: gap) {
 
+                    // ── Personal memory stories (UserProfile.memories) ─────────────
+                    if !appVM.userProfile.memories.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("YOUR STORIES")
+                                .font(.system(size: 12, weight: .bold))
+                                .tracking(1.5)
+                                .foregroundColor(.accentYellow)
+                                .padding(.horizontal, 6)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(appVM.userProfile.memories) { memory in
+                                        MemoryStoryCard(memory: memory)
+                                    }
+                                }
+                                .padding(.horizontal, hPad)
+                            }
+                        }
+                    }
+
                     // Small scanning indicator — doesn't block the tiles
                     if photoService.isScanningInBackground {
                         HStack(spacing: 8) {
@@ -95,12 +117,14 @@ struct MemoriesView: View {
                         }
                     }
 
-                    Text("End of Memories")
-                        .font(.system(size: 11, weight: .bold))
-                        .tracking(2)
-                        .foregroundColor(.onSurface.opacity(0.3))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
+                    if !photoService.albums.isEmpty {
+                        Text("End of Memories")
+                            .font(.system(size: 11, weight: .bold))
+                            .tracking(2)
+                            .foregroundColor(.onSurface.opacity(0.3))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 24)
+                    }
                 }
                 .padding(.horizontal, hPad)
                 .padding(.top, 8)
@@ -300,6 +324,72 @@ struct AlbumCardView: View {
             }
         }
         .accessibilityLabel("\(album.title), \(album.subtitle)")
+    }
+}
+
+// MARK: - Memory Story Card
+
+/// Displays a single `Memory` (title, date, description) from `UserProfile.memories`
+/// as a compact horizontal-scroll card.
+struct MemoryStoryCard: View {
+
+    let memory: Memory
+
+    private var categoryColor: Color {
+        switch memory.category {
+        case .family:  return .blue
+        case .events:  return Color.orange
+        case .places:  return Color.green
+        case .other:   return Color.gray
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+
+            // Category badge + date
+            HStack(spacing: 6) {
+                Text(memory.category.rawValue.uppercased())
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(1.2)
+                    .foregroundColor(categoryColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(categoryColor.opacity(0.15))
+                    .clipShape(Capsule())
+
+                Spacer()
+
+                if !memory.date.isEmpty {
+                    Text(memory.date)
+                        .font(.system(size: 11))
+                        .foregroundColor(.onSurface.opacity(0.4))
+                        .lineLimit(1)
+                }
+            }
+
+            Text(memory.title)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.onSurface)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(memory.description)
+                .font(.system(size: 13))
+                .foregroundColor(.onSurface.opacity(0.6))
+                .lineLimit(4)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(width: 220, height: 190, alignment: .topLeading)
+        .background(Color.surfaceVariant.opacity(0.4))
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .strokeBorder(Color.white.opacity(0.07))
+        )
     }
 }
 
