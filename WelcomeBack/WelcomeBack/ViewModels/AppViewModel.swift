@@ -25,7 +25,15 @@ final class AppViewModel: ObservableObject {
     // MARK: - Init
 
     init() {
-        userProfile = PersistenceService.load() ?? .default
+        let saved = PersistenceService.load()
+        // Use sample data when nothing meaningful has been saved yet
+        // (covers first launch AND leftover empty profiles from earlier test runs).
+        // A "real" profile always has at least a name set via onboarding.
+        if let saved, !saved.name.isEmpty || !(saved.familyMembers.isEmpty) {
+            userProfile = saved
+        } else {
+            userProfile = .sampleData
+        }
     }
 
     // MARK: - Computed
