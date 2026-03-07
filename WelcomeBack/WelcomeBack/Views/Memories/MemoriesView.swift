@@ -330,66 +330,91 @@ struct AlbumCardView: View {
 // MARK: - Memory Story Card
 
 /// Displays a single `Memory` (title, date, description) from `UserProfile.memories`
-/// as a compact horizontal-scroll card.
+/// as a photo-card-style horizontal-scroll tile with a category gradient background.
 struct MemoryStoryCard: View {
 
     let memory: Memory
 
     private var categoryColor: Color {
         switch memory.category {
-        case .family:  return .blue
-        case .events:  return Color.orange
-        case .places:  return Color.green
-        case .other:   return Color.gray
+        case .family:  return Color(red: 0.20, green: 0.40, blue: 0.85)   // rich blue
+        case .events:  return Color(red: 0.85, green: 0.45, blue: 0.10)   // warm orange
+        case .places:  return Color(red: 0.15, green: 0.60, blue: 0.35)   // forest green
+        case .other:   return Color(red: 0.45, green: 0.35, blue: 0.70)   // muted purple
+        }
+    }
+
+    private var categoryIcon: String {
+        switch memory.category {
+        case .family:  return "heart.fill"
+        case .events:  return "sparkles"
+        case .places:  return "map.fill"
+        case .other:   return "doc.text.fill"
         }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        ZStack(alignment: .bottomLeading) {
 
-            // Category badge + date
-            HStack(spacing: 6) {
-                Text(memory.category.rawValue.uppercased())
-                    .font(.system(size: 9, weight: .bold))
-                    .tracking(1.2)
-                    .foregroundColor(categoryColor)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(categoryColor.opacity(0.15))
-                    .clipShape(Capsule())
+            // ── Background: colour gradient ─────────────────────────────────
+            LinearGradient(
+                colors: [categoryColor, categoryColor.opacity(0.55)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
 
-                Spacer()
+            // ── Decorative large icon (watermark style) ─────────────────────
+            Image(systemName: categoryIcon)
+                .font(.system(size: 90, weight: .black))
+                .foregroundColor(.white.opacity(0.12))
+                .rotationEffect(.degrees(-10))
+                .offset(x: 70, y: -30)
+                .allowsHitTesting(false)
 
+            // ── Dark scrim so text is legible ───────────────────────────────
+            LinearGradient(
+                stops: [
+                    .init(color: .black.opacity(0.75), location: 0),
+                    .init(color: .black.opacity(0.30), location: 0.55),
+                    .init(color: .clear,               location: 0.80)
+                ],
+                startPoint: .bottom,
+                endPoint: .top
+            )
+
+            // ── Text content ────────────────────────────────────────────────
+            VStack(alignment: .leading, spacing: 4) {
                 if !memory.date.isEmpty {
-                    Text(memory.date)
-                        .font(.system(size: 11))
-                        .foregroundColor(.onSurface.opacity(0.4))
+                    Text(memory.date.uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .tracking(1.4)
+                        .foregroundColor(.white.opacity(0.65))
                         .lineLimit(1)
                 }
+
+                Text(memory.title)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                    .shadow(color: .black.opacity(0.6), radius: 3, y: 1)
+
+                Text(memory.description)
+                    .font(.system(size: 11))
+                    .foregroundColor(.white.opacity(0.80))
+                    .lineLimit(2)
+                    .shadow(color: .black.opacity(0.5), radius: 2)
             }
-
-            Text(memory.title)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.onSurface)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(memory.description)
-                .font(.system(size: 13))
-                .foregroundColor(.onSurface.opacity(0.6))
-                .lineLimit(4)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Spacer(minLength: 0)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 14)
         }
-        .padding(16)
-        .frame(width: 220, height: 190, alignment: .topLeading)
-        .background(Color.surfaceVariant.opacity(0.4))
+        .frame(width: 200, height: 180)
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
             RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(Color.white.opacity(0.07))
+                .strokeBorder(Color.white.opacity(0.12))
         )
+        .shadow(color: categoryColor.opacity(0.35), radius: 8, y: 4)
+        .accessibilityLabel("\(memory.title), \(memory.date)")
     }
 }
 
