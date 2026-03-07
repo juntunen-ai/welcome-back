@@ -37,6 +37,8 @@
 	</array>
 
 	<!-- Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Welcome Back shows your current location on the home screen so you always know where you are.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Welcome Back uses the microphone to listen to your voice so it can help you rediscover your memories.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

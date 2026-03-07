@@ -1,9 +1,11 @@
 import SwiftUI
+import CoreLocation
 
 struct HomeView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @StateObject private var locationManager = HomeLocationManager()
 
     @State private var pulseScale1: CGFloat = 1.0
     @State private var pulseScale2: CGFloat = 1.0
@@ -14,7 +16,8 @@ struct HomeView: View {
 
             VStack(spacing: 0) {
                 heroSection
-                    .padding(.top, 24)
+                    .padding(.top, 20)
+                    .padding(.horizontal, 24)
 
                 Spacer(minLength: 16)
 
@@ -28,50 +31,112 @@ struct HomeView: View {
             }
             .padding(.top, 8)
         }
-        .onAppear { startPulse() }
-    }
-
-    // MARK: - Subviews
-
-    private var heroSection: some View {
-        VStack(spacing: 16) {
-            // Profile photo — falls back to initials if image not yet added
-            Group {
-                if !appVM.userProfile.profileImageURL.isEmpty,
-                   let uiImage = PersistenceService.loadImage(imageURL: appVM.userProfile.profileImageURL) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Color.surfaceVariant
-                        .overlay(
-                            Text(appVM.userName.prefix(1).uppercased())
-                                .font(.system(size: 36, weight: .black))
-                                .foregroundColor(.onSurface.opacity(0.5))
-                        )
-                }
-            }
-            .frame(width: 96, height: 96)
-            .clipShape(Circle())
-            .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 3))
-            .shadow(color: Color.accentYellow.opacity(0.3), radius: 12, y: 4)
-            .accessibilityLabel("Your profile photo")
-            .accessibilityHidden(true)
-
-            VStack(spacing: 4) {
-                Text(appVM.userName.isEmpty
-                     ? "Welcome Back!"
-                     : "Welcome Back, \(appVM.userName)!")
-                    .font(.system(size: 32, weight: .black))
-                    .foregroundColor(.onSurface)
-                    .minimumScaleFactor(0.7)
-
-                Text("Remember who you are.")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(.onSurface.opacity(0.7))
-            }
+        .onAppear {
+            startPulse()
+            locationManager.start()
         }
     }
+
+    // MARK: - Hero section
+
+    /// Profile circle on the left, current location on the right.
+    private var heroSection: some View {
+        HStack(alignment: .center, spacing: 12) {
+
+            // ── Left: profile photo + greeting ────────────────────────────────
+            HStack(alignment: .center, spacing: 12) {
+                profileCircle
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Welcome Back,")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.onSurface.opacity(0.5))
+
+                    Text(appVM.userName.isEmpty ? "Friend" : appVM.userName)
+                        .font(.system(size: 22, weight: .black))
+                        .foregroundColor(.onSurface)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+
+                    Text("Remember who you are.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.onSurface.opacity(0.4))
+                }
+            }
+
+            Spacer()
+
+            // ── Right: location ───────────────────────────────────────────────
+            locationCard
+        }
+    }
+
+    private var profileCircle: some View {
+        Group {
+            if !appVM.userProfile.profileImageURL.isEmpty,
+               let uiImage = PersistenceService.loadImage(imageURL: appVM.userProfile.profileImageURL) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color.surfaceVariant
+                    .overlay(
+                        Text(appVM.userName.prefix(1).uppercased())
+                            .font(.system(size: 24, weight: .black))
+                            .foregroundColor(.onSurface.opacity(0.5))
+                    )
+            }
+        }
+        .frame(width: 68, height: 68)
+        .clipShape(Circle())
+        .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 2.5))
+        .shadow(color: Color.accentYellow.opacity(0.3), radius: 8, y: 3)
+        .accessibilityLabel("Your profile photo")
+        .accessibilityHidden(true)
+    }
+
+    private var locationCard: some View {
+        VStack(alignment: .trailing, spacing: 5) {
+            // Label row
+            HStack(spacing: 4) {
+                Image(systemName: "location.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(.accentYellow)
+                Text("Your Location")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.accentYellow)
+            }
+
+            if locationManager.isLoading {
+                Text("Finding location…")
+                    .font(.system(size: 12))
+                    .foregroundColor(.onSurface.opacity(0.35))
+            } else if let city = locationManager.city {
+                // City / country
+                Text(city)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.onSurface)
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+
+                // Street address (if available)
+                if let street = locationManager.streetAddress {
+                    Text(street)
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.55))
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                }
+            } else {
+                Text("Location unavailable")
+                    .font(.system(size: 12))
+                    .foregroundColor(.onSurface.opacity(0.35))
+            }
+        }
+        .frame(maxWidth: 150, alignment: .trailing)
+    }
+
+    // MARK: - Mic button
 
     private var micButton: some View {
         ZStack {
@@ -113,6 +178,8 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Hint card
+
     private var hintCard: some View {
         HStack(spacing: 16) {
             Circle()
@@ -146,6 +213,87 @@ struct HomeView: View {
         guard !reduceMotion else { return }
         pulseScale1 = 1.08
         pulseScale2 = 1.08
+    }
+}
+
+// MARK: - Location manager
+
+/// Fetches the device's current location once and reverse-geocodes it to a
+/// city + street address for display on the Home screen.
+@MainActor
+final class HomeLocationManager: NSObject, ObservableObject {
+
+    @Published var city: String?
+    @Published var streetAddress: String?
+    @Published var isLoading = true
+
+    private let clManager = CLLocationManager()
+    private var geocoded = false
+
+    override init() {
+        super.init()
+        clManager.delegate = self
+        clManager.desiredAccuracy = kCLLocationAccuracyKilometer
+    }
+
+    func start() {
+        switch clManager.authorizationStatus {
+        case .notDetermined:
+            clManager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            clManager.requestLocation()
+        default:
+            isLoading = false
+        }
+    }
+
+    private func geocode(_ location: CLLocation) async {
+        guard !geocoded else { return }
+        geocoded = true
+        do {
+            if let p = try await CLGeocoder().reverseGeocodeLocation(location).first {
+                let parts = [p.locality, p.country].compactMap { $0 }
+                city = parts.isEmpty ? p.administrativeArea : parts.joined(separator: ", ")
+                if let street = p.thoroughfare {
+                    let num = p.subThoroughfare.map { "\($0) " } ?? ""
+                    streetAddress = num + street
+                } else {
+                    streetAddress = p.administrativeArea
+                }
+            }
+        } catch {}
+        isLoading = false
+    }
+}
+
+extension HomeLocationManager: CLLocationManagerDelegate {
+
+    nonisolated func locationManager(_ manager: CLLocationManager,
+                                     didUpdateLocations locations: [CLLocation]) {
+        guard let loc = locations.first else { return }
+        manager.stopUpdatingLocation()
+        Task { @MainActor [weak self] in
+            await self?.geocode(loc)
+        }
+    }
+
+    nonisolated func locationManager(_ manager: CLLocationManager,
+                                     didFailWithError error: Error) {
+        Task { @MainActor [weak self] in
+            self?.isLoading = false
+        }
+    }
+
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            switch manager.authorizationStatus {
+            case .authorizedWhenInUse, .authorizedAlways:
+                clManager.requestLocation()
+            default:
+                isLoading = false
+            }
+        }
     }
 }
 
