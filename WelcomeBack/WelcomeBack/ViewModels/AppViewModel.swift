@@ -26,7 +26,7 @@ final class AppViewModel: ObservableObject {
 
     /// Bump this number any time the sample data content changes.
     /// Every device that has an older stamp will reload fresh sample data on next launch.
-    private static let sampleDataVersion = 2
+    private static let sampleDataVersion = 3
     private static let sampleDataVersionKey = "loadedSampleDataVersion"
 
     init() {

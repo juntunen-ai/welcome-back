@@ -1,10 +1,12 @@
 import SwiftUI
+import PhotosUI
 
 struct PersonalInfoView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var editingMemberIndex: Int? = nil
+    @State private var photoPickerItem: PhotosPickerItem? = nil
 
     var body: some View {
         ZStack {
@@ -12,6 +14,7 @@ struct PersonalInfoView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
+                    profilePhotoSection
                     infoSection
                     familySection
                 }
@@ -29,6 +32,61 @@ struct PersonalInfoView: View {
                 existingMember: appVM.userProfile.familyMembers[index]
             )
             .environmentObject(appVM)
+        }
+        .onChange(of: photoPickerItem) { _, newItem in
+            Task {
+                guard let newItem,
+                      let data = try? await newItem.loadTransferable(type: Data.self),
+                      let uiImage = UIImage(data: data) else { return }
+                let url = PersistenceService.savePhoto(uiImage, memberID: "user_profile")
+                appVM.userProfile.profileImageURL = url
+            }
+        }
+    }
+
+    // MARK: - Profile photo section
+
+    private var profilePhotoSection: some View {
+        VStack(spacing: 12) {
+            sectionHeader("Your Photo")
+
+            HStack(spacing: 20) {
+                // Current photo / avatar
+                Group {
+                    if let uiImage = PersistenceService.loadImage(imageURL: appVM.userProfile.profileImageURL) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        PersonAvatarPlaceholder(name: appVM.userProfile.name, fontSize: 36)
+                    }
+                }
+                .frame(width: 90, height: 90)
+                .clipShape(Circle())
+                .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 2.5))
+                .shadow(color: Color.accentYellow.opacity(0.3), radius: 8, y: 3)
+
+                // Picker button
+                PhotosPicker(selection: $photoPickerItem,
+                             matching: .images,
+                             photoLibrary: .shared()) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Change Photo")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.accentYellow)
+                        Text("Tap to choose from your photo library")
+                            .font(.system(size: 12))
+                            .foregroundColor(.onSurface.opacity(0.5))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+            }
+            .padding(16)
+            .background(Color.surfaceVariant.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 

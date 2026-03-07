@@ -11,29 +11,31 @@ struct HomeView: View {
     @State private var pulseScale2: CGFloat = 1.0
 
     var body: some View {
-        ZStack {
-            Color.backgroundDark.ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                Color.backgroundDark.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                heroSection
-                    .padding(.top, 20)
-                    .padding(.horizontal, 24)
+                VStack(spacing: 0) {
+                    heroSection
+                        .padding(.top, 20)
+                        .padding(.horizontal, 24)
 
-                Spacer(minLength: 16)
+                    Spacer(minLength: 16)
 
-                micButton
+                    micButton
 
-                Spacer(minLength: 16)
+                    Spacer(minLength: 16)
 
-                hintCard
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 24)
+                    hintCard
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 24)
+                }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
-        }
-        .onAppear {
-            startPulse()
-            locationManager.start()
+            .onAppear {
+                startPulse()
+                locationManager.start()
+            }
         }
     }
 
@@ -45,7 +47,10 @@ struct HomeView: View {
 
             // ── Left: profile photo + greeting ────────────────────────────────
             HStack(alignment: .center, spacing: 12) {
-                profileCircle
+                NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+                    profileCircle
+                }
+                .buttonStyle(.plain)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Welcome Back,")
@@ -91,8 +96,7 @@ struct HomeView: View {
         .clipShape(Circle())
         .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 2.5))
         .shadow(color: Color.accentYellow.opacity(0.3), radius: 8, y: 3)
-        .accessibilityLabel("Your profile photo")
-        .accessibilityHidden(true)
+        .accessibilityLabel("Your profile photo — tap to edit")
     }
 
     private var locationCard: some View {
