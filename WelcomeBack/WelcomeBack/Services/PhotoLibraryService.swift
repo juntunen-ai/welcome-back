@@ -108,7 +108,9 @@ final class PhotoLibraryService: ObservableObject {
                 let assetID = asset.localIdentifier
                 guard !cache.processedIDs.contains(assetID) else { continue }
 
-                let img = await loadThumbnailAsync(for: asset, size: CGSize(width: 300, height: 300))
+                // 800×800 ensures faces are large enough for Vision to detect reliably.
+                // highQualityFormat gives accurate pixel data (fastFormat can be too blurry).
+                let img = await loadThumbnailAsync(for: asset, size: CGSize(width: 800, height: 800), quality: .highQualityFormat)
                 cache.processedIDs.insert(assetID)
                 guard let img else { continue }
 
@@ -176,27 +178,45 @@ final class PhotoLibraryService: ObservableObject {
 
     // MARK: - Face helpers
 
+    /// Maps UIImage orientation to the CGImagePropertyOrientation Vision expects.
+    /// Without this, photos taken in landscape/portrait are scanned sideways and face
+    /// detection silently fails.
+    private nonisolated static func visionOrientation(for image: UIImage) -> CGImagePropertyOrientation {
+        switch image.imageOrientation {
+        case .up:            return .up
+        case .upMirrored:    return .upMirrored
+        case .down:          return .down
+        case .downMirrored:  return .downMirrored
+        case .left:          return .leftMirrored   // Vision uses mirrored axes vs UIKit
+        case .leftMirrored:  return .left
+        case .right:         return .rightMirrored
+        case .rightMirrored: return .right
+        @unknown default:    return .up
+        }
+    }
+
     /// Generates a feature print for a profile photo.
     /// Returns `(print, isFaceBased)` where `isFaceBased` is true when a face was
     /// detected and the print was generated from the face crop rather than the full image.
     /// Returns nil when the image cannot be processed at all.
     private nonisolated static func faceFeaturePrint(from image: UIImage) -> (VNFeaturePrintObservation, Bool)? {
         guard let cg = image.cgImage else { return nil }
-        let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+        let orient  = visionOrientation(for: image)
+        let handler = VNImageRequestHandler(cgImage: cg, orientation: orient, options: [:])
         let faceReq = VNDetectFaceRectanglesRequest()
         try? handler.perform([faceReq])
 
         let isFaceBased: Bool
         let targetCG: CGImage
         if let face = faceReq.results?.first, let faceCG = cropFace(from: cg, obs: face) {
-            targetCG  = faceCG
+            targetCG    = faceCG
             isFaceBased = true
         } else {
-            targetCG  = cg
+            targetCG    = cg
             isFaceBased = false
         }
 
-        let printReq = VNGenerateImageFeaturePrintRequest()
+        let printReq     = VNGenerateImageFeaturePrintRequest()
         let printHandler = VNImageRequestHandler(cgImage: targetCG, options: [:])
         try? printHandler.perform([printReq])
         guard let fp = printReq.results?.first else { return nil }
@@ -218,22 +238,24 @@ final class PhotoLibraryService: ObservableObject {
     }
 
     /// Matches a library photo against member feature prints.
-    /// - Face-based members (humans): detected face crops are compared → threshold 0.85
+    /// - Face-based members (humans): detected face crops are compared → threshold 0.90
     /// - Full-image members (pets/objects): the whole image print is compared → threshold 0.60
     private nonisolated static func matchFaces(
         in image: UIImage,
         against members: [(id: String, print: VNFeaturePrintObservation, isFaceBased: Bool)]
     ) -> [String] {
         guard let cg = image.cgImage else { return [] }
+        let orient = visionOrientation(for: image)
         var matched = Set<String>()
 
         let faceMembers  = members.filter {  $0.isFaceBased }
         let imageMembers = members.filter { !$0.isFaceBased }
 
         // ── Path A: face-based members ──────────────────────────────────────────
-        // Detect faces in the library photo and compare each face crop to the member's face print.
+        // Detect faces in the library photo (with correct orientation) and compare
+        // each face crop against the member's face-crop feature print.
         if !faceMembers.isEmpty {
-            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            let handler = VNImageRequestHandler(cgImage: cg, orientation: orient, options: [:])
             let faceReq = VNDetectFaceRectanglesRequest()
             if (try? handler.perform([faceReq])) != nil,
                let faces = faceReq.results, !faces.isEmpty {
@@ -245,7 +267,8 @@ final class PhotoLibraryService: ObservableObject {
                           let fp = printReq.results?.first else { continue }
                     for member in faceMembers {
                         var dist: Float = 0
-                        if (try? fp.computeDistance(&dist, to: member.print)) != nil, dist < 0.85 {
+                        // 0.90 is more permissive than 0.85 to handle varied lighting/angles
+                        if (try? fp.computeDistance(&dist, to: member.print)) != nil, dist < 0.90 {
                             matched.insert(member.id)
                         }
                     }
@@ -258,7 +281,7 @@ final class PhotoLibraryService: ObservableObject {
         // the member's full-image print. This finds photos that look like the pet/object.
         if !imageMembers.isEmpty {
             let printReq = VNGenerateImageFeaturePrintRequest()
-            let handler  = VNImageRequestHandler(cgImage: cg, options: [:])
+            let handler  = VNImageRequestHandler(cgImage: cg, orientation: orient, options: [:])
             if (try? handler.perform([printReq])) != nil,
                let fp = printReq.results?.first {
                 for member in imageMembers {
@@ -315,11 +338,12 @@ final class PhotoLibraryService: ObservableObject {
 
     private nonisolated static func loadThumbnailAsync(
         for asset: PHAsset?,
-        size: CGSize = CGSize(width: 400, height: 400)
+        size: CGSize = CGSize(width: 400, height: 400),
+        quality: PHImageRequestOptionsDeliveryMode = .fastFormat
     ) async -> UIImage? {
         guard let asset else { return nil }
         let opts = PHImageRequestOptions()
-        opts.deliveryMode = .fastFormat
+        opts.deliveryMode = quality
         opts.isSynchronous = false
         opts.isNetworkAccessAllowed = false
         return await withCheckedContinuation { cont in
@@ -340,7 +364,7 @@ final class PhotoLibraryService: ObservableObject {
     private struct FaceMatchCache: Codable {
         /// Bump this integer whenever the matching algorithm changes so that stale
         /// caches from older algorithm versions are automatically discarded.
-        var version: Int = 2
+        var version: Int = 3
         var processedIDs: Set<String> = []
         var matches: [String: [String]] = [:]
     }
