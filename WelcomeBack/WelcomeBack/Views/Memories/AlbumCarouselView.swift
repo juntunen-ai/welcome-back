@@ -9,7 +9,7 @@ struct AlbumCarouselView: View {
     @State private var photoItems: [PhotoItem] = []
     @State private var currentIndex = 0
     @State private var isLoading = true
-    @State private var locationCache: [String: String] = [:]   // assetID → "City, Country"
+    @State private var locationCache: [String: String] = [:]
 
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -17,6 +17,11 @@ struct AlbumCarouselView: View {
         f.timeStyle = .none
         return f
     }()
+
+    // Always use the most up-to-date version of this album from the service.
+    private var currentAlbum: MemoryAlbum {
+        service.albums.first(where: { $0.id == album.id }) ?? album
+    }
 
     var body: some View {
         ZStack {
@@ -34,10 +39,29 @@ struct AlbumCarouselView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .task {
-            photoItems = await service.loadPhotos(for: album)
-            isLoading = false
-            geocodeIfNeeded(at: 0)
+            await loadPhotos()
         }
+        // Re-load when the background scan finishes and updates this album's photos.
+        .onChange(of: service.albums) { _, _ in
+            guard photoItems.isEmpty else { return }
+            Task { await loadPhotos() }
+        }
+    }
+
+    // MARK: - Photo loading
+
+    private func loadPhotos() async {
+        let latest = currentAlbum
+        guard !latest.assetLocalIDs.isEmpty else {
+            isLoading = false
+            return
+        }
+        isLoading = true
+        photoItems = await service.loadPhotos(for: latest)
+        isLoading = false
+        currentIndex = 0
+        geocodeIfNeeded(at: 0)
+        geocodeIfNeeded(at: 1)
     }
 
     // MARK: - Carousel
@@ -65,26 +89,18 @@ struct AlbumCarouselView: View {
                 geocodeIfNeeded(at: newIndex + 1)
             }
 
-            // Dot indicators (cap at 20)
-            if photoItems.count <= 20 {
-                HStack(spacing: 6) {
-                    ForEach(photoItems.indices, id: \.self) { i in
-                        Circle()
-                            .fill(i == currentIndex ? Color.accentYellow : Color.white.opacity(0.3))
-                            .frame(width: i == currentIndex ? 8 : 6,
-                                   height: i == currentIndex ? 8 : 6)
-                            .animation(.spring(response: 0.3), value: currentIndex)
-                    }
+            // Dot indicators
+            HStack(spacing: 6) {
+                ForEach(photoItems.indices, id: \.self) { i in
+                    Circle()
+                        .fill(i == currentIndex ? Color.accentYellow : Color.white.opacity(0.3))
+                        .frame(width: i == currentIndex ? 8 : 6,
+                               height: i == currentIndex ? 8 : 6)
+                        .animation(.spring(response: 0.3), value: currentIndex)
                 }
-                .padding(.top, 16)
-                .padding(.bottom, 48)
-            } else {
-                Text("\(currentIndex + 1) / \(photoItems.count)")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white.opacity(0.4))
-                    .padding(.top, 16)
-                    .padding(.bottom, 48)
             }
+            .padding(.top, 16)
+            .padding(.bottom, 48)
         }
     }
 
@@ -132,12 +148,9 @@ struct AlbumCarouselView: View {
         guard index >= 0, index < photoItems.count else { return }
         let item = photoItems[index]
         guard locationCache[item.id] == nil, let location = item.location else { return }
-        // Mark as in-progress with a placeholder so we don't double-geocode
         locationCache[item.id] = ""
-
         Task {
             guard let placemark = try? await CLGeocoder().reverseGeocodeLocation(location).first else {
-                // Use sentinel so we don't retry on every swipe
                 locationCache[item.id] = "—"
                 return
             }
@@ -162,15 +175,29 @@ struct AlbumCarouselView: View {
     }
 
     private var emptyView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 48))
-                .foregroundColor(.white.opacity(0.3))
-            Text("No photos found for this album.")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.white.opacity(0.6))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+        VStack(spacing: 20) {
+            if service.isScanningInBackground {
+                ProgressView()
+                    .tint(.accentYellow)
+                    .scaleEffect(1.2)
+                Text("Scanning your photo library for photos of \(album.title)…")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+                Text("This may take a moment.")
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.35))
+            } else {
+                Image(systemName: "person.fill.questionmark")
+                    .font(.system(size: 48))
+                    .foregroundColor(.white.opacity(0.25))
+                Text("No photos of \(album.title) found in your library.")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.white.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
         }
     }
 }
