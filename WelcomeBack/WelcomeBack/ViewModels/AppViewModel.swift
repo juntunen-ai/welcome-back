@@ -40,6 +40,16 @@ final class AppViewModel: ObservableObject {
         userProfile.isOnboardingComplete = true
     }
 
+    /// Loads the built-in Finnish family demo profile.
+    /// Replaces all current data — useful for demos and testing.
+    func loadSampleData() {
+        PersistenceService.deleteAll()
+        notificationService.cancelAll()
+        selectedFamilyMember = nil
+        selectedTab = .home
+        userProfile = .sampleData   // isOnboardingComplete = true → goes straight to ContentView
+    }
+
     /// Wipes all saved data and restarts the onboarding flow.
     /// Use this when setting up the app for a new person, or for testing.
     func resetToNewUser() {
