@@ -3,13 +3,14 @@ import SwiftUI
 /// Renders a family member's photo from either:
 ///  • the app's Documents directory  (imageURL starts with `"photo:"`)
 ///  • the asset catalog              (any other non-empty string)
-///  • a placeholder person icon      (empty imageURL or image not found)
+///  • an initials gradient avatar    (empty imageURL or image not found — requires `name`)
 ///
 /// Usage:
-///   MemberImageView(imageURL: member.imageURL, size: 80, cornerRadius: 20)
+///   MemberImageView(imageURL: member.imageURL, name: member.name, size: 80, cornerRadius: 20)
 struct MemberImageView: View {
 
     let imageURL: String
+    var name: String = ""
     let size: CGFloat
     var cornerRadius: CGFloat = 16
 
@@ -20,12 +21,7 @@ struct MemberImageView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Color.surfaceVariant
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: size * 0.4))
-                            .foregroundColor(.onSurface.opacity(0.3))
-                    )
+                PersonAvatarPlaceholder(name: name, fontSize: size * 0.42)
             }
         }
         .frame(width: size, height: size)

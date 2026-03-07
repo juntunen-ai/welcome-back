@@ -95,15 +95,10 @@ struct FamilyMemberProfileView: View {
     private var photoPager: some View {
         VStack(spacing: 8) {
             if allPhotoURLs.isEmpty {
-                // Placeholder when no photos
-                Color.surfaceVariant
+                // Initials avatar when no photos
+                PersonAvatarPlaceholder(name: member.name, fontSize: 96)
                     .frame(maxWidth: .infinity)
                     .frame(height: 300)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 80))
-                            .foregroundColor(.onSurface.opacity(0.15))
-                    )
                     .clipShape(RoundedRectangle(cornerRadius: 28))
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -116,12 +111,7 @@ struct FamilyMemberProfileView: View {
                                     .resizable()
                                     .scaledToFill()
                             } else {
-                                Color.surfaceVariant
-                                    .overlay(
-                                        Image(systemName: "person.fill")
-                                            .font(.system(size: 80))
-                                            .foregroundColor(.onSurface.opacity(0.15))
-                                    )
+                                PersonAvatarPlaceholder(name: member.name, fontSize: 96)
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -285,6 +275,6 @@ struct FamilyMemberProfileView: View {
 
 #Preview {
     NavigationStack {
-        FamilyMemberProfileView(member: UserProfile.default.familyMembers[0])
+        FamilyMemberProfileView(member: UserProfile.sampleData.familyMembers[0])
     }
 }
