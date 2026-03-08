@@ -47,6 +47,16 @@ final class AppViewModel: ObservableObject {
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
 
+    /// Returns `.local` only when user has chosen local mode AND the model is downloaded.
+    /// Otherwise falls back to `.cloud` (Gemini).
+    var voiceMode: VoiceSessionBridge.Mode {
+        if userProfile.preferredVoiceMode == .local,
+           ModelDownloadService.shared.isModelReady {
+            return .local
+        }
+        return .cloud
+    }
+
     // MARK: - Onboarding
 
     func completeOnboarding() {

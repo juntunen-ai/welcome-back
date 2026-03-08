@@ -89,6 +89,27 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         Section {
+            NavigationLink(destination: ModelSettingsView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "brain",
+                    iconColor: .orange,
+                    title: "Voice AI Model",
+                    subtitle: ModelDownloadService.shared.isModelReady ? "Ready" : "Not Downloaded"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            // Voice mode toggle
+            NavigationLink(destination: VoiceModeSettingsView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "speaker.wave.2.fill",
+                    iconColor: .cyan,
+                    title: "Voice Mode",
+                    subtitle: appVM.userProfile.preferredVoiceMode == .local ? "Local (On-Device)" : "Cloud (Gemini)"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
             NavigationLink(destination: RecordVoiceView()) {
                 SettingsRowView(
                     icon: "waveform.badge.mic",
@@ -164,7 +185,7 @@ struct SettingsView: View {
             EmptyView()
         } footer: {
             VStack(spacing: 4) {
-                Text("Welcome Back is powered by Google Gemini")
+                Text("Welcome Back is powered by Google Gemini and local AI")
                     .font(.system(size: 12))
                     .foregroundColor(.onSurface.opacity(0.4))
             }

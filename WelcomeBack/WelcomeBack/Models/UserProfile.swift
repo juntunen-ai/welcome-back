@@ -11,6 +11,7 @@ struct UserProfile: Codable {
     var memories: [Memory]
 
     var preferredAIModel: AIModel
+    var preferredVoiceMode: VoiceMode
     var isVoiceCloningEnabled: Bool
 
     var notificationsEnabled: Bool
@@ -24,7 +25,7 @@ struct UserProfile: Codable {
     enum CodingKeys: String, CodingKey {
         case name, profileImageURL, address, biography, currentLocation
         case familyMembers, memories
-        case preferredAIModel, isVoiceCloningEnabled
+        case preferredAIModel, preferredVoiceMode, isVoiceCloningEnabled
         case notificationsEnabled, notificationTimes, notificationTopics
         case isOnboardingComplete
         // Note: socialSecurityNumber is intentionally omitted — field removed for privacy
@@ -39,6 +40,7 @@ struct UserProfile: Codable {
         familyMembers: [FamilyMember] = [],
         memories: [Memory] = [],
         preferredAIModel: AIModel = .geminiFlash,
+        preferredVoiceMode: VoiceMode = .cloud,
         isVoiceCloningEnabled: Bool = false,
         notificationsEnabled: Bool = false,
         notificationTimes: [NotificationTime] = [.morning],
@@ -53,6 +55,7 @@ struct UserProfile: Codable {
         self.familyMembers = familyMembers
         self.memories = memories
         self.preferredAIModel = preferredAIModel
+        self.preferredVoiceMode = preferredVoiceMode
         self.isVoiceCloningEnabled = isVoiceCloningEnabled
         self.notificationsEnabled = notificationsEnabled
         self.notificationTimes = notificationTimes
@@ -70,6 +73,7 @@ struct UserProfile: Codable {
         familyMembers        = (try? c.decode([FamilyMember].self,    forKey: .familyMembers))        ?? []
         memories             = (try? c.decode([Memory].self,          forKey: .memories))             ?? []
         preferredAIModel     = (try? c.decode(AIModel.self,           forKey: .preferredAIModel))     ?? .geminiFlash
+        preferredVoiceMode   = (try? c.decode(VoiceMode.self,        forKey: .preferredVoiceMode))   ?? .cloud
         isVoiceCloningEnabled = (try? c.decode(Bool.self,             forKey: .isVoiceCloningEnabled)) ?? false
         notificationsEnabled = (try? c.decode(Bool.self,              forKey: .notificationsEnabled)) ?? false
         notificationTimes    = (try? c.decode([NotificationTime].self, forKey: .notificationTimes))   ?? [.morning]
@@ -87,6 +91,7 @@ struct UserProfile: Codable {
         try c.encode(familyMembers,         forKey: .familyMembers)
         try c.encode(memories,              forKey: .memories)
         try c.encode(preferredAIModel,      forKey: .preferredAIModel)
+        try c.encode(preferredVoiceMode,   forKey: .preferredVoiceMode)
         try c.encode(isVoiceCloningEnabled, forKey: .isVoiceCloningEnabled)
         try c.encode(notificationsEnabled,  forKey: .notificationsEnabled)
         try c.encode(notificationTimes,     forKey: .notificationTimes)
@@ -221,6 +226,11 @@ struct UserProfile: Codable {
 }
 
 // MARK: - Supporting types
+
+enum VoiceMode: String, Codable, CaseIterable {
+    case cloud = "Cloud (Gemini)"
+    case local = "Local (On-Device)"
+}
 
 enum AIModel: String, Codable, CaseIterable {
     case geminiPro  = "Gemini Pro"

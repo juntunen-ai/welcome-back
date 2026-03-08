@@ -26,6 +26,9 @@ xcuserdata/
 .build/
 .swiftpm/
 
+# Large binary frameworks (downloaded separately — see README)
+WelcomeBack/Frameworks/llama.xcframework/
+
 # Environment / secrets
 .env
 .env.local

@@ -5,8 +5,12 @@ struct ListeningView: View {
     @EnvironmentObject private var appVM: AppViewModel
     @Environment(\.dismiss) private var dismiss
 
-    @StateObject private var liveVM = LiveSessionViewModel()
+    @StateObject private var voiceVM: VoiceSessionBridge
     @State private var wavePhase: CGFloat = 0
+
+    init(mode: VoiceSessionBridge.Mode = .cloud) {
+        _voiceVM = StateObject(wrappedValue: VoiceSessionBridge(mode: mode))
+    }
 
     var body: some View {
         ZStack {
@@ -20,7 +24,7 @@ struct ListeningView: View {
                 endRadius: 300
             )
             .ignoresSafeArea()
-            .animation(.easeInOut(duration: 0.4), value: liveVM.sessionState)
+            .animation(.easeInOut(duration: 0.4), value: voiceVM.sessionState)
 
             VStack(spacing: 0) {
                 header
@@ -40,14 +44,14 @@ struct ListeningView: View {
         // Start live session as soon as the sheet appears
         .onAppear {
             animateWave()
-            liveVM.beginSession(profile: appVM.userProfile)
+            voiceVM.beginSession(profile: appVM.userProfile)
         }
         // Tear down when the sheet is dismissed for any reason
         .onDisappear {
-            liveVM.endSession()
+            voiceVM.endSession()
         }
         // Fallback: if Live WebSocket fails, revert to REST + PlaybackView
-        .onChange(of: liveVM.useFallback) { _, isFallback in
+        .onChange(of: voiceVM.useFallback) { _, isFallback in
             if isFallback {
                 dismiss()
                 appVM.doneSpeaking()
@@ -60,7 +64,7 @@ struct ListeningView: View {
     private var header: some View {
         HStack {
             Button {
-                liveVM.endSession()
+                voiceVM.endSession()
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
@@ -74,7 +78,7 @@ struct ListeningView: View {
             Text(headerTitle)
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.onSurface)
-                .animation(.easeInOut(duration: 0.3), value: liveVM.sessionState)
+                .animation(.easeInOut(duration: 0.3), value: voiceVM.sessionState)
 
             Spacer()
 
@@ -108,19 +112,19 @@ struct ListeningView: View {
                     .frame(width: 160, height: 160)
                     .blur(radius: 8)
                     .scaleEffect(1.0 + 0.05 * sin(wavePhase))
-                    .animation(.easeInOut(duration: 0.4), value: liveVM.sessionState)
+                    .animation(.easeInOut(duration: 0.4), value: voiceVM.sessionState)
 
                 Image(systemName: stateIcon)
                     .font(.system(size: 48))
                     .foregroundColor(.white.opacity(0.8))
-                    .animation(.easeInOut(duration: 0.3), value: liveVM.sessionState)
+                    .animation(.easeInOut(duration: 0.3), value: voiceVM.sessionState)
             }
 
             Text(statusLabel)
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.onSurface.opacity(0.7))
                 .multilineTextAlignment(.center)
-                .animation(.easeInOut(duration: 0.3), value: liveVM.sessionState)
+                .animation(.easeInOut(duration: 0.3), value: voiceVM.sessionState)
         }
     }
 
@@ -143,7 +147,7 @@ struct ListeningView: View {
 
             // "End" replaces "Done Speaking" — VAD handles turn-taking
             Button(action: {
-                liveVM.endSession()
+                voiceVM.endSession()
                 dismiss()
             }) {
                 Text("End")
@@ -159,17 +163,17 @@ struct ListeningView: View {
     // MARK: - State-Driven Computed Properties
 
     private var headerTitle: String {
-        switch liveVM.sessionState {
-        case .connecting:    return "Connecting..."
+        switch voiceVM.sessionState {
+        case .connecting:    return voiceVM.mode == .local ? "Loading…" : "Connecting..."
         case .aiSpeaking:   return "Listening..."
         default:             return "Listening..."
         }
     }
 
     private var statusLabel: String {
-        switch liveVM.sessionState {
+        switch voiceVM.sessionState {
         case .idle:          return ""
-        case .connecting:    return "Connecting…"
+        case .connecting:    return voiceVM.mode == .local ? "Loading AI model…" : "Connecting…"
         case .listening:     return "I'm listening. Take your time…"
         case .userSpeaking:  return "Go on, I'm listening…"
         case .aiThinking:    return "Just a moment…"
@@ -181,16 +185,16 @@ struct ListeningView: View {
     }
 
     private var stateIcon: String {
-        switch liveVM.sessionState {
+        switch voiceVM.sessionState {
         case .aiSpeaking:   return "speaker.wave.2"
-        case .connecting:   return "antenna.radiowaves.left.and.right"
+        case .connecting:   return voiceVM.mode == .local ? "brain" : "antenna.radiowaves.left.and.right"
         case .error:        return "exclamationmark.triangle"
         default:            return "waveform"
         }
     }
 
     private var blobColor: Color {
-        switch liveVM.sessionState {
+        switch voiceVM.sessionState {
         case .aiSpeaking:              return Color.accentYellow
         case .userSpeaking, .listening: return Color.accentYellow.opacity(0.6)
         default:                       return Color.accentYellow.opacity(0.3)
@@ -198,7 +202,7 @@ struct ListeningView: View {
     }
 
     private var blobGlowOpacity: Double {
-        switch liveVM.sessionState {
+        switch voiceVM.sessionState {
         case .aiSpeaking:   return 0.14
         case .listening:    return 0.08
         default:            return 0.04
@@ -215,6 +219,6 @@ struct ListeningView: View {
 }
 
 #Preview {
-    ListeningView()
+    ListeningView(mode: .cloud)
         .environmentObject(AppViewModel())
 }

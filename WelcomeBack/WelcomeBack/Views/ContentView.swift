@@ -38,7 +38,7 @@ struct ContentView: View {
         }
         .tint(.accentYellow)
         .sheet(isPresented: $appVM.listeningSheetPresented) {
-            ListeningView()
+            ListeningView(mode: appVM.voiceMode)
                 .environmentObject(appVM)
         }
         .sheet(item: $appVM.selectedFamilyMember) { member in
