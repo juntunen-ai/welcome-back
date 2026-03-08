@@ -3,6 +3,8 @@ import SwiftUI
 struct SettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @State private var showResetConfirm = false
+    @State private var showDemoConfirm  = false
 
     var body: some View {
         NavigationStack {
@@ -13,13 +15,40 @@ struct SettingsView: View {
                     generalSection
                     aiSection
                     systemSection
+                    demoSection
+                    resetSection
                     footerSection
                 }
                 .scrollContentBackground(.hidden)
                 .listStyle(.insetGrouped)
+                .listRowSeparatorTint(Color.white.opacity(0.07))
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
+            .confirmationDialog(
+                "Reset to New User?",
+                isPresented: $showResetConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Reset Everything", role: .destructive) {
+                    appVM.resetToNewUser()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This will erase all profile data, family members, and saved photos. The onboarding flow will restart. This cannot be undone.")
+            }
+            .confirmationDialog(
+                "Load Demo Data?",
+                isPresented: $showDemoConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Load Demo Data", role: .destructive) {
+                    appVM.loadSampleData()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This replaces all current data with the sample Finnish family profile (Harri, Anna, Toivo, Helmi & Pätkis). Your existing data will be lost.")
+            }
         }
     }
 
@@ -27,60 +56,79 @@ struct SettingsView: View {
 
     private var generalSection: some View {
         Section {
-            SettingsRowView(icon: "person.fill", iconColor: .blue, title: "Personal Info", subtitle: "Manage your name and relations")
-            SettingsRowView(icon: "bell.fill", iconColor: .red, title: "Notifications", subtitle: "Reminders to check in", hasToggle: true, toggleBinding: $appVM.userProfile.notificationsEnabled)
+            NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+                SettingsRowView(icon: "person.fill", iconColor: .blue,
+                                title: "Personal Info",
+                                subtitle: "Name, address, biography")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: FamilyManagementView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "person.3.fill",
+                    iconColor: .green,
+                    title: "Family Members",
+                    subtitle: "\(appVM.userProfile.familyMembers.count) member\(appVM.userProfile.familyMembers.count == 1 ? "" : "s")"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: NotificationsSettingsView().environmentObject(appVM)) {
+                SettingsRowView(icon: "bell.fill", iconColor: .red,
+                                title: "Notifications",
+                                subtitle: appVM.userProfile.notificationsEnabled ? "Enabled" : "Disabled")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("General")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         }
-        .listRowBackground(Color.surfaceVariant.opacity(0.4))
     }
 
     private var aiSection: some View {
         Section {
-            // Model picker
-            HStack {
-                Label {
-                    Text("Core Model")
-                        .foregroundColor(.onSurface)
-                } icon: {
-                    Image(systemName: "cpu.fill")
-                        .foregroundColor(.purple)
-                }
-
-                Spacer()
-
-                Picker("", selection: $appVM.userProfile.preferredAIModel) {
-                    ForEach(AIModel.allCases, id: \.self) { model in
-                        Text(model.rawValue).tag(model)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(.accentYellow)
+            NavigationLink(destination: ModelSettingsView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "brain",
+                    iconColor: .orange,
+                    title: "Voice AI Model",
+                    subtitle: ModelDownloadService.shared.isModelReady ? "Ready" : "Not Downloaded"
+                )
             }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            SettingsRowView(
-                icon: "waveform.badge.mic",
-                iconColor: .accentYellow,
-                title: "Voice Cloning",
-                subtitle: "\(appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count) active personalities",
-                hasToggle: true,
-                toggleBinding: $appVM.userProfile.isVoiceCloningEnabled
-            )
+            // Voice mode toggle
+            NavigationLink(destination: VoiceModeSettingsView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "speaker.wave.2.fill",
+                    iconColor: .cyan,
+                    title: "Voice Mode",
+                    subtitle: appVM.userProfile.preferredVoiceMode == .local ? "Local (On-Device)" : "Cloud (Gemini)"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: RecordVoiceView()) {
+                SettingsRowView(
+                    icon: "waveform.badge.mic",
+                    iconColor: .accentYellow,
+                    title: "Voice Cloning",
+                    subtitle: "Coming Soon"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("Artificial Intelligence")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         }
-        .listRowBackground(Color.surfaceVariant.opacity(0.4))
     }
 
     private var systemSection: some View {
         Section {
-            SettingsRowView(icon: "moon.fill", iconColor: .indigo, title: "Display", subtitle: "Dark mode")
             SettingsRowView(icon: "info.circle.fill", iconColor: .gray, title: "About", subtitle: "Version 1.0.0")
         } header: {
             Text("System")
@@ -91,18 +139,60 @@ struct SettingsView: View {
         .listRowBackground(Color.surfaceVariant.opacity(0.4))
     }
 
+    private var demoSection: some View {
+        Section {
+            Button {
+                showDemoConfirm = true
+            } label: {
+                SettingsRowView(
+                    icon: "person.3.sequence.fill",
+                    iconColor: .purple,
+                    title: "Load Demo Data",
+                    subtitle: "Harri, Anna, Toivo, Helmi & Pätkis"
+                )
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+        } header: {
+            Text("Demo")
+                .foregroundColor(.accentYellow)
+                .font(.system(size: 12, weight: .bold))
+                .tracking(1.5)
+        }
+    }
+
+    private var resetSection: some View {
+        Section {
+            Button {
+                showResetConfirm = true
+            } label: {
+                SettingsRowView(icon: "arrow.counterclockwise", iconColor: .red,
+                                title: "Reset to New User",
+                                subtitle: "Erase all data and restart onboarding")
+            }
+            .buttonStyle(.plain)
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+        } header: {
+            Text("Reset")
+                .foregroundColor(.accentYellow)
+                .font(.system(size: 12, weight: .bold))
+                .tracking(1.5)
+        }
+    }
+
     private var footerSection: some View {
         Section {
             EmptyView()
         } footer: {
             VStack(spacing: 4) {
-                Text("Welcome Back is powered by Google Gemini")
+                Text("Welcome Back is powered by Google Gemini and local AI")
                     .font(.system(size: 12))
                     .foregroundColor(.onSurface.opacity(0.4))
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
         }
+        .listRowBackground(Color.clear)
     }
 }
 
@@ -144,10 +234,6 @@ struct SettingsRowView: View {
                 Toggle("", isOn: binding)
                     .tint(.accentYellow)
                     .labelsHidden()
-            } else {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.onSurface.opacity(0.2))
             }
         }
         .padding(.vertical, 4)

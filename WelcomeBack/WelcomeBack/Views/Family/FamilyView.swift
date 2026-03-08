@@ -16,13 +16,14 @@ struct FamilyView: View {
                                 .padding(.horizontal, 16)
                                 .padding(.top, 40)
                         } else {
-                            familyList
-                                .padding(.horizontal, 16)
-
-                            discoveryCard
-                                .padding(.horizontal, 16)
+                            ForEach(appVM.familyMembers) { member in
+                                NavigationLink(destination: FamilyMemberProfileView(member: member)) {
+                                    FamilyAlbumCard(member: member)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.horizontal, 16)
                         }
-
                         Spacer(minLength: 24)
                     }
                     .padding(.top, 8)
@@ -30,67 +31,7 @@ struct FamilyView: View {
             }
             .navigationTitle("Family")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        // Add family member (future)
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundColor(.onSurface)
-                            .frame(width: 44, height: 44)
-                            .background(Color.surfaceVariant)
-                            .clipShape(Circle())
-                    }
-                }
-            }
         }
-        .sheet(isPresented: $appVM.playbackSheetPresented, onDismiss: {
-            appVM.selectedFamilyMember = nil
-        }) {
-            if let member = appVM.selectedFamilyMember {
-                PlaybackView(member: member)
-                    .environmentObject(appVM)
-            }
-        }
-    }
-
-    // MARK: - Subviews
-
-    private var familyList: some View {
-        VStack(spacing: 12) {
-            ForEach(appVM.familyMembers) { member in
-                FamilyMemberRowView(member: member)
-                    .onTapGesture {
-                        appVM.selectFamilyMember(member)
-                    }
-            }
-        }
-    }
-
-    private var discoveryCard: some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: "wand.and.stars")
-                .font(.system(size: 28))
-                .foregroundColor(.accentYellow)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("New Photos Found")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.accentYellow)
-
-                Text("We've identified new photos of your family members. Would you like to add them to your memories?")
-                    .font(.system(size: 14))
-                    .foregroundColor(.onSurface.opacity(0.6))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(20)
-        .background(Color.accentYellow.opacity(0.08))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(Color.accentYellow.opacity(0.2))
-        )
     }
 
     private var emptyState: some View {
@@ -104,7 +45,7 @@ struct FamilyView: View {
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Tap + to add your first family member")
+                Text("Add family members in Settings")
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
             }
@@ -116,7 +57,61 @@ struct FamilyView: View {
     }
 }
 
-// MARK: - Family Member Row
+// MARK: - Family Album Card
+
+struct FamilyAlbumCard: View {
+
+    let member: FamilyMember
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            heroImage
+                .frame(height: 200)
+                .clipped()
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(member.name)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.onSurface)
+
+                Text(member.relationship.uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1.2)
+                    .foregroundColor(.accentYellow)
+
+                if !member.biography.isEmpty {
+                    Text(member.biography)
+                        .font(.system(size: 14))
+                        .foregroundColor(.onSurface.opacity(0.65))
+                        .lineLimit(2)
+                        .padding(.top, 2)
+                }
+            }
+            .padding(16)
+        }
+        .background(Color.surfaceVariant.opacity(0.4))
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .strokeBorder(Color.white.opacity(0.05))
+        )
+    }
+
+    @ViewBuilder
+    private var heroImage: some View {
+        if let ui = PersistenceService.loadImage(imageURL: member.imageURL) {
+            Image(uiImage: ui)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+        } else {
+            PersonAvatarPlaceholder(name: member.name, fontSize: 72)
+                .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+// MARK: - Row view (used by FamilyManagementView)
 
 struct FamilyMemberRowView: View {
 
@@ -124,24 +119,8 @@ struct FamilyMemberRowView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Photo
-            Group {
-                if let uiImage = UIImage(named: member.imageURL) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Color.surfaceVariant
-                        .overlay(
-                            Image(systemName: "person.fill")
-                                .foregroundColor(.onSurface.opacity(0.3))
-                        )
-                }
-            }
-            .frame(width: 80, height: 80)
-            .clipShape(RoundedRectangle(cornerRadius: 20))
+            MemberImageView(imageURL: member.imageURL, name: member.name, size: 80, cornerRadius: 20)
 
-            // Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(member.name)
                     .font(.system(size: 18, weight: .bold))
@@ -150,18 +129,6 @@ struct FamilyMemberRowView: View {
                 Text(member.relationship)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.onSurface.opacity(0.6))
-
-                if member.isVoiceCloned {
-                    HStack(spacing: 4) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 12))
-                        Text("Voice Cloned")
-                            .font(.system(size: 11, weight: .bold))
-                            .tracking(0.5)
-                    }
-                    .foregroundColor(.accentYellow)
-                    .padding(.top, 2)
-                }
             }
 
             Spacer()
@@ -177,6 +144,58 @@ struct FamilyMemberRowView: View {
             RoundedRectangle(cornerRadius: 24)
                 .strokeBorder(Color.white.opacity(0.05))
         )
+    }
+}
+
+// MARK: - Shared helpers
+
+extension Int: @retroactive Identifiable {
+    public var id: Int { self }
+}
+
+// MARK: - Person Avatar Placeholder
+// Used by FamilyView, FamilyMemberProfileView, and any view that
+// needs a coloured initials avatar when no profile photo is available.
+
+struct PersonAvatarPlaceholder: View {
+
+    let name: String
+    var fontSize: CGFloat = 72
+
+    private var initials: String {
+        let parts = name.split(separator: " ").map { String($0.prefix(1)) }
+        if parts.count >= 2 {
+            return (parts[0] + parts[1]).uppercased()
+        }
+        return String(name.prefix(1)).uppercased()
+    }
+
+    private var gradientColors: [Color] {
+        // Deterministic palette selection from the name string
+        let hash = abs(name.unicodeScalars.reduce(0) { $0 &+ Int($1.value) })
+        let palettes: [[Color]] = [
+            [Color(red: 0.20, green: 0.40, blue: 0.85), Color(red: 0.08, green: 0.20, blue: 0.60)], // blue
+            [Color(red: 0.75, green: 0.25, blue: 0.45), Color(red: 0.50, green: 0.10, blue: 0.30)], // rose
+            [Color(red: 0.15, green: 0.55, blue: 0.35), Color(red: 0.05, green: 0.35, blue: 0.20)], // green
+            [Color(red: 0.72, green: 0.40, blue: 0.10), Color(red: 0.45, green: 0.22, blue: 0.05)], // amber
+            [Color(red: 0.45, green: 0.25, blue: 0.75), Color(red: 0.25, green: 0.12, blue: 0.50)], // purple
+            [Color(red: 0.12, green: 0.50, blue: 0.60), Color(red: 0.05, green: 0.30, blue: 0.45)], // teal
+        ]
+        return palettes[hash % palettes.count]
+    }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: gradientColors,
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            Text(initials)
+                .font(.system(size: fontSize, weight: .bold))
+                .foregroundColor(.white.opacity(0.92))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

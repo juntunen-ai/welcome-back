@@ -8,12 +8,38 @@ final class AppViewModel: ObservableObject {
 
     @Published var selectedTab: AppTab = .home
     @Published var listeningSheetPresented = false
-    @Published var playbackSheetPresented = false
+    /// True while a Gemini Live session is active — suppresses PlaybackView auto-launch.
+    @Published var isLiveSessionActive = false
 
     // MARK: - Data
 
-    @Published var userProfile: UserProfile = .default
+    @Published var userProfile: UserProfile {
+        didSet { PersistenceService.save(userProfile) }
+    }
     @Published var selectedFamilyMember: FamilyMember?
+
+    // MARK: - Services (shared singletons)
+
+    let notificationService = NotificationService.shared
+
+    // MARK: - Init
+
+    /// Bump this number any time the sample data content changes.
+    /// Every device that has an older stamp will reload fresh sample data on next launch.
+    private static let sampleDataVersion = 3
+    private static let sampleDataVersionKey = "loadedSampleDataVersion"
+
+    init() {
+        let loadedVersion = UserDefaults.standard.integer(forKey: Self.sampleDataVersionKey)
+        if loadedVersion < Self.sampleDataVersion {
+            // Sample data is newer than what's on device — reload it.
+            PersistenceService.deleteAll()
+            userProfile = .sampleData
+            UserDefaults.standard.set(Self.sampleDataVersion, forKey: Self.sampleDataVersionKey)
+        } else {
+            userProfile = PersistenceService.load() ?? .sampleData
+        }
+    }
 
     // MARK: - Computed
 
@@ -21,7 +47,43 @@ final class AppViewModel: ObservableObject {
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
 
-    // MARK: - Navigation Helpers
+    /// Returns `.local` only when user has chosen local mode AND the model is downloaded.
+    /// Otherwise falls back to `.cloud` (Gemini).
+    var voiceMode: VoiceSessionBridge.Mode {
+        if userProfile.preferredVoiceMode == .local,
+           ModelDownloadService.shared.isModelReady {
+            return .local
+        }
+        return .cloud
+    }
+
+    // MARK: - Onboarding
+
+    func completeOnboarding() {
+        userProfile.isOnboardingComplete = true
+    }
+
+    /// Loads the built-in Finnish family demo profile.
+    /// Replaces all current data — useful for demos and testing.
+    func loadSampleData() {
+        PersistenceService.deleteAll()
+        notificationService.cancelAll()
+        selectedFamilyMember = nil
+        selectedTab = .home
+        userProfile = .sampleData   // isOnboardingComplete = true → goes straight to ContentView
+    }
+
+    /// Wipes all saved data and restarts the onboarding flow.
+    /// Use this when setting up the app for a new person, or for testing.
+    func resetToNewUser() {
+        PersistenceService.deleteAll()
+        notificationService.cancelAll()
+        selectedFamilyMember = nil
+        selectedTab = .home
+        userProfile = .default   // didSet saves the empty profile; isOnboardingComplete = false → onboarding shows
+    }
+
+    // MARK: - Listening / Conversation
 
     func startListening() {
         listeningSheetPresented = true
@@ -29,20 +91,30 @@ final class AppViewModel: ObservableObject {
 
     func doneSpeaking() {
         listeningSheetPresented = false
-        // Pick a random family member to respond (prototype behaviour)
         selectedFamilyMember = userProfile.familyMembers.randomElement()
-        playbackSheetPresented = true
     }
 
     func selectFamilyMember(_ member: FamilyMember) {
         selectedFamilyMember = member
-        playbackSheetPresented = true
     }
 
-    func selectMemory(_ memory: Memory) {
-        // Navigate to playback with the memory context (future: generate story from memory)
-        selectedFamilyMember = userProfile.familyMembers.randomElement()
-        playbackSheetPresented = true
+    // MARK: - Notifications
+
+    /// Call after the user toggles notifications on/off in Settings.
+    func rescheduleNotifications() {
+        Task {
+            if userProfile.notificationsEnabled {
+                let granted = await notificationService.requestAuthorization()
+                if granted {
+                    await notificationService.reschedule(profile: userProfile)
+                } else {
+                    // System denied — revert toggle, user can allow in iOS Settings
+                    userProfile.notificationsEnabled = false
+                }
+            } else {
+                notificationService.cancelAll()
+            }
+        }
     }
 }
 

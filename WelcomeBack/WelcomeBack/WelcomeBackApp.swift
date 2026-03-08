@@ -7,9 +7,17 @@ struct WelcomeBackApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(appViewModel)
-                .preferredColorScheme(.dark)
+            Group {
+                if appViewModel.userProfile.isOnboardingComplete {
+                    ContentView()
+                } else {
+                    OnboardingContainerView()
+                }
+            }
+            .environmentObject(appViewModel)
+            .preferredColorScheme(.dark)
+            .animation(.easeInOut(duration: 0.45),
+                       value: appViewModel.userProfile.isOnboardingComplete)
         }
     }
 }

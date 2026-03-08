@@ -26,10 +26,16 @@ xcuserdata/
 .build/
 .swiftpm/
 
+# Large binary frameworks (downloaded separately — see README)
+WelcomeBack/Frameworks/llama.xcframework/
+
 # Environment / secrets
 .env
 .env.local
 *.env
+
+# API key lives in Secrets.xcconfig — never commit it
+WelcomeBack/Config/Secrets.xcconfig
 
 # Prototype artefacts (kept locally only)
 prototype.zip
