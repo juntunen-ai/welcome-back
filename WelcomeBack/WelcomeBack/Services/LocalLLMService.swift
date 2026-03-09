@@ -35,7 +35,7 @@ final class LocalLLMService: @unchecked Sendable {
         var temperature: Float = 0.7
         var topP: Float = 0.9
         var topK: Int32 = 40
-        var maxTokens: Int = 256
+        var maxTokens: Int = 150
         var repeatPenalty: Float = 1.1
         var repeatPenaltyLastN: Int32 = 64
     }
@@ -120,10 +120,10 @@ final class LocalLLMService: @unchecked Sendable {
         print("[LocalLLM] 🔧 Using \(nThreads) threads")
 
         var ctxParams = llama_context_default_params()
-        ctxParams.n_ctx = 2048
+        ctxParams.n_ctx = 4096
         ctxParams.n_threads = Int32(nThreads)
         ctxParams.n_threads_batch = Int32(nThreads)
-        print("[LocalLLM] 🔧 Creating context (n_ctx=2048)...")
+        print("[LocalLLM] 🔧 Creating context (n_ctx=4096)...")
 
         guard let ctx = llama_init_from_model(loadedModel, ctxParams) else {
             print("[LocalLLM] ❌ llama_init_from_model returned nil")
@@ -340,21 +340,45 @@ final class LocalLLMService: @unchecked Sendable {
     // MARK: - Context Management
 
     /// Checks if the context is getting full and trims old conversation turns.
-    /// Keeps the system prompt and the most recent portion of conversation.
-    /// Clears the KV cache and resets position counter.
+    /// Uses a sliding window: keeps system prompt + recent conversation, evicts oldest tokens.
     /// Called between conversation turns if context gets too large.
     func trimContextIfNeeded() {
         guard isLoaded, let ctx = context else { return }
-        let maxCtx: Int32 = 2048
-        let threshold: Int32 = maxCtx - 512
+        let maxCtx: Int32 = 4096
+        let threshold: Int32 = maxCtx - 512  // trim when past 3584
 
         if nPast > threshold {
-            // Clear the entire KV cache (matches official example's approach)
             let mem = llama_get_memory(ctx)
-            llama_memory_clear(mem, true)
-            nPast = 0
-            systemPromptTokenCount = 0
-            print("[LocalLLM] Context cleared (was getting full)")
+
+            // Keep system prompt tokens (0..<systemPromptTokenCount)
+            // and the most recent ~1024 conversation tokens.
+            let keepRecent: Int32 = 1024
+            let evictFrom = systemPromptTokenCount   // first token after system prompt
+            let evictTo = nPast - keepRecent          // keep the tail
+
+            if evictTo > evictFrom {
+                // Remove the middle portion of the KV cache
+                let removed = llama_memory_seq_rm(mem, 0, evictFrom, evictTo)
+                if removed {
+                    // Shift remaining tokens' positions down
+                    let shift = evictTo - evictFrom
+                    llama_memory_seq_add(mem, 0, evictTo, nPast, -shift)
+                    nPast -= shift
+                    print("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+                } else {
+                    // Fallback: full clear
+                    llama_memory_clear(mem, true)
+                    nPast = 0
+                    systemPromptTokenCount = 0
+                    print("[LocalLLM] 🔄 Context fully cleared (trim failed)")
+                }
+            } else {
+                // Not enough to evict, full clear
+                llama_memory_clear(mem, true)
+                nPast = 0
+                systemPromptTokenCount = 0
+                print("[LocalLLM] 🔄 Context fully cleared (too few tokens to trim)")
+            }
         }
     }
 }

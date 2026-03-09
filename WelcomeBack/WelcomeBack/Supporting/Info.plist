@@ -51,6 +51,8 @@
 	<string>Welcome Back saves captured photos to your photo library.</string>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>Welcome Back uses Apple Music to play familiar songs from your past, helping to trigger positive memories and feelings of comfort.</string>
+	<key>NSPersonalVoiceUsageDescription</key>
+	<string>Welcome Back can use your Personal Voice so the AI companion sounds like you or a loved one.</string>
 
 	<!-- Gemini API key — injected at build time from Config/Secrets.xcconfig (gitignored) -->
 	<key>GEMINI_API_KEY</key>

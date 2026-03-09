@@ -22,6 +22,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private var conversationHistory: [(role: String, content: String)] = []
     private var currentTranscription = ""
     private var isProcessing = false
+    private var userName = ""
+    private var userProfile: UserProfile?
 
     // MARK: - Sentence Buffer (for streaming LLM → TTS)
 
@@ -39,56 +41,80 @@ final class LocalVoiceAIService: @unchecked Sendable {
     // MARK: - Session Lifecycle
 
     /// Starts a local voice session: loads the LLM, sets the system prompt,
-    /// and begins listening for speech.
-    func startSession(profile: UserProfile) async throws {
+    /// generates a warm greeting, and begins listening for speech.
+    ///
+    /// - Parameters:
+    ///   - profile: The user's profile for building the system prompt.
+    ///   - preloadedLLM: An already-loaded LLM instance (from pre-warming). If nil, loads fresh.
+    func startSession(profile: UserProfile, preloadedLLM: LocalLLMService? = nil) async throws {
         print("[LocalVoiceAI] ▶️ Starting session...")
         updateState(.connecting)   // UI shows "Loading AI model…"
 
-        // 1. Verify model is downloaded
-        let config = await ModelDownloadService.shared.selectedModel
-        let isReady = await ModelDownloadService.shared.isModelDownloaded(config)
-        guard isReady else {
-            print("[LocalVoiceAI] ❌ Model not downloaded")
-            updateState(.error("Voice AI model not downloaded. Please download in Settings → Voice AI Model."))
-            throw LocalVoiceError.modelNotDownloaded
-        }
-
-        // 2. Gather info we need from MainActor
-        let modelPath = await ModelDownloadService.shared.modelFileURL(for: config).path
         let systemPrompt = buildSystemPrompt(from: profile)
-        print("[LocalVoiceAI] 📂 Model path: \(modelPath)")
-        print("[LocalVoiceAI] 📝 System prompt: \(systemPrompt.prefix(100))...")
+        let llm: LocalLLMService
 
-        // 3. Load LLM on a real thread with a full 8 MB stack.
-        //    Swift Task.detached only gets ~64 KB stack, which causes stack overflow
-        //    inside llama.cpp's C code during model loading.
-        let llm = LocalLLMService(modelPath: modelPath)
-        do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                DispatchQueue.global(qos: .userInitiated).async {
-                    do {
-                        try llm.loadModel()
-                        print("[LocalVoiceAI] ✅ Model loaded, setting system prompt...")
-                        try llm.setSystemPrompt(systemPrompt)
-                        print("[LocalVoiceAI] ✅ System prompt set")
-                        continuation.resume()
-                    } catch {
-                        continuation.resume(throwing: error)
+        if let preloaded = preloadedLLM, preloaded.isLoaded {
+            // Use pre-warmed LLM — just set the system prompt
+            print("[LocalVoiceAI] ⚡ Using pre-warmed LLM")
+            llm = preloaded
+            do {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        do {
+                            try llm.setSystemPrompt(systemPrompt)
+                            continuation.resume()
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
                     }
                 }
+            } catch {
+                updateState(.error("Failed to set system prompt: \(error.localizedDescription)"))
+                throw error
             }
-        } catch {
-            print("[LocalVoiceAI] ❌ Model loading failed: \(error)")
-            updateState(.error("Failed to load AI model: \(error.localizedDescription)"))
-            throw error
+        } else {
+            // Load fresh — verify model is downloaded
+            let config = await ModelDownloadService.shared.selectedModel
+            let isReady = await ModelDownloadService.shared.isModelDownloaded(config)
+            guard isReady else {
+                print("[LocalVoiceAI] ❌ Model not downloaded")
+                updateState(.error("Voice AI model not downloaded. Please download in Settings → Voice AI Model."))
+                throw LocalVoiceError.modelNotDownloaded
+            }
+
+            let modelPath = await ModelDownloadService.shared.modelFileURL(for: config).path
+            print("[LocalVoiceAI] 📂 Model path: \(modelPath)")
+
+            let freshLLM = LocalLLMService(modelPath: modelPath)
+            do {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        do {
+                            try freshLLM.loadModel()
+                            try freshLLM.setSystemPrompt(systemPrompt)
+                            continuation.resume()
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
+            } catch {
+                print("[LocalVoiceAI] ❌ Model loading failed: \(error)")
+                updateState(.error("Failed to load AI model: \(error.localizedDescription)"))
+                throw error
+            }
+            llm = freshLLM
         }
 
         self.llmService = llm
-        print("[LocalVoiceAI] 🎤 Starting listening cycle...")
+        self.userName = profile.name
+        self.userProfile = profile
+        print("[LocalVoiceAI] ✅ LLM ready, generating greeting...")
 
-        // 4. Begin listening
-        updateState(.listening)
-        await startListeningCycle()
+        // Generate a warm greeting so the AI speaks first
+        await generateGreeting()
+
+        // Begin listening after greeting finishes (or immediately if greeting fails)
     }
 
     /// Ends the session: stops audio, unloads the model, cleans up.
@@ -194,7 +220,16 @@ final class LocalVoiceAIService: @unchecked Sendable {
             }
 
             // Detect sentence boundaries: . ! ? optionally followed by whitespace
-            while let range = tokenBuffer.range(of: #"[.!?][\"'\u{201D}\u{2019}]?[\s]*"#, options: .regularExpression) {
+            // Also break on commas/semicolons if the buffer is getting long (20+ words)
+            let wordCount = tokenBuffer.split(separator: " ").count
+            let pattern: String
+            if wordCount >= 20 {
+                // Allow clause-level breaks for faster TTS start
+                pattern = #"[.!?,;][\"'\u{201D}\u{2019}]?[\s]*"#
+            } else {
+                pattern = #"[.!?][\"'\u{201D}\u{2019}]?[\s]*"#
+            }
+            while let range = tokenBuffer.range(of: pattern, options: .regularExpression) {
                 let sentence = String(tokenBuffer[tokenBuffer.startIndex..<range.upperBound])
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 tokenBuffer = String(tokenBuffer[range.upperBound...])
@@ -271,6 +306,40 @@ final class LocalVoiceAIService: @unchecked Sendable {
         isProcessing = false
     }
 
+    // MARK: - Warm Greeting
+
+    /// Generates a short greeting so the AI speaks first when the session starts.
+    private func generateGreeting() async {
+        guard let llm = llmService else { return }
+
+        let greetingPrompt = "Greet \(userName) warmly in 1 short sentence. Be natural and friendly."
+        var greeting = ""
+
+        for await token in llm.generateResponse(userMessage: greetingPrompt) {
+            greeting += token
+        }
+
+        greeting = greeting.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !greeting.isEmpty else {
+            print("[LocalVoiceAI] ⚠️ Greeting was empty, skipping")
+            updateState(.listening)
+            await MainActor.run { [weak self] in
+                self?.startListeningCycle()
+            }
+            return
+        }
+
+        print("[LocalVoiceAI] 👋 Greeting: '\(greeting)'")
+        conversationHistory.append((role: "assistant", content: greeting))
+        updateState(.aiSpeaking)
+
+        await MainActor.run { [weak self] in
+            SpeechService.shared.speakSentences([greeting]) { [weak self] in
+                self?.onAllSpeechFinished()
+            }
+        }
+    }
+
     /// Called when TTS finishes all queued sentences → restart listening.
     private func onAllSpeechFinished() {
         guard sessionState != .disconnected else { return }
@@ -282,9 +351,89 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
     // MARK: - System Prompt Builder
 
-    /// Builds a rich system prompt from the user's profile, including full
-    /// biographies, personal memories, address, and location.
-    private func buildSystemPrompt(from profile: UserProfile) -> String {
+    /// Stop words to exclude from relevance scoring.
+    private static let stopWords: Set<String> = [
+        "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+        "have", "has", "had", "do", "does", "did", "will", "would", "could",
+        "should", "may", "might", "shall", "can", "to", "of", "in", "for",
+        "on", "with", "at", "by", "from", "as", "into", "about", "like",
+        "through", "after", "over", "between", "out", "up", "down", "and",
+        "but", "or", "nor", "not", "no", "so", "if", "than", "too", "very",
+        "just", "that", "this", "it", "i", "me", "my", "we", "you", "your",
+        "he", "she", "they", "them", "what", "which", "who", "when", "where",
+        "how", "all", "each", "every", "both", "few", "more", "most", "some",
+        "tell", "know", "think", "say", "said", "get", "go", "come", "make",
+    ]
+
+    /// Scores a text block against a set of query keywords.
+    private func relevanceScore(text: String, keywords: Set<String>) -> Int {
+        let words = Set(text.lowercased().split(separator: " ").map { String($0) })
+        return words.intersection(keywords).count
+    }
+
+    /// Selects the most relevant family members and memories based on the user's query.
+    private func selectRelevantContent(
+        query: String,
+        profile: UserProfile,
+        imageDescriptions: [String: String]
+    ) -> (members: [FamilyMember], memories: [Memory]) {
+        let keywords = Set(
+            query.lowercased()
+                .components(separatedBy: .alphanumerics.inverted)
+                .filter { !$0.isEmpty && !Self.stopWords.contains($0) }
+        )
+
+        // If no meaningful keywords or first turn, include everything
+        guard !keywords.isEmpty else {
+            return (profile.familyMembers, profile.memories)
+        }
+
+        // Score family members
+        let scoredMembers = profile.familyMembers.map { member -> (FamilyMember, Int) in
+            let text = [
+                member.name, member.relationship, member.biography,
+                member.memory1, member.memory2,
+                imageDescriptions[member.imageURL] ?? ""
+            ].joined(separator: " ")
+            return (member, relevanceScore(text: text, keywords: keywords))
+        }.sorted { $0.1 > $1.1 }
+
+        // Score memories
+        let scoredMemories = profile.memories.map { memory -> (Memory, Int) in
+            let text = [
+                memory.title, memory.description,
+                imageDescriptions[memory.imageURL] ?? ""
+            ].joined(separator: " ")
+            return (memory, relevanceScore(text: text, keywords: keywords))
+        }.sorted { $0.1 > $1.1 }
+
+        // Take top-3 members (or all if scored), top-4 memories
+        let topMembers = scoredMembers.prefix(3).map(\.0)
+        let topMemories = scoredMemories.prefix(4).map(\.0)
+
+        return (Array(topMembers), Array(topMemories))
+    }
+
+    /// Builds a rich system prompt from the user's profile.
+    /// When a query is provided, prioritizes relevant memories and family members.
+    private func buildSystemPrompt(
+        from profile: UserProfile,
+        relevantQuery: String? = nil
+    ) -> String {
+        let imageDescs = ImageDescriptionService.shared.descriptions
+
+        let (relevantMembers, relevantMemories): ([FamilyMember], [Memory])
+        if let query = relevantQuery {
+            (relevantMembers, relevantMemories) = selectRelevantContent(
+                query: query, profile: profile, imageDescriptions: imageDescs
+            )
+        } else {
+            relevantMembers = profile.familyMembers
+            relevantMemories = profile.memories
+        }
+
+        let relevantMemberIDs = Set(relevantMembers.map(\.id))
+
         var prompt = """
         You are a friendly, warm companion talking with \(profile.name). \
         Chat naturally like a good friend would — relaxed, curious, unhurried.
@@ -302,33 +451,46 @@ final class LocalVoiceAIService: @unchecked Sendable {
             prompt += ".\n"
         }
 
-        // Family members — include full biographies and personal memories
+        // Family members — full details for relevant ones, brief for others
         if !profile.familyMembers.isEmpty {
             prompt += "\nTheir family:\n"
             for member in profile.familyMembers {
-                prompt += "- \(member.name) (\(member.relationship))"
-                if !member.phone.isEmpty {
-                    prompt += ", phone: \(member.phone)"
-                }
-                prompt += "\n"
-                if !member.biography.isEmpty {
-                    prompt += "  About: \(member.biography)\n"
-                }
-                if !member.memory1.isEmpty {
-                    prompt += "  Memory: \(member.memory1)\n"
-                }
-                if !member.memory2.isEmpty {
-                    prompt += "  Memory: \(member.memory2)\n"
+                if relevantMemberIDs.contains(member.id) {
+                    // Full details for relevant members
+                    prompt += "- \(member.name) (\(member.relationship))"
+                    if !member.phone.isEmpty {
+                        prompt += ", phone: \(member.phone)"
+                    }
+                    prompt += "\n"
+                    if let photoDesc = imageDescs[member.imageURL], photoDesc != "photo" {
+                        prompt += "  [Photo: \(photoDesc)]\n"
+                    }
+                    if !member.biography.isEmpty {
+                        prompt += "  About: \(member.biography)\n"
+                    }
+                    if !member.memory1.isEmpty {
+                        prompt += "  Memory: \(member.memory1)\n"
+                    }
+                    if !member.memory2.isEmpty {
+                        prompt += "  Memory: \(member.memory2)\n"
+                    }
+                } else {
+                    // Brief mention for non-relevant members
+                    prompt += "- \(member.name) (\(member.relationship))\n"
                 }
             }
         }
 
-        // Memories
-        if !profile.memories.isEmpty {
+        // Memories — full details for relevant ones
+        if !relevantMemories.isEmpty {
             prompt += "\nKey memories and places they love:\n"
-            for memory in profile.memories {
+            for memory in relevantMemories {
                 let dateStr = memory.date.isEmpty ? "" : " [\(memory.date)]"
-                prompt += "- \(memory.title)\(dateStr): \(memory.description)\n"
+                prompt += "- \(memory.title)\(dateStr): \(memory.description)"
+                if let photoDesc = imageDescs[memory.imageURL], photoDesc != "photo" {
+                    prompt += " [Photo: \(photoDesc)]"
+                }
+                prompt += "\n"
             }
         }
 

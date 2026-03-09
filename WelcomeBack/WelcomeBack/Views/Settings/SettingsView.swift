@@ -110,11 +110,31 @@ struct SettingsView: View {
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: RecordVoiceView()) {
+            NavigationLink(destination: VoiceSelectionView()) {
+                SettingsRowView(
+                    icon: "person.wave.2.fill",
+                    iconColor: .purple,
+                    title: "AI Voice",
+                    subtitle: SpeechService.shared.selectedVoiceIdentifier != nil ? "Personal Voice" : "Default"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: ElevenLabsSettingsView()) {
                 SettingsRowView(
                     icon: "waveform.badge.mic",
                     iconColor: .accentYellow,
-                    title: "Voice Cloning",
+                    title: "Voice Cloning (ElevenLabs)",
+                    subtitle: ElevenLabsService.shared.isConfigured ? "Connected" : "Set Up"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: RecordVoiceView()) {
+                SettingsRowView(
+                    icon: "mic.badge.plus",
+                    iconColor: .red,
+                    title: "Record Voice Sample",
                     subtitle: "Coming Soon"
                 )
             }
