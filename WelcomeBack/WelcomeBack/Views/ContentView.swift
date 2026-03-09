@@ -37,6 +37,12 @@ struct ContentView: View {
                 .tag(AppTab.settings)
         }
         .tint(.accentYellow)
+        .onAppear {
+            appVM.preloadLLMIfNeeded()
+            Task {
+                await ImageDescriptionService.shared.generateDescriptions(for: appVM.userProfile)
+            }
+        }
         .sheet(isPresented: $appVM.listeningSheetPresented) {
             ListeningView(mode: appVM.voiceMode)
                 .environmentObject(appVM)

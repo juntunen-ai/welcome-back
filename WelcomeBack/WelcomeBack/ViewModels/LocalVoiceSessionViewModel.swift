@@ -16,7 +16,7 @@ final class LocalVoiceSessionViewModel: ObservableObject {
     private var service: LocalVoiceAIService?
     private var stateObserverTask: Task<Void, Never>?
 
-    func beginSession(profile: UserProfile) {
+    func beginSession(profile: UserProfile, preloadedLLM: LocalLLMService? = nil) {
         service = LocalVoiceAIService()
         errorMessage = nil
         useFallback = false
@@ -37,7 +37,7 @@ final class LocalVoiceSessionViewModel: ObservableObject {
         Task { [weak self] in
             guard let self, let service = self.service else { return }
             do {
-                try await service.startSession(profile: profile)
+                try await service.startSession(profile: profile, preloadedLLM: preloadedLLM)
             } catch {
                 print("[LocalVoiceVM] Session failed: \(error)")
                 self.errorMessage = error.localizedDescription
@@ -73,6 +73,9 @@ final class VoiceSessionBridge: ObservableObject {
     private var localVM: LocalVoiceSessionViewModel?
     private var cancellables = Set<AnyCancellable>()
 
+    /// Pre-loaded LLM to pass to the local session (avoids re-loading on mic tap).
+    var preloadedLLM: LocalLLMService?
+
     init(mode: Mode) {
         self.mode = mode
 
@@ -95,7 +98,7 @@ final class VoiceSessionBridge: ObservableObject {
 
     func beginSession(profile: UserProfile) {
         cloudVM?.beginSession(profile: profile)
-        localVM?.beginSession(profile: profile)
+        localVM?.beginSession(profile: profile, preloadedLLM: preloadedLLM)
     }
 
     func endSession() {

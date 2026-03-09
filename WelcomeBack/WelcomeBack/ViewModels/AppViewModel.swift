@@ -22,6 +22,11 @@ final class AppViewModel: ObservableObject {
 
     let notificationService = NotificationService.shared
 
+    /// Pre-loaded LLM service for faster session start. Loaded in background
+    /// when voice mode is local and model is downloaded.
+    private(set) var preloadedLLM: LocalLLMService?
+    private var preloadTask: Task<Void, Never>?
+
     // MARK: - Init
 
     /// Bump this number any time the sample data content changes.
@@ -55,6 +60,58 @@ final class AppViewModel: ObservableObject {
             return .local
         }
         return .cloud
+    }
+
+    // MARK: - LLM Pre-warming
+
+    /// Pre-loads the LLM in background so tapping the mic is instant.
+    func preloadLLMIfNeeded() {
+        guard preloadedLLM == nil,
+              userProfile.preferredVoiceMode == .local,
+              ModelDownloadService.shared.isModelReady else { return }
+
+        preloadTask?.cancel()
+        preloadTask = Task {
+            let config = ModelDownloadService.shared.selectedModel
+            let modelPath = ModelDownloadService.shared.modelFileURL(for: config).path
+            let llm = LocalLLMService(modelPath: modelPath)
+
+            do {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    DispatchQueue.global(qos: .utility).async {
+                        do {
+                            try llm.loadModel()
+                            continuation.resume()
+                        } catch {
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                }
+                guard !Task.isCancelled else {
+                    llm.unloadModel()
+                    return
+                }
+                self.preloadedLLM = llm
+                print("[AppVM] ✅ LLM pre-warmed and ready")
+            } catch {
+                print("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Releases the pre-loaded LLM (e.g. when switching to cloud mode).
+    func releasePreloadedLLM() {
+        preloadTask?.cancel()
+        preloadTask = nil
+        preloadedLLM?.unloadModel()
+        preloadedLLM = nil
+    }
+
+    /// Takes ownership of the pre-loaded LLM. Returns nil if not available.
+    func takePreloadedLLM() -> LocalLLMService? {
+        let llm = preloadedLLM
+        preloadedLLM = nil
+        return llm
     }
 
     // MARK: - Onboarding

@@ -44,11 +44,17 @@ struct ListeningView: View {
         // Start live session as soon as the sheet appears
         .onAppear {
             animateWave()
+            // Pass pre-loaded LLM to avoid re-loading on mic tap
+            if voiceVM.mode == .local {
+                voiceVM.preloadedLLM = appVM.takePreloadedLLM()
+            }
             voiceVM.beginSession(profile: appVM.userProfile)
         }
         // Tear down when the sheet is dismissed for any reason
         .onDisappear {
             voiceVM.endSession()
+            // Re-trigger preload for next session
+            appVM.preloadLLMIfNeeded()
         }
         // Fallback: if Live WebSocket fails, revert to REST + PlaybackView
         .onChange(of: voiceVM.useFallback) { _, isFallback in

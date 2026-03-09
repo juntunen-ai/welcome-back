@@ -35,9 +35,34 @@ final class SpeechService: NSObject, ObservableObject {
     private var pendingUtteranceCount = 0
     private var allFinishedCallback: (() -> Void)?
 
+    /// The voice identifier to use for TTS. If set, uses this voice instead of default.
+    /// Can be a Personal Voice identifier or a premium Apple voice.
+    var selectedVoiceIdentifier: String? {
+        get { UserDefaults.standard.string(forKey: "selectedVoiceIdentifier") }
+        set { UserDefaults.standard.set(newValue, forKey: "selectedVoiceIdentifier") }
+    }
+
     private override init() {
         super.init()
         synthesizer.delegate = self
+    }
+
+    // MARK: - Personal Voice
+
+    /// Requests authorization to use Personal Voice.
+    func requestPersonalVoiceAccess() async -> Bool {
+        let status = await AVSpeechSynthesizer.requestPersonalVoiceAuthorization()
+        return status == .authorized
+    }
+
+    /// Returns available Personal Voices (requires prior authorization).
+    func availablePersonalVoices() -> [AVSpeechSynthesisVoice] {
+        AVSpeechSynthesisVoice.speechVoices().filter { $0.voiceTraits.contains(.isPersonalVoice) }
+    }
+
+    /// Returns the current Personal Voice authorization status.
+    var personalVoiceAuthStatus: AVSpeechSynthesizer.PersonalVoiceAuthorizationStatus {
+        AVSpeechSynthesizer.personalVoiceAuthorizationStatus
     }
 
     // MARK: - Speech Recognition (Original)
@@ -271,12 +296,7 @@ final class SpeechService: NSObject, ObservableObject {
             utterance.rate = 0.48
             utterance.pitchMultiplier = 1.0
             utterance.volume = 1.0
-            if let voiceID = voiceIdentifier,
-               let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
-                utterance.voice = voice
-            } else {
-                utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-            }
+            utterance.voice = resolveVoice(explicit: voiceIdentifier)
             synthesizer.speak(utterance)
         }
         isSpeaking = true
@@ -289,13 +309,17 @@ final class SpeechService: NSObject, ObservableObject {
         utterance.rate = 0.48
         utterance.pitchMultiplier = 1.0
         utterance.volume = 1.0
-        if let voiceID = voiceIdentifier,
-           let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
-            utterance.voice = voice
-        } else {
-            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        }
+        utterance.voice = resolveVoice(explicit: voiceIdentifier)
         synthesizer.speak(utterance)
+    }
+
+    /// Resolves the voice to use: explicit param > selectedVoiceIdentifier > default en-US.
+    private func resolveVoice(explicit voiceIdentifier: String?) -> AVSpeechSynthesisVoice? {
+        if let voiceID = voiceIdentifier ?? selectedVoiceIdentifier,
+           let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
+            return voice
+        }
+        return AVSpeechSynthesisVoice(language: "en-US")
     }
 
     func stopSpeaking() {
