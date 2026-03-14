@@ -4,36 +4,42 @@ import CoreLocation
 struct HomeView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var locationManager = HomeLocationManager()
-
-    @State private var pulseScale1: CGFloat = 1.0
-    @State private var pulseScale2: CGFloat = 1.0
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.backgroundDark.ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    heroSection
-                        .padding(.top, 20)
-                        .padding(.horizontal, 24)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        heroSection
+                            .padding(.top, 20)
+                            .padding(.horizontal, 24)
 
-                    Spacer(minLength: 16)
+                        micButton
+                            .padding(.top, 24)
 
-                    micButton
+                        infoCard
+                            .padding(.top, 28)
+                            .padding(.horizontal, 24)
 
-                    Spacer(minLength: 16)
+                        introSection
+                            .padding(.top, 20)
+                            .padding(.horizontal, 24)
 
-                    hintCard
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
+                        if !appVM.familyMembers.isEmpty {
+                            familyCircles
+                                .padding(.top, 24)
+                                .padding(.horizontal, 24)
+                        }
+
+                        Spacer(minLength: 32)
+                    }
+                    .padding(.top, 8)
                 }
-                .padding(.top, 8)
             }
             .onAppear {
-                startPulse()
                 locationManager.start()
             }
         }
@@ -44,36 +50,65 @@ struct HomeView: View {
     /// Profile circle on the left, current location on the right.
     private var heroSection: some View {
         HStack(alignment: .center, spacing: 12) {
+            NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+                profileCircle
+            }
+            .buttonStyle(.plain)
 
-            // ── Left: profile photo + greeting ────────────────────────────────
-            HStack(alignment: .center, spacing: 12) {
-                NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
-                    profileCircle
-                }
-                .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Welcome Back,")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.onSurface.opacity(0.5))
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Welcome Back,")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.onSurface.opacity(0.5))
-
-                    Text(appVM.userName.isEmpty ? "Friend" : appVM.userName)
-                        .font(.system(size: 22, weight: .black))
-                        .foregroundColor(.onSurface)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-
-                    Text("Remember who you are.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.onSurface.opacity(0.4))
-                }
+                Text(appVM.userName.isEmpty ? "Friend" : appVM.userName)
+                    .font(.system(size: 22, weight: .black))
+                    .foregroundColor(.onSurface)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
 
             Spacer()
 
-            // ── Right: location ───────────────────────────────────────────────
             locationCard
         }
+    }
+
+    private var locationCard: some View {
+        VStack(alignment: .trailing, spacing: 5) {
+            HStack(spacing: 4) {
+                Image(systemName: "location.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(.accentYellow)
+                Text("Your Location")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.accentYellow)
+            }
+
+            if locationManager.isLoading {
+                Text("Finding location…")
+                    .font(.system(size: 12))
+                    .foregroundColor(.onSurface.opacity(0.35))
+            } else if let city = locationManager.city {
+                Text(city)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.onSurface)
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+
+                if let street = locationManager.streetAddress {
+                    Text(street)
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.55))
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                }
+            } else {
+                Text("Location unavailable")
+                    .font(.system(size: 12))
+                    .foregroundColor(.onSurface.opacity(0.35))
+            }
+        }
+        .frame(maxWidth: 150, alignment: .trailing)
     }
 
     private var profileCircle: some View {
@@ -99,67 +134,10 @@ struct HomeView: View {
         .accessibilityLabel("Your profile photo — tap to edit")
     }
 
-    private var locationCard: some View {
-        VStack(alignment: .trailing, spacing: 5) {
-            // Label row
-            HStack(spacing: 4) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.accentYellow)
-                Text("Your Location")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.accentYellow)
-            }
-
-            if locationManager.isLoading {
-                Text("Finding location…")
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.35))
-            } else if let city = locationManager.city {
-                // City / country
-                Text(city)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.onSurface)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(2)
-
-                // Street address (if available)
-                if let street = locationManager.streetAddress {
-                    Text(street)
-                        .font(.system(size: 12))
-                        .foregroundColor(.onSurface.opacity(0.55))
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(1)
-                }
-            } else {
-                Text("Location unavailable")
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.35))
-            }
-        }
-        .frame(maxWidth: 150, alignment: .trailing)
-    }
-
     // MARK: - Mic button
 
     private var micButton: some View {
         ZStack {
-            if !reduceMotion {
-                Circle()
-                    .fill(Color.accentYellow.opacity(0.1))
-                    .frame(width: 288, height: 288)
-                    .scaleEffect(pulseScale1)
-                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true),
-                               value: pulseScale1)
-
-                Circle()
-                    .fill(Color.accentYellow.opacity(0.2))
-                    .frame(width: 240, height: 240)
-                    .scaleEffect(pulseScale2)
-                    .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true).delay(1),
-                               value: pulseScale2)
-            }
-
             Button(action: appVM.startListening) {
                 ZStack {
                     Circle()
@@ -182,42 +160,104 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Hint card
+    // MARK: - Info card
 
-    private var hintCard: some View {
-        HStack(spacing: 16) {
-            Circle()
-                .fill(Color.accentYellow.opacity(0.2))
-                .frame(width: 40, height: 40)
-                .overlay(
-                    Image(systemName: "lightbulb")
+    private var infoCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            let profile = appVM.userProfile
+
+            if !profile.name.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 13))
                         .foregroundColor(.accentYellow)
-                )
-                .accessibilityHidden(true)
+                    Text(profile.name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.onSurface)
+                }
+            }
 
-            Text("Say something like \"Tell me about my wedding day\" or \"Who is Anna?\"")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.onSurface.opacity(0.8))
-                .fixedSize(horizontal: false, vertical: true)
+            if !profile.address.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "house.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.accentYellow)
+                    Text(profile.address)
+                        .font(.system(size: 14))
+                        .foregroundColor(.onSurface.opacity(0.8))
+                }
+            }
+
+            if !profile.biography.isEmpty {
+                Text(profile.biography)
+                    .font(.system(size: 14))
+                    .foregroundColor(.onSurface.opacity(0.65))
+                    .lineLimit(3)
+            }
         }
-        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
         .background(Color.surfaceVariant.opacity(0.3))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
                 .strokeBorder(Color.white.opacity(0.05))
         )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Hint: say something like 'Tell me about my wedding day' or 'Who is Anna'")
     }
 
-    // MARK: - Animation
+    // MARK: - Intro section
 
-    private func startPulse() {
-        guard !reduceMotion else { return }
-        pulseScale1 = 1.08
-        pulseScale2 = 1.08
+    private var introSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("What is Welcome Back?")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(.onSurface.opacity(0.9))
+
+            Text("A compassionate AI companion that helps you remember the people, places, and moments that matter most. Tap the microphone and start talking.")
+                .font(.system(size: 13))
+                .foregroundColor(.onSurface.opacity(0.5))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    // MARK: - Family circles
+
+    private var familyCircles: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Your Family")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(.onSurface.opacity(0.9))
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(appVM.familyMembers) { member in
+                        NavigationLink(destination: FamilyMemberProfileView(member: member)) {
+                            VStack(spacing: 6) {
+                                MemberImageView(
+                                    imageURL: member.imageURL,
+                                    name: member.name,
+                                    size: 56,
+                                    isCircle: true
+                                )
+                                .overlay(
+                                    Circle().strokeBorder(Color.accentYellow, lineWidth: 2)
+                                )
+
+                                Text(member.name.components(separatedBy: " ").first ?? member.name)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundColor(.onSurface.opacity(0.7))
+                                    .lineLimit(1)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
 }
 
 // MARK: - Location manager

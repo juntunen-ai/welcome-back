@@ -181,7 +181,7 @@ struct PersonalInfoView: View {
     private func familyRow(index: Int, member: FamilyMember) -> some View {
         Button { editingMemberIndex = index } label: {
             HStack(spacing: 14) {
-                MemberImageView(imageURL: member.imageURL, name: member.name, size: 36, cornerRadius: 10)
+                MemberImageView(imageURL: member.imageURL, name: member.name, size: 36, isCircle: true)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(member.name.isEmpty ? "Unnamed" : member.name)

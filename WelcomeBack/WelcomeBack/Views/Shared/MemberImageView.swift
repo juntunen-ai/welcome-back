@@ -13,6 +13,7 @@ struct MemberImageView: View {
     var name: String = ""
     let size: CGFloat
     var cornerRadius: CGFloat = 16
+    var isCircle: Bool = false
 
     var body: some View {
         Group {
@@ -25,6 +26,8 @@ struct MemberImageView: View {
             }
         }
         .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+        .clipShape(isCircle
+            ? AnyShape(Circle())
+            : AnyShape(RoundedRectangle(cornerRadius: cornerRadius)))
     }
 }
