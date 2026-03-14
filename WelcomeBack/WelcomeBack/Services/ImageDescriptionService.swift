@@ -103,23 +103,16 @@ final class ImageDescriptionService: ObservableObject {
     /// Uses VNClassifyImageRequest to get scene classification tags.
     private nonisolated func classifyScene(_ cgImage: CGImage) async -> [String] {
         await withCheckedContinuation { continuation in
-            let request = VNClassifyImageRequest { request, error in
-                guard error == nil,
-                      let results = request.results as? [VNClassificationObservation] else {
-                    continuation.resume(returning: [])
-                    return
-                }
-                // Take top 3 classifications with confidence > 0.3
+            let request = VNClassifyImageRequest()
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            do {
+                try handler.perform([request])
+                let results = (request.results as? [VNClassificationObservation]) ?? []
                 let tags = results
                     .filter { $0.confidence > 0.3 }
                     .prefix(3)
                     .map { $0.identifier.replacingOccurrences(of: "_", with: " ") }
                 continuation.resume(returning: Array(tags))
-            }
-
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do {
-                try handler.perform([request])
             } catch {
                 continuation.resume(returning: [])
             }
@@ -129,20 +122,14 @@ final class ImageDescriptionService: ObservableObject {
     /// Uses VNRecognizeTextRequest to find any text in the photo.
     private nonisolated func recognizeText(_ cgImage: CGImage) async -> [String] {
         await withCheckedContinuation { continuation in
-            let request = VNRecognizeTextRequest { request, error in
-                guard error == nil,
-                      let results = request.results as? [VNRecognizedTextObservation] else {
-                    continuation.resume(returning: [])
-                    return
-                }
-                let texts = results.compactMap { $0.topCandidates(1).first?.string }
-                continuation.resume(returning: Array(texts.prefix(3)))
-            }
+            let request = VNRecognizeTextRequest()
             request.recognitionLevel = .fast
-
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
+                let results = (request.results as? [VNRecognizedTextObservation]) ?? []
+                let texts = results.compactMap { $0.topCandidates(1).first?.string }
+                continuation.resume(returning: Array(texts.prefix(3)))
             } catch {
                 continuation.resume(returning: [])
             }
@@ -152,14 +139,12 @@ final class ImageDescriptionService: ObservableObject {
     /// Counts faces in the image.
     private nonisolated func detectFaceCount(_ cgImage: CGImage) async -> Int {
         await withCheckedContinuation { continuation in
-            let request = VNDetectFaceRectanglesRequest { request, error in
-                let count = (request.results as? [VNFaceObservation])?.count ?? 0
-                continuation.resume(returning: count)
-            }
-
+            let request = VNDetectFaceRectanglesRequest()
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
+                let count = (request.results as? [VNFaceObservation])?.count ?? 0
+                continuation.resume(returning: count)
             } catch {
                 continuation.resume(returning: 0)
             }
