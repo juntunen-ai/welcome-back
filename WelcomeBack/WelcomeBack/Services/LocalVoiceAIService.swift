@@ -125,16 +125,19 @@ final class LocalVoiceAIService: @unchecked Sendable {
         // Begin listening after greeting finishes (or immediately if greeting fails)
     }
 
-    /// Ends the session: stops audio, unloads the model, cleans up.
+    /// Ends the session: stops audio, resets the model context, cleans up.
+    /// The LLM stays loaded in memory so the next session starts instantly.
+    /// Call `unloadLLM()` to fully release the model from memory.
     func endSession() {
         Task { @MainActor in
             SpeechService.shared.stopListening()
             SpeechService.shared.stopSpeaking()
         }
         llmService?.cancelGeneration = true
-        llmService?.unloadModel()
+        llmService?.resetContext()  // keep model loaded, just clear KV cache
         llmService = nil
         conversationHistory.removeAll()
+        sessionImageDescriptions = [:]
         updateState(.disconnected)
         stateContinuation.finish()
     }

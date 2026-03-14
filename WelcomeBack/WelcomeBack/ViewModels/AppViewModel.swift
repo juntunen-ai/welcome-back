@@ -114,6 +114,14 @@ final class AppViewModel: ObservableObject {
         return llm
     }
 
+    /// Reclaims a still-loaded LLM after a session ends, so it can be reused
+    /// for the next session without reloading from disk.
+    func reclaimLLM(_ llm: LocalLLMService) {
+        guard llm.isLoaded else { return }
+        preloadedLLM = llm
+        print("[AppVM] ♻️ Reclaimed loaded LLM for reuse")
+    }
+
     // MARK: - Onboarding
 
     func completeOnboarding() {

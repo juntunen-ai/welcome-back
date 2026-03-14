@@ -53,8 +53,12 @@ struct ListeningView: View {
         // Tear down when the sheet is dismissed for any reason
         .onDisappear {
             voiceVM.endSession()
-            // Re-trigger preload for next session
-            appVM.preloadLLMIfNeeded()
+            // Reclaim still-loaded LLM for instant next session
+            if let llm = voiceVM.reclaimableLLM {
+                appVM.reclaimLLM(llm)
+            } else {
+                appVM.preloadLLMIfNeeded()
+            }
         }
         // Fallback: if Live WebSocket fails, revert to REST + PlaybackView
         .onChange(of: voiceVM.useFallback) { _, isFallback in

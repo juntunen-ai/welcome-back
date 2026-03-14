@@ -95,6 +95,7 @@ final class LocalLLMService: @unchecked Sendable {
 
         // 2. Model parameters — GPU offload on real device, CPU-only on simulator
         var modelParams = llama_model_default_params()
+        modelParams.use_mmap = true  // memory-map model file for faster loading
         #if targetEnvironment(simulator)
         modelParams.n_gpu_layers = 0
         print("[LocalLLM] ⚠️ Simulator detected, forcing CPU-only")
@@ -102,7 +103,7 @@ final class LocalLLMService: @unchecked Sendable {
         modelParams.n_gpu_layers = 99   // offload all layers to Metal GPU
         print("[LocalLLM] 🚀 Metal GPU offload enabled (n_gpu_layers=99)")
         #endif
-        print("[LocalLLM] 📂 Loading model file...")
+        print("[LocalLLM] 📂 Loading model file (mmap enabled)...")
 
         guard let loadedModel = llama_model_load_from_file(modelPath, modelParams) else {
             print("[LocalLLM] ❌ llama_model_load_from_file returned nil")
@@ -121,9 +122,12 @@ final class LocalLLMService: @unchecked Sendable {
 
         var ctxParams = llama_context_default_params()
         ctxParams.n_ctx = 4096
+        ctxParams.n_batch = 512         // process up to 512 tokens per decode (prefill speed)
+        ctxParams.n_ubatch = 512        // physical batch size matches logical
         ctxParams.n_threads = Int32(nThreads)
         ctxParams.n_threads_batch = Int32(nThreads)
-        print("[LocalLLM] 🔧 Creating context (n_ctx=4096)...")
+        ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO  // enable flash attention on Metal
+        print("[LocalLLM] 🔧 Creating context (n_ctx=4096, n_batch=512, flash_attn=auto)...")
 
         guard let ctx = llama_init_from_model(loadedModel, ctxParams) else {
             print("[LocalLLM] ❌ llama_init_from_model returned nil")
@@ -174,6 +178,18 @@ final class LocalLLMService: @unchecked Sendable {
 
         sampler = chain
         print("[LocalLLM] ✅ Sampler chain built")
+    }
+
+    /// Resets the context for a new session without unloading the model.
+    /// Much faster than unload + reload (~10ms vs ~2-5s).
+    func resetContext() {
+        guard isLoaded, let ctx = context else { return }
+        let mem = llama_get_memory(ctx)
+        llama_memory_clear(mem, true)
+        nPast = 0
+        systemPromptTokenCount = 0
+        cancelGeneration = false
+        print("[LocalLLM] 🔄 Context reset (model stays loaded)")
     }
 
     /// Unloads the model and frees all resources.
