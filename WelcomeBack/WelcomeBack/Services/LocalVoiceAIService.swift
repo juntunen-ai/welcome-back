@@ -50,7 +50,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
         print("[LocalVoiceAI] ▶️ Starting session...")
         updateState(.connecting)   // UI shows "Loading AI model…"
 
-        let systemPrompt = buildSystemPrompt(from: profile)
+        let imageDescs = await MainActor.run { ImageDescriptionService.shared.descriptions }
+        let systemPrompt = buildSystemPrompt(from: profile, imageDescriptions: imageDescs)
         let llm: LocalLLMService
 
         if let preloaded = preloadedLLM, preloaded.isLoaded {
@@ -313,13 +314,9 @@ final class LocalVoiceAIService: @unchecked Sendable {
         guard let llm = llmService else { return }
 
         let greetingPrompt = "Greet \(userName) warmly in 1 short sentence. Be natural and friendly."
-        var greeting = ""
-
-        for await token in llm.generateResponse(userMessage: greetingPrompt) {
-            greeting += token
-        }
-
-        greeting = greeting.trimmingCharacters(in: .whitespacesAndNewlines)
+        let greeting = await llm.generateResponse(userMessage: greetingPrompt)
+            .reduce("", +)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !greeting.isEmpty else {
             print("[LocalVoiceAI] ⚠️ Greeting was empty, skipping")
             updateState(.listening)
@@ -418,9 +415,10 @@ final class LocalVoiceAIService: @unchecked Sendable {
     /// When a query is provided, prioritizes relevant memories and family members.
     private func buildSystemPrompt(
         from profile: UserProfile,
-        relevantQuery: String? = nil
+        relevantQuery: String? = nil,
+        imageDescriptions: [String: String] = [:]
     ) -> String {
-        let imageDescs = ImageDescriptionService.shared.descriptions
+        let imageDescs = imageDescriptions
 
         let (relevantMembers, relevantMemories): ([FamilyMember], [Memory])
         if let query = relevantQuery {
