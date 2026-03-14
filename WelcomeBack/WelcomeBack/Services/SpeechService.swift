@@ -31,6 +31,13 @@ final class SpeechService: NSObject, ObservableObject {
     private var vadSilenceCallback: (() -> Void)?
     private var vadFinalCallback: ((String) -> Void)?
 
+    // Adaptive VAD: noise floor calibration
+    private var noiseFloorDb: Float = -40   // initial conservative estimate
+    private var noiseCalibrationSamples: [Float] = []
+    private var isCalibrating = true
+    private let calibrationSampleCount = 15  // ~960ms at 64ms/buffer
+    private let speechMarginDb: Float = 10   // speech must be this much louder than noise
+
     // Sentence TTS queue
     private var pendingUtteranceCount = 0
     private var allFinishedCallback: (() -> Void)?
@@ -45,6 +52,22 @@ final class SpeechService: NSObject, ObservableObject {
     private override init() {
         super.init()
         synthesizer.delegate = self
+    }
+
+    // MARK: - Audio Session
+
+    /// Configures the audio session for the given mode.
+    /// Centralised to avoid category thrashing between STT and TTS.
+    private func configureAudioSession(forListening: Bool) throws {
+        let session = AVAudioSession.sharedInstance()
+        if forListening {
+            try session.setCategory(.playAndRecord, mode: .measurement,
+                                     options: [.defaultToSpeaker, .allowBluetoothA2DP])
+        } else {
+            try session.setCategory(.playAndRecord, mode: .default,
+                                     options: [.defaultToSpeaker, .allowBluetoothA2DP])
+        }
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
     }
 
     // MARK: - Personal Voice
@@ -80,9 +103,7 @@ final class SpeechService: NSObject, ObservableObject {
 
         transcribedText = ""
 
-        let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        try configureAudioSession(forListening: true)
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let request = recognitionRequest else { return }
@@ -157,13 +178,12 @@ final class SpeechService: NSObject, ObservableObject {
         self.vadFinalCallback = onFinalResult
         self.isSpeechActive = false
         self.lastSpeechTime = .distantPast
+        self.noiseCalibrationSamples = []
+        self.isCalibrating = true
+        self.noiseFloorDb = -40
         transcribedText = ""
 
-        // Use playAndRecord so TTS can play after STT finishes
-        let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playAndRecord, mode: .measurement,
-                                     options: [.defaultToSpeaker, .allowBluetoothA2DP])
-        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        try configureAudioSession(forListening: true)
 
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let request = recognitionRequest else { return }
@@ -209,6 +229,7 @@ final class SpeechService: NSObject, ObservableObject {
     }
 
     /// Computes RMS amplitude from audio buffer for voice activity detection.
+    /// Uses adaptive noise floor calibration from the first ~1s of audio.
     private nonisolated func processAudioBufferForVAD(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
         let frameLength = UInt(buffer.frameLength)
@@ -222,8 +243,25 @@ final class SpeechService: NSObject, ObservableObject {
 
         Task { @MainActor [weak self] in
             guard let self else { return }
-            if dbLevel > -40 {
-                // Speech detected
+
+            if self.isCalibrating {
+                // Collect noise floor samples from the first ~1s
+                self.noiseCalibrationSamples.append(dbLevel)
+                if self.noiseCalibrationSamples.count >= self.calibrationSampleCount {
+                    // Use median of samples as noise floor (robust to outliers)
+                    let sorted = self.noiseCalibrationSamples.sorted()
+                    let median = sorted[sorted.count / 2]
+                    // Clamp noise floor to reasonable range
+                    self.noiseFloorDb = max(-55, min(-20, median))
+                    self.isCalibrating = false
+                    print("[SpeechService] 🎤 Noise floor calibrated: \(String(format: "%.1f", self.noiseFloorDb)) dB, threshold: \(String(format: "%.1f", self.noiseFloorDb + self.speechMarginDb)) dB")
+                }
+                return
+            }
+
+            // Adaptive threshold: speech must be speechMarginDb above noise floor
+            let threshold = self.noiseFloorDb + self.speechMarginDb
+            if dbLevel > threshold {
                 self.lastSpeechTime = Date()
                 self.isSpeechActive = true
             }
@@ -282,11 +320,7 @@ final class SpeechService: NSObject, ObservableObject {
     func speakSentences(_ sentences: [String],
                         voiceIdentifier: String? = nil,
                         onAllFinished: @escaping () -> Void) {
-        // Set up playAndRecord so speaker works
-        let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setCategory(.playAndRecord, mode: .default,
-                                      options: [.defaultToSpeaker, .allowBluetoothA2DP])
-        try? audioSession.setActive(true)
+        try? configureAudioSession(forListening: false)
 
         pendingUtteranceCount = sentences.count
         allFinishedCallback = onAllFinished

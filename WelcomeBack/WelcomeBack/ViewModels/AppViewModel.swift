@@ -78,7 +78,7 @@ final class AppViewModel: ObservableObject {
 
             do {
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                    DispatchQueue.global(qos: .utility).async {
+                    DispatchQueue.global(qos: .userInitiated).async {
                         do {
                             try llm.loadModel()
                             continuation.resume()

@@ -286,18 +286,12 @@ final class LocalLLMService: @unchecked Sendable {
                 self.cancelGeneration = false
 
                 do {
-                    // 1. Format and evaluate user turn
-                    let userFormatted = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|>"
-                    let userTokens = self.tokenize(userFormatted)
-                    print("[LocalLLM] 📝 User tokens: \(userTokens.count), nPast=\(self.nPast)")
-                    try self.evaluate(tokens: userTokens)
-                    print("[LocalLLM] ✅ User tokens evaluated, nPast=\(self.nPast)")
-
-                    // 2. Evaluate assistant header
-                    let assistantHeader = "<|start_header_id|>assistant<|end_header_id|>\n\n"
-                    let headerTokens = self.tokenize(assistantHeader)
-                    try self.evaluate(tokens: headerTokens)
-                    print("[LocalLLM] ✅ Assistant header evaluated, nPast=\(self.nPast)")
+                    // 1. Format user turn + assistant header and evaluate in a single batch
+                    let prefill = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+                    let prefillTokens = self.tokenize(prefill)
+                    print("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
+                    try self.evaluate(tokens: prefillTokens)
+                    print("[LocalLLM] ✅ Prefill evaluated, nPast=\(self.nPast)")
 
                     // 3. Sampling loop
                     guard let ctx = self.context, let voc = self.vocab, let smpl = self.sampler else {
@@ -341,43 +335,47 @@ final class LocalLLMService: @unchecked Sendable {
 
     /// Checks if the context is getting full and trims old conversation turns.
     /// Uses a sliding window: keeps system prompt + recent conversation, evicts oldest tokens.
-    /// Called between conversation turns if context gets too large.
+    /// Trims proactively at 75% capacity to leave room for the next turn.
     func trimContextIfNeeded() {
         guard isLoaded, let ctx = context else { return }
         let maxCtx: Int32 = 4096
-        let threshold: Int32 = maxCtx - 512  // trim when past 3584
+        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (3072), not 88%
 
-        if nPast > threshold {
-            let mem = llama_get_memory(ctx)
+        guard nPast > threshold else { return }
 
-            // Keep system prompt tokens (0..<systemPromptTokenCount)
-            // and the most recent ~1024 conversation tokens.
-            let keepRecent: Int32 = 1024
-            let evictFrom = systemPromptTokenCount   // first token after system prompt
-            let evictTo = nPast - keepRecent          // keep the tail
+        let mem = llama_get_memory(ctx)
 
-            if evictTo > evictFrom {
-                // Remove the middle portion of the KV cache
-                let removed = llama_memory_seq_rm(mem, 0, evictFrom, evictTo)
-                if removed {
-                    // Shift remaining tokens' positions down
-                    let shift = evictTo - evictFrom
-                    llama_memory_seq_add(mem, 0, evictTo, nPast, -shift)
+        // Keep system prompt tokens (0..<systemPromptTokenCount)
+        // and the most recent 1536 conversation tokens (~6-8 turns).
+        let keepRecent: Int32 = min(1536, nPast - systemPromptTokenCount)
+        let evictFrom = systemPromptTokenCount   // first token after system prompt
+        let evictTo = nPast - keepRecent          // keep the tail
+
+        if evictTo > evictFrom {
+            // Remove the middle portion of the KV cache
+            let removed = llama_memory_seq_rm(mem, 0, evictFrom, evictTo)
+            if removed {
+                // Shift remaining tokens' positions down
+                let shift = evictTo - evictFrom
+                llama_memory_seq_add(mem, 0, evictTo, nPast, -shift)
+                nPast -= shift
+                print("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+            } else {
+                // Gradual fallback: try evicting just the oldest quarter
+                let fallbackTo = evictFrom + (evictTo - evictFrom) / 4
+                let fallbackRemoved = llama_memory_seq_rm(mem, 0, evictFrom, fallbackTo)
+                if fallbackRemoved {
+                    let shift = fallbackTo - evictFrom
+                    llama_memory_seq_add(mem, 0, fallbackTo, nPast, -shift)
                     nPast -= shift
-                    print("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+                    print("[LocalLLM] 🔄 Context partially trimmed: evicted \(shift) tokens, nPast=\(nPast)")
                 } else {
-                    // Fallback: full clear
+                    // Last resort: full clear
                     llama_memory_clear(mem, true)
                     nPast = 0
                     systemPromptTokenCount = 0
-                    print("[LocalLLM] 🔄 Context fully cleared (trim failed)")
+                    print("[LocalLLM] 🔄 Context fully cleared (all trim attempts failed)")
                 }
-            } else {
-                // Not enough to evict, full clear
-                llama_memory_clear(mem, true)
-                nPast = 0
-                systemPromptTokenCount = 0
-                print("[LocalLLM] 🔄 Context fully cleared (too few tokens to trim)")
             }
         }
     }

@@ -11,32 +11,31 @@ struct HomeView: View {
             ZStack {
                 Color.backgroundDark.ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        heroSection
-                            .padding(.top, 20)
+                VStack(spacing: 0) {
+                    heroSection
+                        .padding(.top, 16)
+                        .padding(.horizontal, 24)
+
+                    Spacer(minLength: 8)
+
+                    micButton
+
+                    Spacer(minLength: 8)
+
+                    infoCard
+                        .padding(.horizontal, 24)
+
+                    if !appVM.familyMembers.isEmpty {
+                        familyCircles
+                            .padding(.top, 16)
                             .padding(.horizontal, 24)
-
-                        micButton
-                            .padding(.top, 24)
-
-                        infoCard
-                            .padding(.top, 28)
-                            .padding(.horizontal, 24)
-
-                        introSection
-                            .padding(.top, 20)
-                            .padding(.horizontal, 24)
-
-                        if !appVM.familyMembers.isEmpty {
-                            familyCircles
-                                .padding(.top, 24)
-                                .padding(.horizontal, 24)
-                        }
-
-                        Spacer(minLength: 32)
                     }
-                    .padding(.top, 8)
+
+                    Spacer(minLength: 8)
+
+                    introSection
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 16)
                 }
             }
             .onAppear {
@@ -142,15 +141,15 @@ struct HomeView: View {
                 ZStack {
                     Circle()
                         .fill(Color.accentYellow)
-                        .frame(width: 192, height: 192)
+                        .frame(width: 150, height: 150)
                         .overlay(
                             Circle()
-                                .strokeBorder(Color.surface, lineWidth: 12)
+                                .strokeBorder(Color.surface, lineWidth: 10)
                         )
-                        .shadow(color: .black.opacity(0.3), radius: 20, y: 8)
+                        .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
 
                     Image(systemName: "mic.fill")
-                        .font(.system(size: 64))
+                        .font(.system(size: 48))
                         .foregroundColor(.black)
                 }
             }
@@ -196,7 +195,7 @@ struct HomeView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
+        .padding(16)
         .background(Color.surfaceVariant.opacity(0.3))
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
@@ -224,20 +223,20 @@ struct HomeView: View {
     // MARK: - Family circles
 
     private var familyCircles: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Your Family")
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.onSurface.opacity(0.9))
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
+                HStack(spacing: 14) {
                     ForEach(appVM.familyMembers) { member in
                         NavigationLink(destination: FamilyMemberProfileView(member: member)) {
-                            VStack(spacing: 6) {
+                            VStack(spacing: 4) {
                                 MemberImageView(
                                     imageURL: member.imageURL,
                                     name: member.name,
-                                    size: 56,
+                                    size: 48,
                                     isCircle: true
                                 )
                                 .overlay(
