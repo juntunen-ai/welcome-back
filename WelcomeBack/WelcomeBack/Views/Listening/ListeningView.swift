@@ -53,14 +53,37 @@ struct ListeningView: View {
         // Tear down when the sheet is dismissed for any reason
         .onDisappear {
             voiceVM.endSession()
-            // Re-trigger preload for next session
-            appVM.preloadLLMIfNeeded()
+            // Reclaim still-loaded LLM for instant next session
+            if let llm = voiceVM.reclaimableLLM {
+                appVM.reclaimLLM(llm)
+            } else {
+                appVM.preloadLLMIfNeeded()
+            }
+        }
+        // Announce state changes to VoiceOver users
+        .onChange(of: voiceVM.sessionState) { _, newState in
+            let announcement: String?
+            switch newState {
+            case .listening:     announcement = "Listening. Take your time."
+            case .aiSpeaking:    announcement = "AI is speaking."
+            case .aiThinking:    announcement = "Thinking."
+            case .error(let m):  announcement = "Error: \(m)"
+            case .disconnected:  announcement = "Session ended."
+            default:             announcement = nil
+            }
+            if let announcement {
+                AccessibilityNotification.Announcement(announcement).post()
+            }
         }
         // Fallback: if Live WebSocket fails, revert to REST + PlaybackView
         .onChange(of: voiceVM.useFallback) { _, isFallback in
             if isFallback {
                 dismiss()
-                appVM.doneSpeaking()
+                // Delay slightly so the sheet dismissal completes before
+                // doneSpeaking() triggers the PlaybackView sheet
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    appVM.doneSpeaking()
+                }
             }
         }
     }
@@ -78,6 +101,8 @@ struct ListeningView: View {
                     .foregroundColor(.onSurface.opacity(0.4))
                     .frame(width: 48, height: 48)
             }
+            .accessibilityLabel("Close")
+            .accessibilityHint("Ends the conversation and returns home")
 
             Spacer()
 
@@ -131,6 +156,7 @@ struct ListeningView: View {
                 .foregroundColor(.onSurface.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .animation(.easeInOut(duration: 0.3), value: voiceVM.sessionState)
+                .accessibilityLabel(statusLabel)
         }
     }
 
@@ -163,6 +189,8 @@ struct ListeningView: View {
                     .background(Color.surfaceVariant.opacity(0.5))
                     .clipShape(Capsule())
             }
+            .accessibilityLabel("End conversation")
+            .accessibilityHint("Stops the AI conversation and closes this screen")
         }
     }
 

@@ -95,6 +95,7 @@ final class LocalLLMService: @unchecked Sendable {
 
         // 2. Model parameters — GPU offload on real device, CPU-only on simulator
         var modelParams = llama_model_default_params()
+        modelParams.use_mmap = true  // memory-map model file for faster loading
         #if targetEnvironment(simulator)
         modelParams.n_gpu_layers = 0
         print("[LocalLLM] ⚠️ Simulator detected, forcing CPU-only")
@@ -102,7 +103,7 @@ final class LocalLLMService: @unchecked Sendable {
         modelParams.n_gpu_layers = 99   // offload all layers to Metal GPU
         print("[LocalLLM] 🚀 Metal GPU offload enabled (n_gpu_layers=99)")
         #endif
-        print("[LocalLLM] 📂 Loading model file...")
+        print("[LocalLLM] 📂 Loading model file (mmap enabled)...")
 
         guard let loadedModel = llama_model_load_from_file(modelPath, modelParams) else {
             print("[LocalLLM] ❌ llama_model_load_from_file returned nil")
@@ -121,9 +122,12 @@ final class LocalLLMService: @unchecked Sendable {
 
         var ctxParams = llama_context_default_params()
         ctxParams.n_ctx = 4096
+        ctxParams.n_batch = 512         // process up to 512 tokens per decode (prefill speed)
+        ctxParams.n_ubatch = 512        // physical batch size matches logical
         ctxParams.n_threads = Int32(nThreads)
         ctxParams.n_threads_batch = Int32(nThreads)
-        print("[LocalLLM] 🔧 Creating context (n_ctx=4096)...")
+        ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO  // enable flash attention on Metal
+        print("[LocalLLM] 🔧 Creating context (n_ctx=4096, n_batch=512, flash_attn=auto)...")
 
         guard let ctx = llama_init_from_model(loadedModel, ctxParams) else {
             print("[LocalLLM] ❌ llama_init_from_model returned nil")
@@ -176,6 +180,18 @@ final class LocalLLMService: @unchecked Sendable {
         print("[LocalLLM] ✅ Sampler chain built")
     }
 
+    /// Resets the context for a new session without unloading the model.
+    /// Much faster than unload + reload (~10ms vs ~2-5s).
+    func resetContext() {
+        guard isLoaded, let ctx = context else { return }
+        let mem = llama_get_memory(ctx)
+        llama_memory_clear(mem, true)
+        nPast = 0
+        systemPromptTokenCount = 0
+        cancelGeneration = false
+        print("[LocalLLM] 🔄 Context reset (model stays loaded)")
+    }
+
     /// Unloads the model and frees all resources.
     func unloadModel() {
         if let s = sampler {
@@ -224,34 +240,45 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Evaluation
 
+    /// Maximum tokens per decode call — must match `ctxParams.n_batch`.
+    private let maxBatchSize = 512
+
     /// Evaluates a batch of tokens into the context.
+    /// Automatically splits into chunks of `maxBatchSize` to avoid ggml assertion failures.
     private func evaluate(tokens: [llama_token]) throws {
         guard let ctx = context else { throw LLMError.notLoaded }
         guard !tokens.isEmpty else { return }
 
-        var batch = llama_batch_init(Int32(tokens.count), 0, 1)
-        defer { llama_batch_free(batch) }
+        for chunkStart in stride(from: 0, to: tokens.count, by: maxBatchSize) {
+            let chunkEnd = min(chunkStart + maxBatchSize, tokens.count)
+            let chunk = Array(tokens[chunkStart..<chunkEnd])
+            let isLastChunk = (chunkEnd == tokens.count)
 
-        for (i, token) in tokens.enumerated() {
-            let pos = nPast + Int32(i)
-            let idx = batch.n_tokens
-            batch.token[Int(idx)] = token
-            batch.pos[Int(idx)] = pos
-            batch.n_seq_id[Int(idx)] = 1
-            if let seqIdPtr = batch.seq_id?[Int(idx)] {
-                seqIdPtr.pointee = 0
+            var batch = llama_batch_init(Int32(chunk.count), 0, 1)
+            defer { llama_batch_free(batch) }
+
+            for (i, token) in chunk.enumerated() {
+                let pos = nPast + Int32(i)
+                let idx = batch.n_tokens
+                batch.token[Int(idx)] = token
+                batch.pos[Int(idx)] = pos
+                batch.n_seq_id[Int(idx)] = 1
+                if let seqIdPtr = batch.seq_id?[Int(idx)] {
+                    seqIdPtr.pointee = 0
+                }
+                // Only request logits for the very last token overall
+                batch.logits[Int(idx)] = (isLastChunk && i == chunk.count - 1) ? 1 : 0
+                batch.n_tokens += 1
             }
-            batch.logits[Int(idx)] = (i == tokens.count - 1) ? 1 : 0
-            batch.n_tokens += 1
-        }
 
-        let result = llama_decode(ctx, batch)
-        guard result == 0 else {
-            print("[LocalLLM] ❌ llama_decode failed with code: \(result)")
-            throw LLMError.generationFailed
-        }
+            let result = llama_decode(ctx, batch)
+            guard result == 0 else {
+                print("[LocalLLM] ❌ llama_decode failed with code: \(result)")
+                throw LLMError.generationFailed
+            }
 
-        nPast += Int32(tokens.count)
+            nPast += Int32(chunk.count)
+        }
     }
 
     // MARK: - System Prompt
@@ -286,18 +313,12 @@ final class LocalLLMService: @unchecked Sendable {
                 self.cancelGeneration = false
 
                 do {
-                    // 1. Format and evaluate user turn
-                    let userFormatted = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|>"
-                    let userTokens = self.tokenize(userFormatted)
-                    print("[LocalLLM] 📝 User tokens: \(userTokens.count), nPast=\(self.nPast)")
-                    try self.evaluate(tokens: userTokens)
-                    print("[LocalLLM] ✅ User tokens evaluated, nPast=\(self.nPast)")
-
-                    // 2. Evaluate assistant header
-                    let assistantHeader = "<|start_header_id|>assistant<|end_header_id|>\n\n"
-                    let headerTokens = self.tokenize(assistantHeader)
-                    try self.evaluate(tokens: headerTokens)
-                    print("[LocalLLM] ✅ Assistant header evaluated, nPast=\(self.nPast)")
+                    // 1. Format user turn + assistant header and evaluate in a single batch
+                    let prefill = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+                    let prefillTokens = self.tokenize(prefill)
+                    print("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
+                    try self.evaluate(tokens: prefillTokens)
+                    print("[LocalLLM] ✅ Prefill evaluated, nPast=\(self.nPast)")
 
                     // 3. Sampling loop
                     guard let ctx = self.context, let voc = self.vocab, let smpl = self.sampler else {
@@ -341,43 +362,47 @@ final class LocalLLMService: @unchecked Sendable {
 
     /// Checks if the context is getting full and trims old conversation turns.
     /// Uses a sliding window: keeps system prompt + recent conversation, evicts oldest tokens.
-    /// Called between conversation turns if context gets too large.
+    /// Trims proactively at 75% capacity to leave room for the next turn.
     func trimContextIfNeeded() {
         guard isLoaded, let ctx = context else { return }
         let maxCtx: Int32 = 4096
-        let threshold: Int32 = maxCtx - 512  // trim when past 3584
+        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (3072), not 88%
 
-        if nPast > threshold {
-            let mem = llama_get_memory(ctx)
+        guard nPast > threshold else { return }
 
-            // Keep system prompt tokens (0..<systemPromptTokenCount)
-            // and the most recent ~1024 conversation tokens.
-            let keepRecent: Int32 = 1024
-            let evictFrom = systemPromptTokenCount   // first token after system prompt
-            let evictTo = nPast - keepRecent          // keep the tail
+        let mem = llama_get_memory(ctx)
 
-            if evictTo > evictFrom {
-                // Remove the middle portion of the KV cache
-                let removed = llama_memory_seq_rm(mem, 0, evictFrom, evictTo)
-                if removed {
-                    // Shift remaining tokens' positions down
-                    let shift = evictTo - evictFrom
-                    llama_memory_seq_add(mem, 0, evictTo, nPast, -shift)
+        // Keep system prompt tokens (0..<systemPromptTokenCount)
+        // and the most recent 1536 conversation tokens (~6-8 turns).
+        let keepRecent: Int32 = min(1536, nPast - systemPromptTokenCount)
+        let evictFrom = systemPromptTokenCount   // first token after system prompt
+        let evictTo = nPast - keepRecent          // keep the tail
+
+        if evictTo > evictFrom {
+            // Remove the middle portion of the KV cache
+            let removed = llama_memory_seq_rm(mem, 0, evictFrom, evictTo)
+            if removed {
+                // Shift remaining tokens' positions down
+                let shift = evictTo - evictFrom
+                llama_memory_seq_add(mem, 0, evictTo, nPast, -shift)
+                nPast -= shift
+                print("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+            } else {
+                // Gradual fallback: try evicting just the oldest quarter
+                let fallbackTo = evictFrom + (evictTo - evictFrom) / 4
+                let fallbackRemoved = llama_memory_seq_rm(mem, 0, evictFrom, fallbackTo)
+                if fallbackRemoved {
+                    let shift = fallbackTo - evictFrom
+                    llama_memory_seq_add(mem, 0, fallbackTo, nPast, -shift)
                     nPast -= shift
-                    print("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+                    print("[LocalLLM] 🔄 Context partially trimmed: evicted \(shift) tokens, nPast=\(nPast)")
                 } else {
-                    // Fallback: full clear
+                    // Last resort: full clear
                     llama_memory_clear(mem, true)
                     nPast = 0
                     systemPromptTokenCount = 0
-                    print("[LocalLLM] 🔄 Context fully cleared (trim failed)")
+                    print("[LocalLLM] 🔄 Context fully cleared (all trim attempts failed)")
                 }
-            } else {
-                // Not enough to evict, full clear
-                llama_memory_clear(mem, true)
-                nPast = 0
-                systemPromptTokenCount = 0
-                print("[LocalLLM] 🔄 Context fully cleared (too few tokens to trim)")
             }
         }
     }

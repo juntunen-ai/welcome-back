@@ -101,69 +101,54 @@ final class ImageDescriptionService: ObservableObject {
     }
 
     /// Uses VNClassifyImageRequest to get scene classification tags.
+    /// Runs synchronously on a background thread — no continuation needed.
     private nonisolated func classifyScene(_ cgImage: CGImage) async -> [String] {
-        await withCheckedContinuation { continuation in
-            let request = VNClassifyImageRequest { request, error in
-                guard error == nil,
-                      let results = request.results as? [VNClassificationObservation] else {
-                    continuation.resume(returning: [])
-                    return
-                }
-                // Take top 3 classifications with confidence > 0.3
-                let tags = results
+        await Task.detached(priority: .userInitiated) {
+            let request = VNClassifyImageRequest()
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            do {
+                try handler.perform([request])
+                let results = request.results ?? []
+                return results
                     .filter { $0.confidence > 0.3 }
                     .prefix(3)
                     .map { $0.identifier.replacingOccurrences(of: "_", with: " ") }
-                continuation.resume(returning: Array(tags))
-            }
-
-            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            do {
-                try handler.perform([request])
             } catch {
-                continuation.resume(returning: [])
+                return []
             }
-        }
+        }.value
     }
 
     /// Uses VNRecognizeTextRequest to find any text in the photo.
+    /// Runs synchronously on a background thread — no continuation needed.
     private nonisolated func recognizeText(_ cgImage: CGImage) async -> [String] {
-        await withCheckedContinuation { continuation in
-            let request = VNRecognizeTextRequest { request, error in
-                guard error == nil,
-                      let results = request.results as? [VNRecognizedTextObservation] else {
-                    continuation.resume(returning: [])
-                    return
-                }
-                let texts = results.compactMap { $0.topCandidates(1).first?.string }
-                continuation.resume(returning: Array(texts.prefix(3)))
-            }
+        await Task.detached(priority: .userInitiated) {
+            let request = VNRecognizeTextRequest()
             request.recognitionLevel = .fast
-
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
+                let results = request.results ?? []
+                return Array(results.compactMap { $0.topCandidates(1).first?.string }.prefix(3))
             } catch {
-                continuation.resume(returning: [])
+                return []
             }
-        }
+        }.value
     }
 
     /// Counts faces in the image.
+    /// Runs synchronously on a background thread — no continuation needed.
     private nonisolated func detectFaceCount(_ cgImage: CGImage) async -> Int {
-        await withCheckedContinuation { continuation in
-            let request = VNDetectFaceRectanglesRequest { request, error in
-                let count = (request.results as? [VNFaceObservation])?.count ?? 0
-                continuation.resume(returning: count)
-            }
-
+        await Task.detached(priority: .userInitiated) {
+            let request = VNDetectFaceRectanglesRequest()
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
+                return request.results?.count ?? 0
             } catch {
-                continuation.resume(returning: 0)
+                return 0
             }
-        }
+        }.value
     }
 
     // MARK: - Cache Persistence
@@ -182,7 +167,7 @@ final class ImageDescriptionService: ObservableObject {
     private func saveCache() {
         do {
             let data = try JSONEncoder().encode(descriptions)
-            try data.write(to: cacheURL, options: .atomic)
+            try data.write(to: cacheURL, options: [.atomic, .completeFileProtection])
         } catch {
             print("[ImageDesc] Failed to save cache: \(error)")
         }

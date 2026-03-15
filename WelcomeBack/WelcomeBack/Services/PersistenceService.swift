@@ -32,7 +32,7 @@ enum PersistenceService {
     static func save(_ profile: UserProfile) {
         do {
             let data = try JSONEncoder().encode(profile)
-            try data.write(to: profileURL, options: .atomic)
+            try data.write(to: profileURL, options: [.atomic, .completeFileProtection])
         } catch {
             print("[Persistence] Save failed: \(error)")
         }
@@ -59,7 +59,7 @@ enum PersistenceService {
         let filename = "\(memberID).jpg"
         let fileURL = photosDirectoryURL.appendingPathComponent(filename)
         if let data = image.jpegData(compressionQuality: 0.85) {
-            try? data.write(to: fileURL, options: .atomic)
+            try? data.write(to: fileURL, options: [.atomic, .completeFileProtection])
         }
         return "photo:\(filename)"
     }
@@ -92,8 +92,11 @@ enum PersistenceService {
     private static func createPhotosDirectoryIfNeeded() {
         let fm = FileManager.default
         if !fm.fileExists(atPath: photosDirectoryURL.path) {
-            try? fm.createDirectory(at: photosDirectoryURL,
-                                    withIntermediateDirectories: true)
+            try? fm.createDirectory(
+                at: photosDirectoryURL,
+                withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.complete]
+            )
         }
     }
 }

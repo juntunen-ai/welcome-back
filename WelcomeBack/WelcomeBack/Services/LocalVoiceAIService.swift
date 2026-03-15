@@ -30,6 +30,13 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private var tokenBuffer = ""
     private var isFirstSentenceSpoken = false
 
+    /// Maximum conversation turns to keep (user + assistant pairs).
+    /// Older turns are dropped to prevent unbounded memory growth.
+    private let maxConversationTurns = 16
+
+    /// Cached image descriptions for the session (fetched once at start).
+    private var sessionImageDescriptions: [String: String] = [:]
+
     // MARK: - Init
 
     init() {
@@ -50,8 +57,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
         print("[LocalVoiceAI] ▶️ Starting session...")
         updateState(.connecting)   // UI shows "Loading AI model…"
 
-        let imageDescs = await MainActor.run { ImageDescriptionService.shared.descriptions }
-        let systemPrompt = buildSystemPrompt(from: profile, imageDescriptions: imageDescs)
+        sessionImageDescriptions = await MainActor.run { ImageDescriptionService.shared.descriptions }
+        let systemPrompt = buildSystemPrompt(from: profile, imageDescriptions: sessionImageDescriptions)
         let llm: LocalLLMService
 
         if let preloaded = preloadedLLM, preloaded.isLoaded {
@@ -118,16 +125,19 @@ final class LocalVoiceAIService: @unchecked Sendable {
         // Begin listening after greeting finishes (or immediately if greeting fails)
     }
 
-    /// Ends the session: stops audio, unloads the model, cleans up.
+    /// Ends the session: stops audio, resets the model context, cleans up.
+    /// The LLM stays loaded in memory so the next session starts instantly.
+    /// Call `unloadLLM()` to fully release the model from memory.
     func endSession() {
         Task { @MainActor in
             SpeechService.shared.stopListening()
             SpeechService.shared.stopSpeaking()
         }
         llmService?.cancelGeneration = true
-        llmService?.unloadModel()
+        llmService?.resetContext()  // keep model loaded, just clear KV cache
         llmService = nil
         conversationHistory.removeAll()
+        sessionImageDescriptions = [:]
         updateState(.disconnected)
         stateContinuation.finish()
     }
@@ -190,12 +200,22 @@ final class LocalVoiceAIService: @unchecked Sendable {
         // Add user turn to conversation history
         conversationHistory.append((role: "user", content: text))
 
+        // Trim conversation history if it's getting too long
+        if conversationHistory.count > maxConversationTurns {
+            let excess = conversationHistory.count - maxConversationTurns
+            conversationHistory.removeFirst(excess)
+            print("[LocalVoiceAI] 🔄 Trimmed \(excess) old conversation turns")
+        }
+
         // Stream LLM response
         guard let llm = llmService else {
             print("[LocalVoiceAI] ❌ llmService is nil!")
             isProcessing = false
             return
         }
+
+        // Trim context proactively BEFORE generation to ensure space
+        llm.trimContextIfNeeded()
 
         tokenBuffer = ""
         isFirstSentenceSpoken = false
@@ -300,9 +320,6 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
         // Save assistant response
         conversationHistory.append((role: "assistant", content: fullResponse))
-
-        // Trim context if approaching limit
-        llm.trimContextIfNeeded()
 
         isProcessing = false
     }

@@ -13,10 +13,18 @@ final class ElevenLabsService: ObservableObject {
 
     // MARK: - Configuration
 
-    /// API key stored in UserDefaults (entered by user in settings).
+    private static let apiKeyKeychainKey = "elevenLabsApiKey"
+
+    /// API key stored securely in the iOS Keychain.
     var apiKey: String {
-        get { UserDefaults.standard.string(forKey: "elevenLabsApiKey") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "elevenLabsApiKey") }
+        get { KeychainService.load(key: Self.apiKeyKeychainKey) ?? "" }
+        set {
+            if newValue.isEmpty {
+                KeychainService.delete(key: Self.apiKeyKeychainKey)
+            } else {
+                KeychainService.save(key: Self.apiKeyKeychainKey, value: newValue)
+            }
+        }
     }
 
     var isConfigured: Bool { !apiKey.isEmpty }
@@ -25,7 +33,16 @@ final class ElevenLabsService: ObservableObject {
     /// Low-latency model for conversational TTS.
     private let modelId = "eleven_turbo_v2_5"
 
-    private init() {}
+    private init() {
+        // One-time migration: move API key from UserDefaults to Keychain
+        if let legacyKey = UserDefaults.standard.string(forKey: Self.apiKeyKeychainKey),
+           !legacyKey.isEmpty,
+           KeychainService.load(key: Self.apiKeyKeychainKey) == nil {
+            KeychainService.save(key: Self.apiKeyKeychainKey, value: legacyKey)
+            UserDefaults.standard.removeObject(forKey: Self.apiKeyKeychainKey)
+            print("[ElevenLabs] Migrated API key from UserDefaults to Keychain")
+        }
+    }
 
     // MARK: - Voice Cloning
 
@@ -37,7 +54,9 @@ final class ElevenLabsService: ObservableObject {
     func cloneVoice(name: String, audioData: Data) async throws -> String {
         guard isConfigured else { throw ElevenLabsError.noApiKey }
 
-        let url = URL(string: "\(baseURL)/v1/voices/add")!
+        guard let url = URL(string: "\(baseURL)/v1/voices/add") else {
+            throw ElevenLabsError.requestFailed
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
@@ -47,15 +66,15 @@ final class ElevenLabsService: ObservableObject {
 
         var body = Data()
         // Name field
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"name\"\r\n\r\n".data(using: .utf8)!)
-        body.append("\(name)\r\n".data(using: .utf8)!)
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"name\"\r\n\r\n".utf8))
+        body.append(Data("\(name)\r\n".utf8))
         // Audio file
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"files\"; filename=\"sample.m4a\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: audio/mp4\r\n\r\n".data(using: .utf8)!)
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"files\"; filename=\"sample.m4a\"\r\n".utf8))
+        body.append(Data("Content-Type: audio/mp4\r\n\r\n".utf8))
         body.append(audioData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
 
         request.httpBody = body
 
@@ -84,7 +103,9 @@ final class ElevenLabsService: ObservableObject {
     func synthesize(text: String, voiceId: String) async throws -> Data {
         guard isConfigured else { throw ElevenLabsError.noApiKey }
 
-        let url = URL(string: "\(baseURL)/v1/text-to-speech/\(voiceId)")!
+        guard let url = URL(string: "\(baseURL)/v1/text-to-speech/\(voiceId)") else {
+            throw ElevenLabsError.requestFailed
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
@@ -118,7 +139,9 @@ final class ElevenLabsService: ObservableObject {
     func deleteVoice(voiceId: String) async throws {
         guard isConfigured else { throw ElevenLabsError.noApiKey }
 
-        let url = URL(string: "\(baseURL)/v1/voices/\(voiceId)")!
+        guard let url = URL(string: "\(baseURL)/v1/voices/\(voiceId)") else {
+            throw ElevenLabsError.requestFailed
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
@@ -136,7 +159,9 @@ final class ElevenLabsService: ObservableObject {
     func testConnection() async throws -> Bool {
         guard isConfigured else { throw ElevenLabsError.noApiKey }
 
-        let url = URL(string: "\(baseURL)/v1/user/subscription")!
+        guard let url = URL(string: "\(baseURL)/v1/user/subscription") else {
+            throw ElevenLabsError.requestFailed
+        }
         var request = URLRequest(url: url)
         request.setValue(apiKey, forHTTPHeaderField: "xi-api-key")
 

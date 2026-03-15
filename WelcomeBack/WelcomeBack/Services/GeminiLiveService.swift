@@ -53,20 +53,20 @@ final class GeminiLiveService: @unchecked Sendable {
     private var pendingAudioBytes = Data()
 
     /// Capture format: 16 kHz, Int16, mono
-    private let captureFormat = AVAudioFormat(
-        commonFormat: .pcmFormatInt16,
-        sampleRate: 16_000,
-        channels: 1,
-        interleaved: true
-    )!
+    private let captureFormat: AVAudioFormat = {
+        guard let fmt = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16_000, channels: 1, interleaved: true) else {
+            preconditionFailure("Failed to create 16 kHz Int16 mono audio format")
+        }
+        return fmt
+    }()
 
     /// Playback format: 24 kHz, Int16, mono
-    private let playbackFormat = AVAudioFormat(
-        commonFormat: .pcmFormatInt16,
-        sampleRate: 24_000,
-        channels: 1,
-        interleaved: true
-    )!
+    private let playbackFormat: AVAudioFormat = {
+        guard let fmt = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 24_000, channels: 1, interleaved: true) else {
+            preconditionFailure("Failed to create 24 kHz Int16 mono audio format")
+        }
+        return fmt
+    }()
 
     // MARK: - Init
 
@@ -88,6 +88,7 @@ final class GeminiLiveService: @unchecked Sendable {
 
         updateState(.connecting)
 
+        // TODO: Replace with backend proxy for production at scale — WSS API requires key in URL
         let urlString = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=\(apiKey)&alt=ws"
         guard let url = URL(string: urlString) else {
             updateState(.error("Could not connect to the live service."))
@@ -306,6 +307,11 @@ final class GeminiLiveService: @unchecked Sendable {
 
         let inputNode = audioEngine.inputNode
         let nativeFormat = inputNode.outputFormat(forBus: 0)
+
+        // Guard against 0-channel format (e.g. no microphone permission)
+        guard nativeFormat.channelCount > 0 else {
+            throw LiveServiceError.audioSetupFailed
+        }
 
         guard let converter = AVAudioConverter(from: nativeFormat, to: captureFormat) else {
             throw LiveServiceError.audioSetupFailed

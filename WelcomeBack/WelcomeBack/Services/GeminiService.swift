@@ -44,7 +44,7 @@ actor GeminiService {
         ]
 
         let model = "gemini-2.0-flash"
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent?key=\(apiKey)"
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/\(model):generateContent"
 
         guard let url = URL(string: urlString) else {
             throw GeminiError.invalidURL
@@ -53,6 +53,7 @@ actor GeminiService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
         request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
 
         let (data, response) = try await URLSession.shared.data(for: request)
