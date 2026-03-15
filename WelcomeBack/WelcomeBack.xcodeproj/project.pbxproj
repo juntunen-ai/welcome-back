@@ -71,6 +71,10 @@
 		DF851633FA1FD0820C26E86F /* LocalVoiceSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */; };
 		60A24DCAFF3A2230835D8478 /* ModelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */; };
 		349001A7121FD0F3C557B75D /* VoiceModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */; };
+		KC001000000000000000001 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = KC002000000000000000001 /* KeychainService.swift */; };
+		LG001000000000000000001 /* LegalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LG002000000000000000001 /* LegalView.swift */; };
+		LI001000000000000000001 /* LicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LI002000000000000000001 /* LicensesView.swift */; };
+		LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = LL002000000000000000001 /* llama-cpp-LICENSE.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -160,6 +164,10 @@
 		395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceModeSettingsView.swift; sourceTree = "<group>"; };
 		V02C000000000000000002 /* VoiceSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSelectionView.swift; sourceTree = "<group>"; };
 		V02D000000000000000002 /* ElevenLabsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsSettingsView.swift; sourceTree = "<group>"; };
+		KC002000000000000000001 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		LG002000000000000000001 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
+		LI002000000000000000001 /* LicensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensesView.swift; sourceTree = "<group>"; };
+		LL002000000000000000001 /* llama-cpp-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "llama-cpp-LICENSE.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -259,8 +267,17 @@
 			isa = PBXGroup;
 			children = (
 				3E2AADFDDECE49C2847688B6 /* Assets.xcassets */,
+				LIC00000000000000000001 /* LICENSES */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		LIC00000000000000000001 /* LICENSES */ = {
+			isa = PBXGroup;
+			children = (
+				LL002000000000000000001 /* llama-cpp-LICENSE.txt */,
+			);
+			path = LICENSES;
 			sourceTree = "<group>";
 		};
 		292412A7699B4FA78D2F9763X /* Home */ = {
@@ -282,6 +299,8 @@
 				395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */,
 				V02C000000000000000002 /* VoiceSelectionView.swift */,
 				V02D000000000000000002 /* ElevenLabsSettingsView.swift */,
+				LG002000000000000000001 /* LegalView.swift */,
+				LI002000000000000000001 /* LicensesView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -327,6 +346,7 @@
 				C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */,
 				V02A000000000000000002 /* ImageDescriptionService.swift */,
 				V02B000000000000000002 /* ElevenLabsService.swift */,
+				KC002000000000000000001 /* KeychainService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -573,6 +593,7 @@
 			files = (
 				966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */,
 				PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
+				LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +660,9 @@
 				V02B000000000000000001 /* ElevenLabsService.swift in Sources */,
 				V02C000000000000000001 /* VoiceSelectionView.swift in Sources */,
 				V02D000000000000000001 /* ElevenLabsSettingsView.swift in Sources */,
+				KC001000000000000000001 /* KeychainService.swift in Sources */,
+				LG001000000000000000001 /* LegalView.swift in Sources */,
+				LI001000000000000000001 /* LicensesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

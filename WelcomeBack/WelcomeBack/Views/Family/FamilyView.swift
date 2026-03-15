@@ -144,6 +144,9 @@ struct FamilyMemberRowView: View {
             RoundedRectangle(cornerRadius: 24)
                 .strokeBorder(Color.white.opacity(0.05))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(member.name), \(member.relationship)")
+        .accessibilityHint("Opens profile")
     }
 }
 

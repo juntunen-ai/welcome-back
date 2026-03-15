@@ -167,7 +167,7 @@ final class ImageDescriptionService: ObservableObject {
     private func saveCache() {
         do {
             let data = try JSONEncoder().encode(descriptions)
-            try data.write(to: cacheURL, options: .atomic)
+            try data.write(to: cacheURL, options: [.atomic, .completeFileProtection])
         } catch {
             print("[ImageDesc] Failed to save cache: \(error)")
         }

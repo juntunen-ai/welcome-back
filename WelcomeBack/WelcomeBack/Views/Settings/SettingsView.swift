@@ -15,7 +15,10 @@ struct SettingsView: View {
                     generalSection
                     aiSection
                     systemSection
+                    legalSection
+                    #if DEBUG
                     demoSection
+                    #endif
                     resetSection
                     footerSection
                 }
@@ -150,13 +153,43 @@ struct SettingsView: View {
     private var systemSection: some View {
         Section {
             SettingsRowView(icon: "info.circle.fill", iconColor: .gray, title: "About", subtitle: "Version 1.0.0")
+                .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: LicensesView()) {
+                SettingsRowView(icon: "doc.plaintext", iconColor: .gray,
+                                title: "Open Source Licenses",
+                                subtitle: "llama.cpp (MIT)")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("System")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         }
-        .listRowBackground(Color.surfaceVariant.opacity(0.4))
+    }
+
+    private var legalSection: some View {
+        Section {
+            NavigationLink(destination: LegalView(document: .privacyPolicy)) {
+                SettingsRowView(icon: "hand.raised.fill", iconColor: .blue,
+                                title: "Privacy Policy",
+                                subtitle: "How your data is handled")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: LegalView(document: .termsOfService)) {
+                SettingsRowView(icon: "doc.text.fill", iconColor: .gray,
+                                title: "Terms of Service",
+                                subtitle: "Usage terms and disclaimers")
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+        } header: {
+            Text("Legal")
+                .foregroundColor(.accentYellow)
+                .font(.system(size: 12, weight: .bold))
+                .tracking(1.5)
+        }
     }
 
     private var demoSection: some View {
@@ -204,10 +237,16 @@ struct SettingsView: View {
         Section {
             EmptyView()
         } footer: {
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 Text("Welcome Back is powered by Google Gemini and local AI")
                     .font(.system(size: 12))
                     .foregroundColor(.onSurface.opacity(0.4))
+
+                if let url = URL(string: "https://juntunen.ai/welcomeback/privacy") {
+                    Link("Privacy Policy", destination: url)
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.3))
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
@@ -257,6 +296,8 @@ struct SettingsRowView: View {
             }
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(subtitle)")
     }
 }
 

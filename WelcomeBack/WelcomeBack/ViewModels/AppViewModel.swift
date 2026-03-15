@@ -29,12 +29,15 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Init
 
+    #if DEBUG
     /// Bump this number any time the sample data content changes.
     /// Every device that has an older stamp will reload fresh sample data on next launch.
     private static let sampleDataVersion = 3
     private static let sampleDataVersionKey = "loadedSampleDataVersion"
+    #endif
 
     init() {
+        #if DEBUG
         let loadedVersion = UserDefaults.standard.integer(forKey: Self.sampleDataVersionKey)
         if loadedVersion < Self.sampleDataVersion {
             // Sample data is newer than what's on device — reload it.
@@ -44,6 +47,9 @@ final class AppViewModel: ObservableObject {
         } else {
             userProfile = PersistenceService.load() ?? .sampleData
         }
+        #else
+        userProfile = PersistenceService.load() ?? .default
+        #endif
     }
 
     // MARK: - Computed

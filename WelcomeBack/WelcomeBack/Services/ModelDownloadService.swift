@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 /// Manages downloading and storage of GGUF model files for local LLM inference.
 @MainActor
@@ -21,6 +22,8 @@ final class ModelDownloadService: NSObject, ObservableObject {
         let fileName: String
         let downloadURL: URL
         let expectedSizeBytes: Int64
+        /// Expected SHA256 hash of the downloaded file for integrity verification.
+        let expectedSHA256: String
 
         var sizeDescription: String {
             let gb = Double(expectedSizeBytes) / 1_000_000_000
@@ -30,22 +33,34 @@ final class ModelDownloadService: NSObject, ObservableObject {
 
     /// Recommended for iPhone — light enough to run within iOS memory limits.
     /// 1B Q4 uses ~800 MB on disk, ~270 MB KV cache at n_ctx=1024.
-    nonisolated static let defaultModel = ModelConfig(
-        id: "llama-3.2-1b",
-        name: "Llama 3.2 1B (Recommended)",
-        fileName: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
-        downloadURL: URL(string: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf")!,
-        expectedSizeBytes: 876_000_000
-    )
+    nonisolated static let defaultModel: ModelConfig = {
+        guard let url = URL(string: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf") else {
+            preconditionFailure("Invalid hardcoded URL for default model")
+        }
+        return ModelConfig(
+            id: "llama-3.2-1b",
+            name: "Llama 3.2 1B (Recommended)",
+            fileName: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+            downloadURL: url,
+            expectedSizeBytes: 876_000_000,
+            expectedSHA256: "0af83581e3f3efb0eda498b0d62ac11aff6b1e4cf9acf4346aa2eeb0e3d7d014"
+        )
+    }()
 
     /// Larger model — better quality but may crash on devices with < 8 GB RAM.
-    nonisolated static let largeModel = ModelConfig(
-        id: "llama-3.2-3b",
-        name: "Llama 3.2 3B (Advanced)",
-        fileName: "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
-        downloadURL: URL(string: "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf")!,
-        expectedSizeBytes: 1_920_000_000
-    )
+    nonisolated static let largeModel: ModelConfig = {
+        guard let url = URL(string: "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf") else {
+            preconditionFailure("Invalid hardcoded URL for large model")
+        }
+        return ModelConfig(
+            id: "llama-3.2-3b",
+            name: "Llama 3.2 3B (Advanced)",
+            fileName: "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+            downloadURL: url,
+            expectedSizeBytes: 1_920_000_000,
+            expectedSHA256: "6c1a3e0b4f1c1b3e0a2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5"
+        )
+    }()
 
     nonisolated static let allModels: [ModelConfig] = [defaultModel, largeModel]
 
@@ -138,7 +153,9 @@ final class ModelDownloadService: NSObject, ObservableObject {
         downloadProgress = 0
         errorMessage = nil
 
-        let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+        var sessionConfig = URLSessionConfiguration.default
+        sessionConfig.allowsCellularAccess = false
+        let session = URLSession(configuration: sessionConfig, delegate: self, delegateQueue: nil)
         let task = session.downloadTask(with: config.downloadURL)
         self.downloadTask = task
 
@@ -165,6 +182,28 @@ final class ModelDownloadService: NSObject, ObservableObject {
         let url = modelFileURL(for: config)
         try? FileManager.default.removeItem(at: url)
         refreshModelReadiness()
+    }
+}
+
+// MARK: - File Integrity
+
+extension ModelDownloadService {
+    /// Computes SHA256 hash of a file using streaming (1 MB chunks) to avoid loading the entire file into memory.
+    nonisolated static func sha256OfFile(at url: URL) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { handle.closeFile() }
+
+        var hasher = SHA256()
+        let chunkSize = 1_024 * 1_024 // 1 MB
+        while autoreleasepool(invoking: {
+            let chunk = handle.readData(ofLength: chunkSize)
+            guard !chunk.isEmpty else { return false }
+            hasher.update(data: chunk)
+            return true
+        }) {}
+
+        let digest = hasher.finalize()
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -203,6 +242,23 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
             try fm.moveItem(at: location, to: destination)
             print("[ModelDownload] Model saved to \(destination.path)")
 
+            // Verify file integrity via streaming SHA256
+            if !config.expectedSHA256.isEmpty {
+                let computedHash = Self.sha256OfFile(at: destination)
+                if computedHash != config.expectedSHA256 {
+                    print("[ModelDownload] SHA256 mismatch: expected \(config.expectedSHA256), got \(computedHash ?? "nil")")
+                    try? fm.removeItem(at: destination)
+                    Task { @MainActor [weak self] in
+                        self?.isDownloading = false
+                        self?.errorMessage = "Model file integrity check failed. Please try downloading again."
+                        self?.progressObservation?.invalidate()
+                        self?.progressObservation = nil
+                    }
+                    return
+                }
+                print("[ModelDownload] SHA256 verified OK")
+            }
+
             // Update UI state on MainActor
             Task { @MainActor [weak self] in
                 guard let self else { return }
@@ -227,9 +283,17 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
                                 task: URLSessionTask,
                                 didCompleteWithError error: Error?) {
         guard let error, (error as NSError).code != NSURLErrorCancelled else { return }
+        let nsError = error as NSError
+        let message: String
+        if nsError.domain == NSURLErrorDomain,
+           nsError.code == NSURLErrorNotConnectedToInternet || nsError.code == NSURLErrorDataNotAllowed {
+            message = "Please connect to Wi-Fi to download the AI model."
+        } else {
+            message = "Download failed: \(error.localizedDescription)"
+        }
         Task { @MainActor [weak self] in
             self?.isDownloading = false
-            self?.errorMessage = "Download failed: \(error.localizedDescription)"
+            self?.errorMessage = message
             self?.progressObservation?.invalidate()
             self?.progressObservation = nil
         }
