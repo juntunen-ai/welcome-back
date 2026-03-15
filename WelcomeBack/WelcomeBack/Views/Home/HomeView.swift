@@ -151,6 +151,13 @@ struct HomeView: View {
                     Image(systemName: "mic.fill")
                         .font(.system(size: 48))
                         .foregroundColor(.black)
+
+                    // Curved text inside the circle
+                    CurvedText(
+                        text: "Press to remember who you are",
+                        radius: 54,
+                        fontSize: 10
+                    )
                 }
             }
             .buttonStyle(.plain)
@@ -336,6 +343,40 @@ extension HomeLocationManager: CLLocationManagerDelegate {
             default:
                 isLoading = false
             }
+        }
+    }
+}
+
+// MARK: - Curved Text
+
+/// Renders text along the bottom arc of a circle, letters right-side-up.
+struct CurvedText: View {
+    let text: String
+    let radius: CGFloat
+    let fontSize: CGFloat
+
+    var body: some View {
+        ZStack {
+            ForEach(Array(characterAngles.enumerated()), id: \.offset) { _, item in
+                Text(String(item.char))
+                    .font(.system(size: fontSize, weight: .bold))
+                    .foregroundColor(.black.opacity(0.6))
+                    // Move down to bottom edge, then rotate around center
+                    .offset(y: radius)
+                    .rotationEffect(.radians(item.angle))
+            }
+        }
+    }
+
+    private var characterAngles: [(char: Character, angle: Double)] {
+        let chars = Array(text)
+        let charWidth = Double(fontSize) * 0.62
+        let totalAngle = charWidth * Double(chars.count) / Double(radius)
+        let startAngle = -totalAngle / 2
+
+        return chars.enumerated().map { i, char in
+            let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
+            return (char, angle)
         }
     }
 }

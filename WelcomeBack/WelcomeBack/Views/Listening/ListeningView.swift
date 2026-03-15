@@ -79,7 +79,11 @@ struct ListeningView: View {
         .onChange(of: voiceVM.useFallback) { _, isFallback in
             if isFallback {
                 dismiss()
-                appVM.doneSpeaking()
+                // Delay slightly so the sheet dismissal completes before
+                // doneSpeaking() triggers the PlaybackView sheet
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    appVM.doneSpeaking()
+                }
             }
         }
     }

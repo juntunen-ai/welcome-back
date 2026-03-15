@@ -240,34 +240,45 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Evaluation
 
+    /// Maximum tokens per decode call — must match `ctxParams.n_batch`.
+    private let maxBatchSize = 512
+
     /// Evaluates a batch of tokens into the context.
+    /// Automatically splits into chunks of `maxBatchSize` to avoid ggml assertion failures.
     private func evaluate(tokens: [llama_token]) throws {
         guard let ctx = context else { throw LLMError.notLoaded }
         guard !tokens.isEmpty else { return }
 
-        var batch = llama_batch_init(Int32(tokens.count), 0, 1)
-        defer { llama_batch_free(batch) }
+        for chunkStart in stride(from: 0, to: tokens.count, by: maxBatchSize) {
+            let chunkEnd = min(chunkStart + maxBatchSize, tokens.count)
+            let chunk = Array(tokens[chunkStart..<chunkEnd])
+            let isLastChunk = (chunkEnd == tokens.count)
 
-        for (i, token) in tokens.enumerated() {
-            let pos = nPast + Int32(i)
-            let idx = batch.n_tokens
-            batch.token[Int(idx)] = token
-            batch.pos[Int(idx)] = pos
-            batch.n_seq_id[Int(idx)] = 1
-            if let seqIdPtr = batch.seq_id?[Int(idx)] {
-                seqIdPtr.pointee = 0
+            var batch = llama_batch_init(Int32(chunk.count), 0, 1)
+            defer { llama_batch_free(batch) }
+
+            for (i, token) in chunk.enumerated() {
+                let pos = nPast + Int32(i)
+                let idx = batch.n_tokens
+                batch.token[Int(idx)] = token
+                batch.pos[Int(idx)] = pos
+                batch.n_seq_id[Int(idx)] = 1
+                if let seqIdPtr = batch.seq_id?[Int(idx)] {
+                    seqIdPtr.pointee = 0
+                }
+                // Only request logits for the very last token overall
+                batch.logits[Int(idx)] = (isLastChunk && i == chunk.count - 1) ? 1 : 0
+                batch.n_tokens += 1
             }
-            batch.logits[Int(idx)] = (i == tokens.count - 1) ? 1 : 0
-            batch.n_tokens += 1
-        }
 
-        let result = llama_decode(ctx, batch)
-        guard result == 0 else {
-            print("[LocalLLM] ❌ llama_decode failed with code: \(result)")
-            throw LLMError.generationFailed
-        }
+            let result = llama_decode(ctx, batch)
+            guard result == 0 else {
+                print("[LocalLLM] ❌ llama_decode failed with code: \(result)")
+                throw LLMError.generationFailed
+            }
 
-        nPast += Int32(tokens.count)
+            nPast += Int32(chunk.count)
+        }
     }
 
     // MARK: - System Prompt

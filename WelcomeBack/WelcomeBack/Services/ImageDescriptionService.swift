@@ -101,54 +101,54 @@ final class ImageDescriptionService: ObservableObject {
     }
 
     /// Uses VNClassifyImageRequest to get scene classification tags.
+    /// Runs synchronously on a background thread — no continuation needed.
     private nonisolated func classifyScene(_ cgImage: CGImage) async -> [String] {
-        await withCheckedContinuation { continuation in
+        await Task.detached(priority: .userInitiated) {
             let request = VNClassifyImageRequest()
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
-                let results = (request.results as? [VNClassificationObservation]) ?? []
-                let tags = results
+                let results = request.results ?? []
+                return results
                     .filter { $0.confidence > 0.3 }
                     .prefix(3)
                     .map { $0.identifier.replacingOccurrences(of: "_", with: " ") }
-                continuation.resume(returning: Array(tags))
             } catch {
-                continuation.resume(returning: [])
+                return []
             }
-        }
+        }.value
     }
 
     /// Uses VNRecognizeTextRequest to find any text in the photo.
+    /// Runs synchronously on a background thread — no continuation needed.
     private nonisolated func recognizeText(_ cgImage: CGImage) async -> [String] {
-        await withCheckedContinuation { continuation in
+        await Task.detached(priority: .userInitiated) {
             let request = VNRecognizeTextRequest()
             request.recognitionLevel = .fast
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
-                let results = (request.results as? [VNRecognizedTextObservation]) ?? []
-                let texts = results.compactMap { $0.topCandidates(1).first?.string }
-                continuation.resume(returning: Array(texts.prefix(3)))
+                let results = request.results ?? []
+                return Array(results.compactMap { $0.topCandidates(1).first?.string }.prefix(3))
             } catch {
-                continuation.resume(returning: [])
+                return []
             }
-        }
+        }.value
     }
 
     /// Counts faces in the image.
+    /// Runs synchronously on a background thread — no continuation needed.
     private nonisolated func detectFaceCount(_ cgImage: CGImage) async -> Int {
-        await withCheckedContinuation { continuation in
+        await Task.detached(priority: .userInitiated) {
             let request = VNDetectFaceRectanglesRequest()
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])
-                let count = (request.results as? [VNFaceObservation])?.count ?? 0
-                continuation.resume(returning: count)
+                return request.results?.count ?? 0
             } catch {
-                continuation.resume(returning: 0)
+                return 0
             }
-        }
+        }.value
     }
 
     // MARK: - Cache Persistence

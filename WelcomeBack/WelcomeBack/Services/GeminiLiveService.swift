@@ -308,6 +308,11 @@ final class GeminiLiveService: @unchecked Sendable {
         let inputNode = audioEngine.inputNode
         let nativeFormat = inputNode.outputFormat(forBus: 0)
 
+        // Guard against 0-channel format (e.g. no microphone permission)
+        guard nativeFormat.channelCount > 0 else {
+            throw LiveServiceError.audioSetupFailed
+        }
+
         guard let converter = AVAudioConverter(from: nativeFormat, to: captureFormat) else {
             throw LiveServiceError.audioSetupFailed
         }
