@@ -38,9 +38,15 @@ final class SpeechService: NSObject, ObservableObject {
     private let calibrationSampleCount = 15  // ~960ms at 64ms/buffer
     private let speechMarginDb: Float = 10   // speech must be this much louder than noise
 
-    // Sentence TTS queue
+    // Sentence TTS queue (AVSpeechSynthesizer path)
     private var pendingUtteranceCount = 0
     private var allFinishedCallback: (() -> Void)?
+
+    // Cloned voice WAV queue (F5-TTS path)
+    private var wavPlayer: AVAudioPlayer?
+    private var wavQueue: [String] = []        // sentences waiting to be synthesized + played
+    private var wavVoiceProfileID: String?      // current voice profile for WAV queue
+    private var isWavPlaying = false
 
     /// The voice identifier to use for TTS. If set, uses this voice instead of default.
     /// Can be a Personal Voice identifier or a premium Apple voice.
@@ -296,7 +302,13 @@ final class SpeechService: NSObject, ObservableObject {
 
     // MARK: - Text-to-Speech (Single)
 
-    func speak(_ text: String, voiceIdentifier: String? = nil) {
+    /// Speaks text, using F5-TTS cloned voice if `voiceProfileID` is provided and server is configured.
+    func speak(_ text: String, voiceIdentifier: String? = nil, voiceProfileID: String? = nil) {
+        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
+            speakWithClonedVoice(text, referenceId: profileID)
+            return
+        }
+
         let utterance = AVSpeechUtterance(string: text)
         utterance.rate = 0.48
         utterance.pitchMultiplier = 1.0
@@ -313,18 +325,45 @@ final class SpeechService: NSObject, ObservableObject {
         isSpeaking = true
     }
 
+    /// Synthesizes and plays text using a cloned voice from the F5-TTS server.
+    private func speakWithClonedVoice(_ text: String, referenceId: String) {
+        isSpeaking = true
+        Task {
+            do {
+                let wavData = try await F5TTSService.shared.synthesize(text: text, referenceId: referenceId)
+                try await F5TTSService.shared.playAudioData(wavData)
+            } catch {
+                print("[SpeechService] F5-TTS failed, falling back to Apple voice: \(error.localizedDescription)")
+                speak(text)
+                return
+            }
+            isSpeaking = false
+        }
+    }
+
     // MARK: - Text-to-Speech (Sentence Queue — for streaming LLM output)
 
     /// Speaks the first batch of sentences, calling `onAllFinished` when every
     /// utterance (including subsequently enqueued ones) has completed.
+    /// When `voiceProfileID` is provided and F5-TTS is configured, uses cloned voice.
     func speakSentences(_ sentences: [String],
                         voiceIdentifier: String? = nil,
+                        voiceProfileID: String? = nil,
                         onAllFinished: @escaping () -> Void) {
         try? configureAudioSession(forListening: false)
-
-        pendingUtteranceCount = sentences.count
         allFinishedCallback = onAllFinished
 
+        // F5-TTS cloned voice path
+        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
+            wavVoiceProfileID = profileID
+            wavQueue = sentences
+            isSpeaking = true
+            playNextWavSentence()
+            return
+        }
+
+        // Apple voice path
+        pendingUtteranceCount = sentences.count
         for sentence in sentences {
             let utterance = AVSpeechUtterance(string: sentence)
             utterance.rate = 0.48
@@ -336,8 +375,18 @@ final class SpeechService: NSObject, ObservableObject {
         isSpeaking = true
     }
 
-    /// Enqueues an additional sentence while the synthesizer is already speaking.
-    func enqueueSentence(_ sentence: String, voiceIdentifier: String? = nil) {
+    /// Enqueues an additional sentence while speaking.
+    /// When `voiceProfileID` is provided and F5-TTS is configured, uses cloned voice.
+    func enqueueSentence(_ sentence: String, voiceIdentifier: String? = nil, voiceProfileID: String? = nil) {
+        // F5-TTS path: add to WAV queue
+        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
+            wavVoiceProfileID = profileID
+            wavQueue.append(sentence)
+            if !isWavPlaying { playNextWavSentence() }
+            return
+        }
+
+        // Apple voice path
         pendingUtteranceCount += 1
         let utterance = AVSpeechUtterance(string: sentence)
         utterance.rate = 0.48
@@ -345,6 +394,42 @@ final class SpeechService: NSObject, ObservableObject {
         utterance.volume = 1.0
         utterance.voice = resolveVoice(explicit: voiceIdentifier)
         synthesizer.speak(utterance)
+    }
+
+    // MARK: - WAV Queue Playback (F5-TTS)
+
+    /// Plays the next sentence in the WAV queue via F5-TTS synthesis.
+    private func playNextWavSentence() {
+        guard !wavQueue.isEmpty, let profileID = wavVoiceProfileID else {
+            // Queue exhausted
+            isWavPlaying = false
+            isSpeaking = false
+            allFinishedCallback?()
+            allFinishedCallback = nil
+            return
+        }
+
+        let sentence = wavQueue.removeFirst()
+        isWavPlaying = true
+
+        Task {
+            do {
+                let wavData = try await F5TTSService.shared.synthesize(text: sentence, referenceId: profileID)
+                let player = try AVAudioPlayer(data: wavData)
+                self.wavPlayer = player
+                player.delegate = self
+                player.play()
+            } catch {
+                // Fallback: speak this sentence with Apple voice, then continue queue
+                print("[SpeechService] F5-TTS sentence failed, using Apple voice: \(error.localizedDescription)")
+                let utterance = AVSpeechUtterance(string: sentence)
+                utterance.rate = 0.48
+                utterance.voice = resolveVoice(explicit: nil)
+                // After this utterance finishes, the delegate will call playNextWavSentence
+                pendingUtteranceCount = 1
+                synthesizer.speak(utterance)
+            }
+        }
     }
 
     /// Resolves the voice to use: explicit param > selectedVoiceIdentifier > default en-US.
@@ -358,6 +443,10 @@ final class SpeechService: NSObject, ObservableObject {
 
     func stopSpeaking() {
         synthesizer.stopSpeaking(at: .immediate)
+        wavPlayer?.stop()
+        wavPlayer = nil
+        wavQueue.removeAll()
+        isWavPlaying = false
         isSpeaking = false
         pendingUtteranceCount = 0
         allFinishedCallback = nil
@@ -372,11 +461,27 @@ extension SpeechService: AVSpeechSynthesizerDelegate {
         Task { @MainActor in
             self.pendingUtteranceCount -= 1
             if self.pendingUtteranceCount <= 0 {
-                self.isSpeaking = false
                 self.pendingUtteranceCount = 0
-                self.allFinishedCallback?()
-                self.allFinishedCallback = nil
+                // If we're in WAV queue mode (fallback utterance finished), continue the queue
+                if !self.wavQueue.isEmpty {
+                    self.playNextWavSentence()
+                } else if !self.isWavPlaying {
+                    self.isSpeaking = false
+                    self.allFinishedCallback?()
+                    self.allFinishedCallback = nil
+                }
             }
+        }
+    }
+}
+
+// MARK: - AVAudioPlayerDelegate (WAV playback)
+
+extension SpeechService: AVAudioPlayerDelegate {
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        Task { @MainActor in
+            self.wavPlayer = nil
+            self.playNextWavSentence()
         }
     }
 }

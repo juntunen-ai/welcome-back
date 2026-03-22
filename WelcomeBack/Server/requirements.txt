@@ -1,0 +1,6 @@
+fastapi>=0.115.0
+uvicorn>=0.32.0
+f5-tts>=1.0.0
+torch>=2.4.0
+torchaudio>=2.4.0
+python-multipart>=0.0.12

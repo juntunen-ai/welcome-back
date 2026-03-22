@@ -45,3 +45,8 @@ prototype_extracted/
 venv/
 __pycache__/
 *.pyc
+
+# F5-TTS server runtime (large model files, voice samples)
+WelcomeBack/Server/model/
+WelcomeBack/Server/references/
+WelcomeBack/Server/venv/

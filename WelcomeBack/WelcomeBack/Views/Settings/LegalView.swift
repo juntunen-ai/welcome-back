@@ -76,8 +76,9 @@ struct LegalView: View {
                 """
                 When using Cloud voice mode, your voice input is sent to Google Gemini \
                 for processing. When using voice cloning (optional), audio samples are \
-                sent to ElevenLabs. No data is shared with third parties for advertising \
-                or analytics.
+                processed by a local F5-TTS server on your home network — your voice \
+                data never leaves your local network. No data is shared with third \
+                parties for advertising or analytics.
                 """
             }
 

@@ -54,6 +54,7 @@ struct FamilyMemberDetailView: View {
                         basicSection
                         biographySection
                         memoriesSection
+                        voiceSection
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 12)
@@ -288,6 +289,65 @@ struct FamilyMemberDetailView: View {
             .background(Color.surfaceVariant.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+    }
+
+    // MARK: - Voice Cloning
+
+    private var voiceSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            sectionHeader("Voice Cloning")
+
+            if draft.isVoiceCloned {
+                HStack(spacing: 14) {
+                    iconBadge("checkmark.circle.fill", color: .green)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Voice Cloned")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.onSurface)
+                        Text("This person's voice can be used for story playback.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.onSurface.opacity(0.5))
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(Color.surfaceVariant.opacity(0.4))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            if !isAddMode {
+                NavigationLink(destination: RecordVoiceView(member: memberBindingForRecording).environmentObject(appVM)) {
+                    HStack(spacing: 14) {
+                        iconBadge("mic.fill", color: .red)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(draft.isVoiceCloned ? "Re-record Voice" : "Record Voice Sample")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.onSurface)
+                            Text("Record 10-30 seconds of speech to clone this voice.")
+                                .font(.system(size: 12))
+                                .foregroundColor(.onSurface.opacity(0.5))
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.onSurface.opacity(0.3))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 14)
+                    .background(Color.surfaceVariant.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+            }
+        }
+    }
+
+    /// Creates a binding to the actual family member in the profile for voice recording.
+    private var memberBindingForRecording: Binding<FamilyMember> {
+        guard let index = memberIndex else {
+            return .constant(draft)
+        }
+        return $appVM.userProfile.familyMembers[index]
     }
 
     // MARK: - Row helpers

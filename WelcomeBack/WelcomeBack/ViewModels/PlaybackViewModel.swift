@@ -10,8 +10,10 @@ final class PlaybackViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let speechService = SpeechService.shared
+    private var member: FamilyMember?
 
     func loadStory(for member: FamilyMember, userName: String) async {
+        self.member = member
         isLoading = true
         errorMessage = nil
         do {
@@ -31,7 +33,8 @@ final class PlaybackViewModel: ObservableObject {
             speechService.stopSpeaking()
             isPlaying = false
         } else {
-            speechService.speak(story)
+            let voiceProfileID = (member?.isVoiceCloned == true) ? member?.voiceProfileID : nil
+            speechService.speak(story, voiceProfileID: voiceProfileID)
             isPlaying = true
         }
     }
