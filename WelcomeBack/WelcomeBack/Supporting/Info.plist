@@ -54,6 +54,15 @@
 	<key>NSPersonalVoiceUsageDescription</key>
 	<string>Welcome Back can use your Personal Voice so the AI companion sounds like you or a loved one.</string>
 
+	<!-- Local network access for F5-TTS voice cloning server -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Welcome Back connects to a voice cloning server on your home network to generate speech in a family member's voice.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+
 	<!-- Export compliance: app uses standard HTTPS only (exempt) -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>

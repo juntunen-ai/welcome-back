@@ -6,6 +6,12 @@ struct SettingsView: View {
     @State private var showResetConfirm = false
     @State private var showDemoConfirm  = false
 
+    private var voiceCloneSubtitle: String {
+        let count = appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count
+        if count == 0 { return "No voices cloned" }
+        return "\(count) voice\(count == 1 ? "" : "s") cloned"
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -123,25 +129,28 @@ struct SettingsView: View {
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: ElevenLabsSettingsView()) {
+            NavigationLink(destination: F5TTSSettingsView()) {
                 SettingsRowView(
                     icon: "waveform.badge.mic",
                     iconColor: .accentYellow,
-                    title: "Voice Cloning (ElevenLabs)",
-                    subtitle: ElevenLabsService.shared.isConfigured ? "Connected" : "Set Up"
+                    title: "Voice Cloning Server",
+                    subtitle: F5TTSService.shared.isConfigured ? "Connected" : "Set Up"
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: RecordVoiceView()) {
-                SettingsRowView(
-                    icon: "mic.badge.plus",
-                    iconColor: .red,
-                    title: "Record Voice Sample",
-                    subtitle: "Coming Soon"
-                )
+            if let idx = appVM.userProfile.familyMembers.firstIndex(where: { !$0.isVoiceCloned })
+                ?? appVM.userProfile.familyMembers.indices.first {
+                NavigationLink(destination: RecordVoiceView(member: $appVM.userProfile.familyMembers[idx]).environmentObject(appVM)) {
+                    SettingsRowView(
+                        icon: "mic.badge.plus",
+                        iconColor: .red,
+                        title: "Record Voice Sample",
+                        subtitle: voiceCloneSubtitle
+                    )
+                }
+                .listRowBackground(Color.surfaceVariant.opacity(0.4))
             }
-            .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("Artificial Intelligence")
                 .foregroundColor(.accentYellow)

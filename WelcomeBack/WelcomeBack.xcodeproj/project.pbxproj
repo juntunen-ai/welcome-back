@@ -7,74 +7,74 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		LLMXCFW0000000000000001 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; };
-		LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		V02A000000000000000001 /* ImageDescriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02A000000000000000002 /* ImageDescriptionService.swift */; };
-		V02B000000000000000001 /* ElevenLabsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02B000000000000000002 /* ElevenLabsService.swift */; };
-		V02C000000000000000001 /* VoiceSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02C000000000000000002 /* VoiceSelectionView.swift */; };
-		V02D000000000000000001 /* ElevenLabsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02D000000000000000002 /* ElevenLabsSettingsView.swift */; };
+		072B65D522534519B10231D7 /* FamilyMemberProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */; };
 		150F7B3F557940EA90CA8901 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */; };
 		1F7BD671EB4442D0AEF5D8CE /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06FA49070CC404EA37C543E /* AppViewModel.swift */; };
+		200C83C9A503458A865318BC /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */; };
 		27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */; };
+		349001A7121FD0F3C557B75D /* VoiceModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */; };
 		38ABF02D442148B7AD863466 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76343AB596AD4B76B1119451 /* Colors.swift */; };
 		41365669B934429CBCA5F6A5 /* LiveSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD2663102EF4682ACD4795F /* LiveSessionState.swift */; };
-		FM001000000000000000001 /* FamilyMemberDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FM002000000000000000001 /* FamilyMemberDetailView.swift */; };
-		072B65D522534519B10231D7 /* FamilyMemberProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */; };
-		534CDFF66F7E46D196AB73D4 /* FamilyManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D48FF67987842FB9DBEB977 /* FamilyManagementView.swift */; };
-		B89C9A45AFC5415E96101AD8 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */; };
-		C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */; };
 		45CEA7B841E642AB91812826 /* GeminiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983BA50C87DF43E190C6BF96 /* GeminiService.swift */; };
+		534CDFF66F7E46D196AB73D4 /* FamilyManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D48FF67987842FB9DBEB977 /* FamilyManagementView.swift */; };
+		60A24DCAFF3A2230835D8478 /* ModelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */; };
 		7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */; };
-		200C83C9A503458A865318BC /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */; };
-		PLS001000000000000000001 /* PhotoLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLS002000000000000000001 /* PhotoLibraryService.swift */; };
-		ACR001000000000000000001 /* AlbumCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACR002000000000000000001 /* AlbumCarouselView.swift */; };
-		MAL001000000000000000001 /* MemoryAlbum.swift in Sources */ = {isa = PBXBuildFile; fileRef = MAL002000000000000000001 /* MemoryAlbum.swift */; };
-		887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4479220ADE43DFB121488F /* MemberImageView.swift */; };
 		8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7259413FA8F24BA9950D9980 /* PlaybackView.swift */; };
+		887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4479220ADE43DFB121488F /* MemberImageView.swift */; };
 		966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3E2AADFDDECE49C2847688B6 /* Assets.xcassets */; };
-		PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRI002000000000000000001 /* PrivacyInfo.xcprivacy */; };
+		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
+		9991FE4A04DE8A2511CA0D00 /* ModelDownloadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */; };
+		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
+		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
+		ACR001000000000000000001 /* AlbumCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACR002000000000000000001 /* AlbumCarouselView.swift */; };
+		B89C9A45AFC5415E96101AD8 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */; };
+		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
+		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
+		BC6926A6DB3A0A0A9CFB84D0 /* LocalLLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5463032BE538A9C780D8064A /* LocalLLMService.swift */; };
+		BDE30EA8963E4970B93DF40F /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70108CE7B4714B598E18371E /* Memory.swift */; };
+		C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */; };
+		C9E4108B2833F69113E4A884 /* LocalVoiceAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44174451BBAE24648E5026FD /* LocalVoiceAIService.swift */; };
+		CD08A9AB62BF4F9797B044D6 /* PlaybackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29100E5723B2440287B86994 /* PlaybackViewModel.swift */; };
+		D5902CCD9A4B40B681B9E5F6 /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE8C6810B365488E95EE918D /* FamilyMember.swift */; };
+		DF851633FA1FD0820C26E86F /* LocalVoiceSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */; };
+		E4046ED6A3074741AC694A39 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B71E72C11464A6798CA4FC3 /* ContentView.swift */; };
+		E969761872CB48C986337B81 /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7AC45DE64420D84C56C35 /* FamilyView.swift */; };
+		F00D1E1EFFED4B138C82C702 /* MusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B61E8E07414909ABD6DA65 /* MusicView.swift */; };
+		F353BBAF955D422496144B7C /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */; };
+		FM001000000000000000001 /* FamilyMemberDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FM002000000000000000001 /* FamilyMemberDetailView.swift */; };
+		KC001000000000000000001 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = KC002000000000000000001 /* KeychainService.swift */; };
+		LG001000000000000000001 /* LegalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LG002000000000000000001 /* LegalView.swift */; };
+		LI001000000000000000001 /* LicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LI002000000000000000001 /* LicensesView.swift */; };
+		LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = LL002000000000000000001 /* llama-cpp-LICENSE.txt */; };
+		LLMXCFW0000000000000001 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; };
+		LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		MAL001000000000000000001 /* MemoryAlbum.swift in Sources */ = {isa = PBXBuildFile; fileRef = MAL002000000000000000001 /* MemoryAlbum.swift */; };
 		NS0010000000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NS0020000000000000000001 /* NotificationService.swift */; };
 		OB0010000000000000000001 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000001 /* OnboardingContainerView.swift */; };
 		OB0010000000000000000002 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000002 /* OnboardingWelcomeView.swift */; };
 		OB0010000000000000000003 /* OnboardingProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000003 /* OnboardingProfileView.swift */; };
 		OB0010000000000000000004 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000004 /* OnboardingPermissionsView.swift */; };
 		OB0010000000000000000005 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000005 /* OnboardingCompleteView.swift */; };
-		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
-		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
+		PLS001000000000000000001 /* PhotoLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLS002000000000000000001 /* PhotoLibraryService.swift */; };
+		PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRI002000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		SE001000000000000000001 /* PersonalInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000001 /* PersonalInfoView.swift */; };
 		SE001000000000000000002 /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000002 /* NotificationsSettingsView.swift */; };
 		SE001000000000000000003 /* RecordVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000003 /* RecordVoiceView.swift */; };
-		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
-		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
-		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
-		BDE30EA8963E4970B93DF40F /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70108CE7B4714B598E18371E /* Memory.swift */; };
-		CD08A9AB62BF4F9797B044D6 /* PlaybackViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29100E5723B2440287B86994 /* PlaybackViewModel.swift */; };
-		D5902CCD9A4B40B681B9E5F6 /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE8C6810B365488E95EE918D /* FamilyMember.swift */; };
-		E4046ED6A3074741AC694A39 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B71E72C11464A6798CA4FC3 /* ContentView.swift */; };
-		E969761872CB48C986337B81 /* FamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A7AC45DE64420D84C56C35 /* FamilyView.swift */; };
-		F00D1E1EFFED4B138C82C702 /* MusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4B61E8E07414909ABD6DA65 /* MusicView.swift */; };
-		F353BBAF955D422496144B7C /* ListeningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */; };
 		T001AA0000000000000000001 /* MemoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000001 /* MemoryTests.swift */; };
 		T001AA0000000000000000002 /* FamilyMemberTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000002 /* FamilyMemberTests.swift */; };
 		T001AA0000000000000000003 /* UserProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000003 /* UserProfileTests.swift */; };
 		T001AA0000000000000000004 /* AppViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000004 /* AppViewModelTests.swift */; };
 		T001AA0000000000000000005 /* GeminiServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000005 /* GeminiServiceTests.swift */; };
 		T001AA0000000000000000006 /* PlaybackViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = T002AA0000000000000000006 /* PlaybackViewModelTests.swift */; };
+		V02A000000000000000001 /* ImageDescriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02A000000000000000002 /* ImageDescriptionService.swift */; };
+		V02B000000000000000001 /* F5TTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02B000000000000000002 /* F5TTSService.swift */; };
+		V02C000000000000000001 /* VoiceSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02C000000000000000002 /* VoiceSelectionView.swift */; };
+		V02D000000000000000001 /* F5TTSSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02D000000000000000002 /* F5TTSSettingsView.swift */; };
 		WGT001000000000000000001 /* WelcomeBackWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000001 /* WelcomeBackWidget.swift */; };
-		WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000005 /* WelcomeBackWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		WGT001000000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000002 /* Assets.xcassets */; };
 		WGT001000000000000000003 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000003 /* WidgetKit.framework */; };
 		WGT001000000000000000004 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000004 /* SwiftUI.framework */; };
-		BC6926A6DB3A0A0A9CFB84D0 /* LocalLLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5463032BE538A9C780D8064A /* LocalLLMService.swift */; };
-		C9E4108B2833F69113E4A884 /* LocalVoiceAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44174451BBAE24648E5026FD /* LocalVoiceAIService.swift */; };
-		9991FE4A04DE8A2511CA0D00 /* ModelDownloadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */; };
-		DF851633FA1FD0820C26E86F /* LocalVoiceSessionViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */; };
-		60A24DCAFF3A2230835D8478 /* ModelSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */; };
-		349001A7121FD0F3C557B75D /* VoiceModeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */; };
-		KC001000000000000000001 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = KC002000000000000000001 /* KeychainService.swift */; };
-		LG001000000000000000001 /* LegalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LG002000000000000000001 /* LegalView.swift */; };
-		LI001000000000000000001 /* LicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LI002000000000000000001 /* LicensesView.swift */; };
-		LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = LL002000000000000000001 /* llama-cpp-LICENSE.txt */; };
+		WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000005 /* WelcomeBackWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,53 +94,88 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		LLMXCFW0000000000000004 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WGT010000000000000000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		LLMXCFW0000000000000002 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = llama.xcframework; path = Frameworks/llama.xcframework; sourceTree = "<group>"; };
+		1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberProfileView.swift; sourceTree = "<group>"; };
+		215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
+		23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionViewModel.swift; sourceTree = "<group>"; };
 		26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		29100E5723B2440287B86994 /* PlaybackViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModel.swift; sourceTree = "<group>"; };
+		2AD2663102EF4682ACD4795F /* LiveSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionState.swift; sourceTree = "<group>"; };
 		2F77DC1A47E5455F9EC84F72 /* ListeningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningView.swift; sourceTree = "<group>"; };
+		395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceModeSettingsView.swift; sourceTree = "<group>"; };
 		3B71E72C11464A6798CA4FC3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3E2AADFDDECE49C2847688B6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		44174451BBAE24648E5026FD /* LocalVoiceAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceAIService.swift; sourceTree = "<group>"; };
+		4D48FF67987842FB9DBEB977 /* FamilyManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyManagementView.swift; sourceTree = "<group>"; };
 		5042CD26087445D78D12F05E /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		SE002000000000000000001 /* PersonalInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInfoView.swift; sourceTree = "<group>"; };
-		SE002000000000000000002 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
-		SE002000000000000000003 /* RecordVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordVoiceView.swift; sourceTree = "<group>"; };
+		5463032BE538A9C780D8064A /* LocalLLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLLMService.swift; sourceTree = "<group>"; };
 		70108CE7B4714B598E18371E /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		7259413FA8F24BA9950D9980 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		76343AB596AD4B76B1119451 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
-		2AD2663102EF4682ACD4795F /* LiveSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionState.swift; sourceTree = "<group>"; };
-		FM002000000000000000001 /* FamilyMemberDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberDetailView.swift; sourceTree = "<group>"; };
-		1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberProfileView.swift; sourceTree = "<group>"; };
-		4D48FF67987842FB9DBEB977 /* FamilyManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyManagementView.swift; sourceTree = "<group>"; };
-		215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
-		23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionViewModel.swift; sourceTree = "<group>"; };
+		91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
 		983BA50C87DF43E190C6BF96 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
 		A06FA49070CC404EA37C543E /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		ACR002000000000000000001 /* AlbumCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumCarouselView.swift; sourceTree = "<group>"; };
 		AE8C6810B365488E95EE918D /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
 		AFFB626B53B843ABACAD5923 /* WelcomeBack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WelcomeBack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1A7AC45DE64420D84C56C35 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
+		B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSettingsView.swift; sourceTree = "<group>"; };
 		BB001MUSICKIT0000001 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
 		BB001MUSICVM0000001 /* MusicViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicViewModel.swift; sourceTree = "<group>"; };
+		BF4479220ADE43DFB121488F /* MemberImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberImageView.swift; sourceTree = "<group>"; };
 		C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
-		91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
-		PLS002000000000000000001 /* PhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryService.swift; sourceTree = "<group>"; };
-		PRI002000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadService.swift; sourceTree = "<group>"; };
+		CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesView.swift; sourceTree = "<group>"; };
+		CFG001000000000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		CFG001000000000000000002 /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
+		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E003D2E11731416396E5E3C8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		E4B61E8E07414909ABD6DA65 /* MusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicView.swift; sourceTree = "<group>"; };
+		F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceSessionViewModel.swift; sourceTree = "<group>"; };
+		F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackApp.swift; sourceTree = "<group>"; };
+		FM002000000000000000001 /* FamilyMemberDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberDetailView.swift; sourceTree = "<group>"; };
+		KC002000000000000000001 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		LG002000000000000000001 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
+		LI002000000000000000001 /* LicensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensesView.swift; sourceTree = "<group>"; };
+		LL002000000000000000001 /* llama-cpp-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "llama-cpp-LICENSE.txt"; sourceTree = "<group>"; };
+		LLMXCFW0000000000000002 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = llama.xcframework; path = Frameworks/llama.xcframework; sourceTree = "<group>"; };
+		MAL002000000000000000001 /* MemoryAlbum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryAlbum.swift; sourceTree = "<group>"; };
 		NS0020000000000000000001 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		OB0020000000000000000001 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000002 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000003 /* OnboardingProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProfileView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000004 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000005 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
-		CFG001000000000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
-		CFG001000000000000000002 /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
-		ACR002000000000000000001 /* AlbumCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumCarouselView.swift; sourceTree = "<group>"; };
-		MAL002000000000000000001 /* MemoryAlbum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryAlbum.swift; sourceTree = "<group>"; };
-		BF4479220ADE43DFB121488F /* MemberImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemberImageView.swift; sourceTree = "<group>"; };
-		CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesView.swift; sourceTree = "<group>"; };
-		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		E003D2E11731416396E5E3C8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		E4B61E8E07414909ABD6DA65 /* MusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicView.swift; sourceTree = "<group>"; };
-		F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackApp.swift; sourceTree = "<group>"; };
+		PLS002000000000000000001 /* PhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryService.swift; sourceTree = "<group>"; };
+		PRI002000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		SE002000000000000000001 /* PersonalInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInfoView.swift; sourceTree = "<group>"; };
+		SE002000000000000000002 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
+		SE002000000000000000003 /* RecordVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordVoiceView.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000001 /* MemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000002 /* FamilyMemberTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000003 /* UserProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileTests.swift; sourceTree = "<group>"; };
@@ -148,26 +183,16 @@
 		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
 		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		V02A000000000000000002 /* ImageDescriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDescriptionService.swift; sourceTree = "<group>"; };
+		V02B000000000000000002 /* F5TTSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F5TTSService.swift; sourceTree = "<group>"; };
+		V02C000000000000000002 /* VoiceSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSelectionView.swift; sourceTree = "<group>"; };
+		V02D000000000000000002 /* F5TTSSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F5TTSSettingsView.swift; sourceTree = "<group>"; };
 		WGT002000000000000000001 /* WelcomeBackWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackWidget.swift; sourceTree = "<group>"; };
 		WGT002000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WelcomeBackWidget-Info.plist"; sourceTree = "<group>"; };
 		WGT002000000000000000003 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		WGT002000000000000000004 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		WGT002000000000000000005 /* WelcomeBackWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WelcomeBackWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		5463032BE538A9C780D8064A /* LocalLLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLLMService.swift; sourceTree = "<group>"; };
-		V02A000000000000000002 /* ImageDescriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDescriptionService.swift; sourceTree = "<group>"; };
-		V02B000000000000000002 /* ElevenLabsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsService.swift; sourceTree = "<group>"; };
-		44174451BBAE24648E5026FD /* LocalVoiceAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceAIService.swift; sourceTree = "<group>"; };
-		C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadService.swift; sourceTree = "<group>"; };
-		F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceSessionViewModel.swift; sourceTree = "<group>"; };
-		B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSettingsView.swift; sourceTree = "<group>"; };
-		395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceModeSettingsView.swift; sourceTree = "<group>"; };
-		V02C000000000000000002 /* VoiceSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSelectionView.swift; sourceTree = "<group>"; };
-		V02D000000000000000002 /* ElevenLabsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenLabsSettingsView.swift; sourceTree = "<group>"; };
-		KC002000000000000000001 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
-		LG002000000000000000001 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
-		LI002000000000000000001 /* LicensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensesView.swift; sourceTree = "<group>"; };
-		LL002000000000000000001 /* llama-cpp-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "llama-cpp-LICENSE.txt"; sourceTree = "<group>"; };
+		WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WelcomeBackWidget-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -231,14 +256,6 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		584B942A73AA435BB2507F7E /* Shared */ = {
-			isa = PBXGroup;
-			children = (
-				BF4479220ADE43DFB121488F /* MemberImageView.swift */,
-			);
-			path = Shared;
-			sourceTree = "<group>";
-		};
 		2057BA6F46724B71A613E6DB /* WelcomeBack */ = {
 			isa = PBXGroup;
 			children = (
@@ -254,15 +271,6 @@
 			path = WelcomeBack;
 			sourceTree = "<group>";
 		};
-		CFG000000000000000000001 /* Config */ = {
-			isa = PBXGroup;
-			children = (
-				CFG001000000000000000001 /* Secrets.xcconfig */,
-				CFG001000000000000000002 /* Secrets.xcconfig.template */,
-			);
-			path = Config;
-			sourceTree = "<group>";
-		};
 		292412A7699B4FA78D2F9763 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -270,14 +278,6 @@
 				LIC00000000000000000001 /* LICENSES */,
 			);
 			path = Resources;
-			sourceTree = "<group>";
-		};
-		LIC00000000000000000001 /* LICENSES */ = {
-			isa = PBXGroup;
-			children = (
-				LL002000000000000000001 /* llama-cpp-LICENSE.txt */,
-			);
-			path = LICENSES;
 			sourceTree = "<group>";
 		};
 		292412A7699B4FA78D2F9763X /* Home */ = {
@@ -298,7 +298,7 @@
 				B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */,
 				395B9530A9C0EACAE4B8FEEF /* VoiceModeSettingsView.swift */,
 				V02C000000000000000002 /* VoiceSelectionView.swift */,
-				V02D000000000000000002 /* ElevenLabsSettingsView.swift */,
+				V02D000000000000000002 /* F5TTSSettingsView.swift */,
 				LG002000000000000000001 /* LegalView.swift */,
 				LI002000000000000000001 /* LicensesView.swift */,
 			);
@@ -331,6 +331,14 @@
 			path = Listening;
 			sourceTree = "<group>";
 		};
+		584B942A73AA435BB2507F7E /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				BF4479220ADE43DFB121488F /* MemberImageView.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		5AA4BFAEF10046B7969992FE /* Services */ = {
 			isa = PBXGroup;
 			children = (
@@ -345,7 +353,7 @@
 				44174451BBAE24648E5026FD /* LocalVoiceAIService.swift */,
 				C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */,
 				V02A000000000000000002 /* ImageDescriptionService.swift */,
-				V02B000000000000000002 /* ElevenLabsService.swift */,
+				V02B000000000000000002 /* F5TTSService.swift */,
 				KC002000000000000000001 /* KeychainService.swift */,
 			);
 			path = Services;
@@ -362,16 +370,6 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		WGT004000000000000000001 /* WelcomeBackWidget */ = {
-			isa = PBXGroup;
-			children = (
-				WGT002000000000000000001 /* WelcomeBackWidget.swift */,
-				WGT002000000000000000002 /* Assets.xcassets */,
-				WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */,
-			);
-			path = WelcomeBackWidget;
-			sourceTree = "<group>";
-		};
 		C6BFC52C67974DCBB461A633 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -386,20 +384,8 @@
 				0F8AC098900C481F8F3F4B83 /* Components */,
 				584B942A73AA435BB2507F7E /* Shared */,
 				OBG00000000000000000001 /* Onboarding */,
-				);
-			path = Views;
-			sourceTree = "<group>";
-		};
-		OBG00000000000000000001 /* Onboarding */ = {
-			isa = PBXGroup;
-			children = (
-				OB0020000000000000000001 /* OnboardingContainerView.swift */,
-				OB0020000000000000000002 /* OnboardingWelcomeView.swift */,
-				OB0020000000000000000003 /* OnboardingProfileView.swift */,
-				OB0020000000000000000004 /* OnboardingPermissionsView.swift */,
-				OB0020000000000000000005 /* OnboardingCompleteView.swift */,
 			);
-			path = Onboarding;
+			path = Views;
 			sourceTree = "<group>";
 		};
 		CDE33D5DD1A34B418B2E6D36 /* Models */ = {
@@ -411,6 +397,15 @@
 				MAL002000000000000000001 /* MemoryAlbum.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		CFG000000000000000000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				CFG001000000000000000001 /* Secrets.xcconfig */,
+				CFG001000000000000000002 /* Secrets.xcconfig.template */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		D0AB60D89F744121884585C0 /* Family */ = {
@@ -449,6 +444,26 @@
 			path = Playback;
 			sourceTree = "<group>";
 		};
+		LIC00000000000000000001 /* LICENSES */ = {
+			isa = PBXGroup;
+			children = (
+				LL002000000000000000001 /* llama-cpp-LICENSE.txt */,
+			);
+			path = LICENSES;
+			sourceTree = "<group>";
+		};
+		OBG00000000000000000001 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				OB0020000000000000000001 /* OnboardingContainerView.swift */,
+				OB0020000000000000000002 /* OnboardingWelcomeView.swift */,
+				OB0020000000000000000003 /* OnboardingProfileView.swift */,
+				OB0020000000000000000004 /* OnboardingPermissionsView.swift */,
+				OB0020000000000000000005 /* OnboardingCompleteView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
 		T006AA0000000000000000001 /* WelcomeBackTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -462,34 +477,19 @@
 			path = WelcomeBackTests;
 			sourceTree = "<group>";
 		};
+		WGT004000000000000000001 /* WelcomeBackWidget */ = {
+			isa = PBXGroup;
+			children = (
+				WGT002000000000000000001 /* WelcomeBackWidget.swift */,
+				WGT002000000000000000002 /* Assets.xcassets */,
+				WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */,
+			);
+			path = WelcomeBackWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		LLMXCFW0000000000000004 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		WGT010000000000000000001 /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */,
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		15282737539D469CAF4A24B5 /* WelcomeBack */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AC866B4AFA354D33ABC46F51 /* Build configuration list for PBXNativeTarget "WelcomeBack" */;
@@ -657,9 +657,9 @@
 				60A24DCAFF3A2230835D8478 /* ModelSettingsView.swift in Sources */,
 				349001A7121FD0F3C557B75D /* VoiceModeSettingsView.swift in Sources */,
 				V02A000000000000000001 /* ImageDescriptionService.swift in Sources */,
-				V02B000000000000000001 /* ElevenLabsService.swift in Sources */,
+				V02B000000000000000001 /* F5TTSService.swift in Sources */,
 				V02C000000000000000001 /* VoiceSelectionView.swift in Sources */,
-				V02D000000000000000001 /* ElevenLabsSettingsView.swift in Sources */,
+				V02D000000000000000001 /* F5TTSSettingsView.swift in Sources */,
 				KC001000000000000000001 /* KeychainService.swift in Sources */,
 				LG001000000000000000001 /* LegalView.swift in Sources */,
 				LI001000000000000000001 /* LicensesView.swift in Sources */,
@@ -772,6 +772,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -787,6 +788,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -799,6 +801,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -814,6 +817,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -921,7 +925,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WelcomeBackWidget/WelcomeBackWidget-Info.plist;
+				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -946,7 +950,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WelcomeBackWidget/WelcomeBackWidget-Info.plist;
+				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1003,7 +1007,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = FB72992900FF436E8131F682 /* Project object */;
 }
