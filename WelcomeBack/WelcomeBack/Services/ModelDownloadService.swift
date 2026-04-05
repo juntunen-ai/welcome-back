@@ -16,6 +16,12 @@ final class ModelDownloadService: NSObject, ObservableObject {
 
     // MARK: - Model Configuration
 
+    /// Identifies the model family so LocalLLMService can apply the correct chat template.
+    enum ModelFamily: String, Codable, Sendable {
+        case llama3
+        case gemma4
+    }
+
     struct ModelConfig: Identifiable, Equatable, Sendable {
         let id: String
         let name: String
@@ -24,6 +30,7 @@ final class ModelDownloadService: NSObject, ObservableObject {
         let expectedSizeBytes: Int64
         /// Expected SHA256 hash of the downloaded file for integrity verification.
         let expectedSHA256: String
+        let family: ModelFamily
 
         var sizeDescription: String {
             let gb = Double(expectedSizeBytes) / 1_000_000_000
@@ -39,11 +46,12 @@ final class ModelDownloadService: NSObject, ObservableObject {
         }
         return ModelConfig(
             id: "llama-3.2-1b",
-            name: "Llama 3.2 1B (Recommended)",
+            name: "Llama 3.2 1B",
             fileName: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
             downloadURL: url,
             expectedSizeBytes: 876_000_000,
-            expectedSHA256: "0af83581e3f3efb0eda498b0d62ac11aff6b1e4cf9acf4346aa2eeb0e3d7d014"
+            expectedSHA256: "0af83581e3f3efb0eda498b0d62ac11aff6b1e4cf9acf4346aa2eeb0e3d7d014",
+            family: .llama3
         )
     }()
 
@@ -54,15 +62,33 @@ final class ModelDownloadService: NSObject, ObservableObject {
         }
         return ModelConfig(
             id: "llama-3.2-3b",
-            name: "Llama 3.2 3B (Advanced)",
+            name: "Llama 3.2 3B",
             fileName: "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
             downloadURL: url,
             expectedSizeBytes: 1_920_000_000,
-            expectedSHA256: "6c1a3e0b4f1c1b3e0a2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5"
+            expectedSHA256: "6c1a3e0b4f1c1b3e0a2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5",
+            family: .llama3
         )
     }()
 
-    nonisolated static let allModels: [ModelConfig] = [defaultModel, largeModel]
+    /// Gemma 4 E2B — Google's frontier on-device model with multimodal support.
+    /// ~3.1 GB on disk (Q4_K_M), needs ~4 GB RAM. Best quality for devices with 6+ GB RAM.
+    nonisolated static let gemma4E2B: ModelConfig = {
+        guard let url = URL(string: "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf") else {
+            preconditionFailure("Invalid hardcoded URL for Gemma 4 E2B model")
+        }
+        return ModelConfig(
+            id: "gemma-4-e2b",
+            name: "Gemma 4 E2B (Recommended)",
+            fileName: "gemma-4-E2B-it-Q4_K_M.gguf",
+            downloadURL: url,
+            expectedSizeBytes: 3_110_000_000,
+            expectedSHA256: "",
+            family: .gemma4
+        )
+    }()
+
+    nonisolated static let allModels: [ModelConfig] = [gemma4E2B, defaultModel, largeModel]
 
     // MARK: - Active Model
 

@@ -80,7 +80,7 @@ final class AppViewModel: ObservableObject {
         preloadTask = Task {
             let config = ModelDownloadService.shared.selectedModel
             let modelPath = ModelDownloadService.shared.modelFileURL(for: config).path
-            let llm = LocalLLMService(modelPath: modelPath)
+            let llm = LocalLLMService(modelPath: modelPath, modelFamily: config.family)
 
             do {
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in

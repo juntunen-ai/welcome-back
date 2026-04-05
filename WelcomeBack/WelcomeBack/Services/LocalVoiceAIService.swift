@@ -93,7 +93,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
             let modelPath = await ModelDownloadService.shared.modelFileURL(for: config).path
             print("[LocalVoiceAI] 📂 Model path: \(modelPath)")
 
-            let freshLLM = LocalLLMService(modelPath: modelPath)
+            let freshLLM = LocalLLMService(modelPath: modelPath, modelFamily: config.family)
             do {
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                     DispatchQueue.global(qos: .userInitiated).async {

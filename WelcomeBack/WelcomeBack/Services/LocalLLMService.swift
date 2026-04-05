@@ -50,6 +50,7 @@ final class LocalLLMService: @unchecked Sendable {
     private var sampler: UnsafeMutablePointer<llama_sampler>?
     private(set) var isLoaded = false
     private let modelPath: String
+    private let modelFamily: ModelDownloadService.ModelFamily
 
     /// Tracks the total number of tokens evaluated so far in this context.
     private var nPast: Int32 = 0
@@ -65,8 +66,9 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Init / Deinit
 
-    init(modelPath: String) {
+    init(modelPath: String, modelFamily: ModelDownloadService.ModelFamily = .llama3) {
         self.modelPath = modelPath
+        self.modelFamily = modelFamily
     }
 
     deinit {
@@ -189,6 +191,7 @@ final class LocalLLMService: @unchecked Sendable {
         nPast = 0
         systemPromptTokenCount = 0
         cancelGeneration = false
+        gemmaFirstTurn = true
         print("[LocalLLM] 🔄 Context reset (model stays loaded)")
     }
 
@@ -284,9 +287,20 @@ final class LocalLLMService: @unchecked Sendable {
     // MARK: - System Prompt
 
     /// Evaluates the system prompt once at the start of a session.
-    /// Uses the Llama 3 chat template format.
+    /// Format depends on the model family (Llama 3 vs Gemma 4).
     func setSystemPrompt(_ prompt: String) throws {
-        let formatted = "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n\(prompt)<|eot_id|>"
+        let formatted: String
+        switch modelFamily {
+        case .llama3:
+            formatted = "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n\(prompt)<|eot_id|>"
+        case .gemma4:
+            // Gemma 4 embeds system instructions in the first user turn preamble.
+            // We store the prompt and prepend it to the first user message instead.
+            gemmaSystemPrompt = prompt
+            systemPromptTokenCount = 0
+            print("[LocalLLM] Gemma system prompt stored (will prepend to first user turn)")
+            return
+        }
         let tokens = tokenize(formatted, addSpecial: false)
         guard !tokens.isEmpty else { return }
 
@@ -294,6 +308,10 @@ final class LocalLLMService: @unchecked Sendable {
         systemPromptTokenCount = nPast
         print("[LocalLLM] System prompt set: \(tokens.count) tokens")
     }
+
+    /// Stored system prompt for Gemma models (embedded in the first user turn).
+    private var gemmaSystemPrompt: String?
+    private var gemmaFirstTurn = true
 
     // MARK: - Streaming Generation
 
@@ -314,7 +332,20 @@ final class LocalLLMService: @unchecked Sendable {
 
                 do {
                     // 1. Format user turn + assistant header and evaluate in a single batch
-                    let prefill = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+                    let prefill: String
+                    switch self.modelFamily {
+                    case .llama3:
+                        prefill = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+                    case .gemma4:
+                        // For Gemma 4: embed system instructions in the first user turn
+                        var userContent = userMessage
+                        if self.gemmaFirstTurn, let sys = self.gemmaSystemPrompt, !sys.isEmpty {
+                            userContent = "System: \(sys)\n\n\(userMessage)"
+                            self.gemmaFirstTurn = false
+                        }
+                        let bos = self.nPast == 0 ? "<bos>" : ""
+                        prefill = "\(bos)<start_of_turn>user\n\(userContent)<end_of_turn>\n<start_of_turn>model\n"
+                    }
                     let prefillTokens = self.tokenize(prefill)
                     print("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
                     try self.evaluate(tokens: prefillTokens)
