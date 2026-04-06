@@ -164,6 +164,7 @@
 		CFG001000000000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		CFG001000000000000000002 /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
 		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ENT001000000000000000001 /* WelcomeBack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WelcomeBack.entitlements; sourceTree = "<group>"; };
 		E003D2E11731416396E5E3C8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E4B61E8E07414909ABD6DA65 /* MusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicView.swift; sourceTree = "<group>"; };
 		F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceSessionViewModel.swift; sourceTree = "<group>"; };
@@ -331,6 +332,7 @@
 			isa = PBXGroup;
 			children = (
 				DE297EACA8384C47815D0178 /* Info.plist */,
+				ENT001000000000000000001 /* WelcomeBack.entitlements */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -785,12 +787,14 @@
 		};
 		591463A43A7347799042A51X /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CFG001000000000000000001 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -817,9 +821,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;

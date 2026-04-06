@@ -62,7 +62,9 @@ final class ImageDescriptionService: ObservableObject {
 
         if updated {
             saveCache()
+            #if DEBUG
             print("[ImageDesc] Generated \(descriptions.count) total descriptions")
+            #endif
         }
     }
 
@@ -158,9 +160,13 @@ final class ImageDescriptionService: ObservableObject {
         do {
             let data = try Data(contentsOf: cacheURL)
             descriptions = try JSONDecoder().decode([String: String].self, from: data)
+            #if DEBUG
             print("[ImageDesc] Loaded \(descriptions.count) cached descriptions")
+            #endif
         } catch {
+            #if DEBUG
             print("[ImageDesc] Failed to load cache: \(error)")
+            #endif
         }
     }
 
@@ -169,7 +175,9 @@ final class ImageDescriptionService: ObservableObject {
             let data = try JSONEncoder().encode(descriptions)
             try data.write(to: cacheURL, options: [.atomic, .completeFileProtection])
         } catch {
+            #if DEBUG
             print("[ImageDesc] Failed to save cache: \(error)")
+            #endif
         }
     }
 }

@@ -50,30 +50,42 @@ final class F5TTSService: ObservableObject {
     /// Tests connectivity to the F5-TTS server.
     func testConnection() async throws -> Bool {
         guard isConfigured else {
+            #if DEBUG
             print("[F5-TTS] Test failed: no server URL configured")
+            #endif
             throw F5TTSError.noServerURL
         }
 
         guard let url = URL(string: "\(cleanBaseURL)/v1/health") else {
+            #if DEBUG
             print("[F5-TTS] Test failed: invalid URL '\(serverURL)'")
+            #endif
             throw F5TTSError.serverUnreachable
         }
 
+        #if DEBUG
         print("[F5-TTS] Testing connection to \(url.absoluteString)...")
+        #endif
 
         let (data, response) = try await session.data(from: url)
         guard let http = response as? HTTPURLResponse else {
+            #if DEBUG
             print("[F5-TTS] Test failed: no HTTP response")
+            #endif
             return false
         }
 
+        #if DEBUG
         print("[F5-TTS] Server responded with status \(http.statusCode)")
+        #endif
 
         guard http.statusCode == 200 else { return false }
 
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
            let status = json["status"] as? String {
+            #if DEBUG
             print("[F5-TTS] Health check: status=\(status)")
+            #endif
             return status == "ok"
         }
         return false
@@ -125,7 +137,9 @@ final class F5TTSService: ObservableObject {
             throw F5TTSError.requestFailed
         }
 
+        #if DEBUG
         print("[F5-TTS] Voice reference uploaded: \(name) (\(refId))")
+        #endif
         return refId
     }
 
@@ -168,7 +182,9 @@ final class F5TTSService: ObservableObject {
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw F5TTSError.requestFailed
         }
+        #if DEBUG
         print("[F5-TTS] Voice reference deleted: \(id)")
+        #endif
     }
 
     // MARK: - Text-to-Speech
@@ -260,7 +276,9 @@ private class AudioDataPlayer: NSObject, AVAudioPlayerDelegate {
             player = try AVAudioPlayer(data: data)
             player?.delegate = self
         } catch {
+            #if DEBUG
             print("[F5-TTS] Failed to create audio player: \(error)")
+            #endif
         }
     }
 

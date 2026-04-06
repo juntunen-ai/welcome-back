@@ -402,7 +402,9 @@ struct RecordVoiceView: View {
                 member.voiceProfileID = refId
                 member.isVoiceCloned = true
                 uploadSuccess = true
+                #if DEBUG
                 print("[RecordVoice] Upload success: \(refId)")
+                #endif
             } catch {
                 uploadError = error.localizedDescription
             }

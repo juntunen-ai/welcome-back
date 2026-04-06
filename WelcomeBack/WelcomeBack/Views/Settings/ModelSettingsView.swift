@@ -75,7 +75,7 @@ struct ModelSettingsView: View {
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.onSurface)
 
-                            Text("\(model.sizeDescription) • \(model.id == "llama-3.2-3b" ? "Best quality, needs 8 GB RAM" : "Best for iPhone")")
+                            Text("\(model.sizeDescription) • \(modelSubtitle(for: model))")
                                 .font(.system(size: 12))
                                 .foregroundColor(.onSurface.opacity(0.5))
                         }
@@ -236,6 +236,15 @@ struct ModelSettingsView: View {
     }
 
     // MARK: - Utility
+
+    private func modelSubtitle(for model: ModelDownloadService.ModelConfig) -> String {
+        switch model.id {
+        case "gemma-4-e2b":  return "Google's frontier on-device model, needs 6 GB RAM"
+        case "llama-3.2-1b": return "Smallest, best for older iPhones"
+        case "llama-3.2-3b": return "Best Llama quality, needs 8 GB RAM"
+        default:             return "On-device AI model"
+        }
+    }
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
