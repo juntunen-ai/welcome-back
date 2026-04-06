@@ -82,6 +82,26 @@ struct SettingsView: View {
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
+            NavigationLink(destination: PlacesManagementView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "mappin.and.ellipse",
+                    iconColor: .green,
+                    title: "Places",
+                    subtitle: "\(appVM.userProfile.places.count) place\(appVM.userProfile.places.count == 1 ? "" : "s")"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: MemoriesManagementView().environmentObject(appVM)) {
+                SettingsRowView(
+                    icon: "book.fill",
+                    iconColor: .orange,
+                    title: "Memories & Stories",
+                    subtitle: "\(appVM.userProfile.memories.count) memor\(appVM.userProfile.memories.count == 1 ? "y" : "ies")"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
             NavigationLink(destination: NotificationsSettingsView().environmentObject(appVM)) {
                 SettingsRowView(icon: "bell.fill", iconColor: .red,
                                 title: "Notifications",
