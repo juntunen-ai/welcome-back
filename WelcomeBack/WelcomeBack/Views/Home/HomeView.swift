@@ -152,11 +152,18 @@ struct HomeView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.black)
 
-                    // Curved text inside the circle
+                    // Curved text around the mic button
                     CurvedText(
-                        text: "Press to remember who you are",
-                        radius: 54,
-                        fontSize: 10
+                        text: "REMEMBER WHO YOU ARE",
+                        radius: 58,
+                        fontSize: 11,
+                        topArc: true
+                    )
+                    CurvedText(
+                        text: "PRESS TO SPEAK",
+                        radius: 58,
+                        fontSize: 11,
+                        topArc: false
                     )
                 }
             }
@@ -349,34 +356,52 @@ extension HomeLocationManager: CLLocationManagerDelegate {
 
 // MARK: - Curved Text
 
-/// Renders text along the bottom arc of a circle, letters right-side-up.
+/// Renders text along an arc of a circle. `topArc: true` curves along the top,
+/// `topArc: false` curves along the bottom. Letters always read left-to-right.
 struct CurvedText: View {
     let text: String
     let radius: CGFloat
     let fontSize: CGFloat
+    var topArc: Bool = true
 
     var body: some View {
         ZStack {
-            ForEach(Array(characterAngles.enumerated()), id: \.offset) { _, item in
+            ForEach(Array(letterPositions.enumerated()), id: \.offset) { _, item in
                 Text(String(item.char))
-                    .font(.system(size: fontSize, weight: .bold))
-                    .foregroundColor(.black.opacity(0.6))
-                    // Move down to bottom edge, then rotate around center
-                    .offset(y: radius)
-                    .rotationEffect(.radians(item.angle))
+                    .font(.system(size: fontSize, weight: .bold, design: .default))
+                    .tracking(1)
+                    .foregroundColor(.black.opacity(0.5))
+                    .rotationEffect(.radians(item.rotation))
+                    .offset(x: item.x, y: item.y)
             }
         }
     }
 
-    private var characterAngles: [(char: Character, angle: Double)] {
+    private var letterPositions: [(char: Character, x: CGFloat, y: CGFloat, rotation: Double)] {
         let chars = Array(text)
-        let charWidth = Double(fontSize) * 0.62
+        let charWidth = Double(fontSize) * 0.65
         let totalAngle = charWidth * Double(chars.count) / Double(radius)
-        let startAngle = -totalAngle / 2
 
-        return chars.enumerated().map { i, char in
-            let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
-            return (char, angle)
+        if topArc {
+            // Top arc: center at -π/2 (12 o'clock), letters spread left-to-right
+            let startAngle = -.pi / 2 - totalAngle / 2
+            return chars.enumerated().map { i, char in
+                let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
+                let x = CGFloat(cos(angle)) * radius
+                let y = CGFloat(sin(angle)) * radius
+                let rotation = angle + .pi / 2
+                return (char, x, y, rotation)
+            }
+        } else {
+            // Bottom arc: center at π/2 (6 o'clock), letters spread left-to-right
+            let startAngle = .pi / 2 - totalAngle / 2
+            return chars.enumerated().map { i, char in
+                let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
+                let x = CGFloat(cos(angle)) * radius
+                let y = CGFloat(sin(angle)) * radius
+                let rotation = angle - .pi / 2
+                return (char, x, y, rotation)
+            }
         }
     }
 }

@@ -26,7 +26,13 @@
 		9991FE4A04DE8A2511CA0D00 /* ModelDownloadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */; };
 		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
 		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
-		ACR001000000000000000001 /* AlbumCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACR002000000000000000001 /* AlbumCarouselView.swift */; };
+		PPS001000000000000000001 /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000001 /* Place.swift */; };
+		PPS001000000000000000002 /* PlaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000002 /* PlaceDetailView.swift */; };
+		PPS001000000000000000007 /* MemoryStoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000007 /* MemoryStoryDetailView.swift */; };
+		PPS001000000000000000003 /* PlacesManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000003 /* PlacesManagementView.swift */; };
+		PPS001000000000000000004 /* PlaceDetailEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000004 /* PlaceDetailEditView.swift */; };
+		PPS001000000000000000005 /* MemoriesManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000005 /* MemoriesManagementView.swift */; };
+		PPS001000000000000000006 /* MemoryDetailEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000006 /* MemoryDetailEditView.swift */; };
 		B89C9A45AFC5415E96101AD8 /* GeminiLiveService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */; };
 		BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BB001MUSICKIT0000001 /* MusicKit.framework */; };
 		BB001MUSICVM0000002 /* MusicViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB001MUSICVM0000001 /* MusicViewModel.swift */; };
@@ -48,14 +54,12 @@
 		LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = LL002000000000000000001 /* llama-cpp-LICENSE.txt */; };
 		LLMXCFW0000000000000001 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; };
 		LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		MAL001000000000000000001 /* MemoryAlbum.swift in Sources */ = {isa = PBXBuildFile; fileRef = MAL002000000000000000001 /* MemoryAlbum.swift */; };
 		NS0010000000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NS0020000000000000000001 /* NotificationService.swift */; };
 		OB0010000000000000000001 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000001 /* OnboardingContainerView.swift */; };
 		OB0010000000000000000002 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000002 /* OnboardingWelcomeView.swift */; };
 		OB0010000000000000000003 /* OnboardingProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000003 /* OnboardingProfileView.swift */; };
 		OB0010000000000000000004 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000004 /* OnboardingPermissionsView.swift */; };
 		OB0010000000000000000005 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000005 /* OnboardingCompleteView.swift */; };
-		PLS001000000000000000001 /* PhotoLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = PLS002000000000000000001 /* PhotoLibraryService.swift */; };
 		PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRI002000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		SE001000000000000000001 /* PersonalInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000001 /* PersonalInfoView.swift */; };
 		SE001000000000000000002 /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000002 /* NotificationsSettingsView.swift */; };
@@ -140,7 +144,13 @@
 		91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
 		983BA50C87DF43E190C6BF96 /* GeminiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiService.swift; sourceTree = "<group>"; };
 		A06FA49070CC404EA37C543E /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
-		ACR002000000000000000001 /* AlbumCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumCarouselView.swift; sourceTree = "<group>"; };
+		PPS002000000000000000001 /* Place.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Place.swift; sourceTree = "<group>"; };
+		PPS002000000000000000002 /* PlaceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceDetailView.swift; sourceTree = "<group>"; };
+		PPS002000000000000000007 /* MemoryStoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryStoryDetailView.swift; sourceTree = "<group>"; };
+		PPS002000000000000000003 /* PlacesManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlacesManagementView.swift; sourceTree = "<group>"; };
+		PPS002000000000000000004 /* PlaceDetailEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceDetailEditView.swift; sourceTree = "<group>"; };
+		PPS002000000000000000005 /* MemoriesManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesManagementView.swift; sourceTree = "<group>"; };
+		PPS002000000000000000006 /* MemoryDetailEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDetailEditView.swift; sourceTree = "<group>"; };
 		AE8C6810B365488E95EE918D /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
 		AFFB626B53B843ABACAD5923 /* WelcomeBack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WelcomeBack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1A7AC45DE64420D84C56C35 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
@@ -165,14 +175,12 @@
 		LI002000000000000000001 /* LicensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensesView.swift; sourceTree = "<group>"; };
 		LL002000000000000000001 /* llama-cpp-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "llama-cpp-LICENSE.txt"; sourceTree = "<group>"; };
 		LLMXCFW0000000000000002 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = llama.xcframework; path = Frameworks/llama.xcframework; sourceTree = "<group>"; };
-		MAL002000000000000000001 /* MemoryAlbum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryAlbum.swift; sourceTree = "<group>"; };
 		NS0020000000000000000001 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		OB0020000000000000000001 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000002 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000003 /* OnboardingProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProfileView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000004 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000005 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
-		PLS002000000000000000001 /* PhotoLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryService.swift; sourceTree = "<group>"; };
 		PRI002000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		SE002000000000000000001 /* PersonalInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInfoView.swift; sourceTree = "<group>"; };
 		SE002000000000000000002 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
@@ -302,6 +310,10 @@
 				V02D000000000000000002 /* F5TTSSettingsView.swift */,
 				LG002000000000000000001 /* LegalView.swift */,
 				LI002000000000000000001 /* LicensesView.swift */,
+				PPS002000000000000000003 /* PlacesManagementView.swift */,
+				PPS002000000000000000004 /* PlaceDetailEditView.swift */,
+				PPS002000000000000000005 /* MemoriesManagementView.swift */,
+				PPS002000000000000000006 /* MemoryDetailEditView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -349,7 +361,6 @@
 				2AD2663102EF4682ACD4795F /* LiveSessionState.swift */,
 				C7D16E615E1A40A7A9ADBFCB /* SpeechService.swift */,
 				91DAA2A9C7A443D9809F3E42 /* PersistenceService.swift */,
-				PLS002000000000000000001 /* PhotoLibraryService.swift */,
 				NS0020000000000000000001 /* NotificationService.swift */,
 				5463032BE538A9C780D8064A /* LocalLLMService.swift */,
 				44174451BBAE24648E5026FD /* LocalVoiceAIService.swift */,
@@ -396,7 +407,7 @@
 				70108CE7B4714B598E18371E /* Memory.swift */,
 				AE8C6810B365488E95EE918D /* FamilyMember.swift */,
 				26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */,
-				MAL002000000000000000001 /* MemoryAlbum.swift */,
+				PPS002000000000000000001 /* Place.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -425,7 +436,8 @@
 			isa = PBXGroup;
 			children = (
 				CDE96F33216543DEAFBEF3D0 /* MemoriesView.swift */,
-				ACR002000000000000000001 /* AlbumCarouselView.swift */,
+				PPS002000000000000000002 /* PlaceDetailView.swift */,
+				PPS002000000000000000007 /* MemoryStoryDetailView.swift */,
 			);
 			path = Memories;
 			sourceTree = "<group>";
@@ -620,8 +632,13 @@
 				F353BBAF955D422496144B7C /* ListeningView.swift in Sources */,
 				8498B4C66FC54337AF701150 /* PlaybackView.swift in Sources */,
 				27DD2EEE990B4279875BCB72 /* MemoriesView.swift in Sources */,
-				ACR001000000000000000001 /* AlbumCarouselView.swift in Sources */,
-				MAL001000000000000000001 /* MemoryAlbum.swift in Sources */,
+				PPS001000000000000000001 /* Place.swift in Sources */,
+				PPS001000000000000000002 /* PlaceDetailView.swift in Sources */,
+				PPS001000000000000000007 /* MemoryStoryDetailView.swift in Sources */,
+				PPS001000000000000000003 /* PlacesManagementView.swift in Sources */,
+				PPS001000000000000000004 /* PlaceDetailEditView.swift in Sources */,
+				PPS001000000000000000005 /* MemoriesManagementView.swift in Sources */,
+				PPS001000000000000000006 /* MemoryDetailEditView.swift in Sources */,
 				E969761872CB48C986337B81 /* FamilyView.swift in Sources */,
 				FM001000000000000000001 /* FamilyMemberDetailView.swift in Sources */,
 				072B65D522534519B10231D7 /* FamilyMemberProfileView.swift in Sources */,
@@ -644,7 +661,6 @@
 				C3DE39FA3546492492D5A466 /* LiveSessionViewModel.swift in Sources */,
 				7278DA7811D7468C831D8E42 /* SpeechService.swift in Sources */,
 				200C83C9A503458A865318BC /* PersistenceService.swift in Sources */,
-				PLS001000000000000000001 /* PhotoLibraryService.swift in Sources */,
 				NS0010000000000000000001 /* NotificationService.swift in Sources */,
 				OB0010000000000000000001 /* OnboardingContainerView.swift in Sources */,
 				OB0010000000000000000002 /* OnboardingWelcomeView.swift in Sources */,

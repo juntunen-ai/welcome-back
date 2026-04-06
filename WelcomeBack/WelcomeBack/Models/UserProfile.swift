@@ -9,6 +9,7 @@ struct UserProfile: Codable {
 
     var familyMembers: [FamilyMember]
     var memories: [Memory]
+    var places: [Place]
 
     var preferredAIModel: AIModel
     var preferredVoiceMode: VoiceMode
@@ -24,7 +25,7 @@ struct UserProfile: Codable {
 
     enum CodingKeys: String, CodingKey {
         case name, profileImageURL, address, biography, currentLocation
-        case familyMembers, memories
+        case familyMembers, memories, places
         case preferredAIModel, preferredVoiceMode, isVoiceCloningEnabled
         case notificationsEnabled, notificationTimes, notificationTopics
         case isOnboardingComplete
@@ -39,6 +40,7 @@ struct UserProfile: Codable {
         currentLocation: String = "",
         familyMembers: [FamilyMember] = [],
         memories: [Memory] = [],
+        places: [Place] = [],
         preferredAIModel: AIModel = .geminiFlash,
         preferredVoiceMode: VoiceMode = .cloud,
         isVoiceCloningEnabled: Bool = false,
@@ -54,6 +56,7 @@ struct UserProfile: Codable {
         self.currentLocation = currentLocation
         self.familyMembers = familyMembers
         self.memories = memories
+        self.places = places
         self.preferredAIModel = preferredAIModel
         self.preferredVoiceMode = preferredVoiceMode
         self.isVoiceCloningEnabled = isVoiceCloningEnabled
@@ -72,6 +75,7 @@ struct UserProfile: Codable {
         currentLocation      = (try? c.decode(String.self,            forKey: .currentLocation))      ?? ""
         familyMembers        = (try? c.decode([FamilyMember].self,    forKey: .familyMembers))        ?? []
         memories             = (try? c.decode([Memory].self,          forKey: .memories))             ?? []
+        places               = (try? c.decode([Place].self,           forKey: .places))               ?? []
         preferredAIModel     = (try? c.decode(AIModel.self,           forKey: .preferredAIModel))     ?? .geminiFlash
         preferredVoiceMode   = (try? c.decode(VoiceMode.self,        forKey: .preferredVoiceMode))   ?? .cloud
         isVoiceCloningEnabled = (try? c.decode(Bool.self,             forKey: .isVoiceCloningEnabled)) ?? false
@@ -90,6 +94,7 @@ struct UserProfile: Codable {
         try c.encode(currentLocation,       forKey: .currentLocation)
         try c.encode(familyMembers,         forKey: .familyMembers)
         try c.encode(memories,              forKey: .memories)
+        try c.encode(places,                forKey: .places)
         try c.encode(preferredAIModel,      forKey: .preferredAIModel)
         try c.encode(preferredVoiceMode,   forKey: .preferredVoiceMode)
         try c.encode(isVoiceCloningEnabled, forKey: .isVoiceCloningEnabled)
@@ -105,6 +110,7 @@ struct UserProfile: Codable {
         name: "",
         familyMembers: [],
         memories: [],
+        places: [],
         isOnboardingComplete: false
     )
 
@@ -214,6 +220,32 @@ struct UserProfile: Codable {
                 imageURL: "",
                 category: .places,
                 description: "I grew up on Hämeenkatu in Tampere, the son of a factory foreman and a seamstress. Summer meant the city pool, riding bikes along the river Tammerkoski, and eating ice cream outside the market hall. I remember the smell of the textile factories — warm wool and machine oil — that drifted across the neighbourhood on still evenings."
+            )
+        ],
+        places: [
+            Place(
+                id: "place-saimaa-cottage",
+                name: "Saimaa Cottage",
+                description: "Our family summer cottage on Lake Saimaa. Three weeks every July — swimming, fishing, picking blueberries, and watching sunsets turn the water pink and gold. The children built a raft called SS Salminen that sank on the third day.",
+                imageURL: "",
+                latitude: 61.50,
+                longitude: 28.10
+            ),
+            Place(
+                id: "place-porvoo-cathedral",
+                name: "Porvoo Cathedral",
+                description: "Anna and I were married here on June 14, 1980. The old stone church was full of sunflowers. We wrote our own vows and danced in the courtyard of a riverside restaurant while a small band played Finnish tangos.",
+                imageURL: "",
+                latitude: 60.3943,
+                longitude: 25.6607
+            ),
+            Place(
+                id: "place-tampere-home",
+                name: "Tampere Childhood Home",
+                description: "I grew up on Hämeenkatu in Tampere, the son of a factory foreman and a seamstress. Summer meant the city pool, riding bikes along the river Tammerkoski, and eating ice cream outside the market hall.",
+                imageURL: "",
+                latitude: 61.4978,
+                longitude: 23.7610
             )
         ],
         preferredAIModel: .geminiFlash,
