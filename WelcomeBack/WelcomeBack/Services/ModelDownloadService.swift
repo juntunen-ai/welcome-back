@@ -266,13 +266,17 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
 
             // Move the temp file — must happen synchronously before delegate returns
             try fm.moveItem(at: location, to: destination)
+            #if DEBUG
             print("[ModelDownload] Model saved to \(destination.path)")
+            #endif
 
             // Verify file integrity via streaming SHA256
             if !config.expectedSHA256.isEmpty {
                 let computedHash = Self.sha256OfFile(at: destination)
                 if computedHash != config.expectedSHA256 {
+                    #if DEBUG
                     print("[ModelDownload] SHA256 mismatch: expected \(config.expectedSHA256), got \(computedHash ?? "nil")")
+                    #endif
                     try? fm.removeItem(at: destination)
                     Task { @MainActor [weak self] in
                         self?.isDownloading = false
@@ -282,7 +286,9 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
                     }
                     return
                 }
+                #if DEBUG
                 print("[ModelDownload] SHA256 verified OK")
+                #endif
             }
 
             // Update UI state on MainActor
@@ -295,7 +301,9 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
                 self.refreshModelReadiness()
             }
         } catch {
+            #if DEBUG
             print("[ModelDownload] Failed to save: \(error)")
+            #endif
             Task { @MainActor [weak self] in
                 self?.isDownloading = false
                 self?.errorMessage = "Failed to save model: \(error.localizedDescription)"
