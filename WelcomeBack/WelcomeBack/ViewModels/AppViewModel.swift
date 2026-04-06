@@ -98,9 +98,13 @@ final class AppViewModel: ObservableObject {
                     return
                 }
                 self.preloadedLLM = llm
+                #if DEBUG
                 print("[AppVM] ✅ LLM pre-warmed and ready")
+                #endif
             } catch {
+                #if DEBUG
                 print("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
+                #endif
             }
         }
     }
@@ -125,7 +129,9 @@ final class AppViewModel: ObservableObject {
     func reclaimLLM(_ llm: LocalLLMService) {
         guard llm.isLoaded else { return }
         preloadedLLM = llm
+        #if DEBUG
         print("[AppVM] ♻️ Reclaimed loaded LLM for reuse")
+        #endif
     }
 
     // MARK: - Onboarding

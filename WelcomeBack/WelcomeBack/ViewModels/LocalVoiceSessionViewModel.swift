@@ -48,7 +48,9 @@ final class LocalVoiceSessionViewModel: ObservableObject {
             do {
                 try await service.startSession(profile: profile, preloadedLLM: preloadedLLM)
             } catch {
+                #if DEBUG
                 print("[LocalVoiceVM] Session failed: \(error)")
+                #endif
                 self.errorMessage = error.localizedDescription
                 self.useFallback = true
             }
