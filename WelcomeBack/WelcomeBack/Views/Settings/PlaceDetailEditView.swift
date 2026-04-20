@@ -3,6 +3,7 @@ import PhotosUI
 import MapKit
 import CoreLocation
 import ImageIO
+import Photos
 
 /// Add or edit a Place — presented as a sheet from PlacesManagementView.
 struct PlaceDetailEditView: View {
@@ -67,16 +68,26 @@ struct PlaceDetailEditView: View {
             .onChange(of: selectedPhoto) { _, newItem in
                 Task {
                     guard let newItem else { return }
-                    // Load raw data for both display and EXIF extraction.
-                    // Keeping raw bytes so savePhotoData can write them as-is,
-                    // preserving EXIF GPS metadata for map display in PlaceDetailView.
+
+                    // Load raw data first (for display and EXIF fallback).
                     if let data = try? await newItem.loadTransferable(type: Data.self) {
                         pickedRawData = data
                         if let ui = UIImage(data: data) {
                             pickedUIImage = ui
                             photoImage = Image(uiImage: ui)
                         }
-                        // Extract GPS coordinates from EXIF
+                    }
+
+                    // PRIMARY: read GPS from PHAsset.location — works regardless of
+                    // whether the picker returns HEIC, transcoded JPEG, etc.
+                    var gotLocationFromAsset = false
+                    if let identifier = newItem.itemIdentifier {
+                        gotLocationFromAsset = await readLocationFromPHAsset(identifier: identifier)
+                    }
+
+                    // FALLBACK: parse EXIF from raw bytes (works for JPEG photos that
+                    // carry GPS in their EXIF and weren't transcoded by the picker).
+                    if !gotLocationFromAsset, let data = pickedRawData {
                         extractGPSFromImageData(data)
                     }
                 }
@@ -85,6 +96,29 @@ struct PlaceDetailEditView: View {
     }
 
     // MARK: - GPS Extraction
+
+    /// Reads location from the PHAsset identified by `identifier`.
+    /// Returns `true` and updates draft coordinates if a location was found.
+    /// Requests photo-library authorization if not already determined.
+    @discardableResult
+    private func readLocationFromPHAsset(identifier: String) async -> Bool {
+        // Ensure we have at least read-only access.
+        var status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if status == .notDetermined {
+            status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+        }
+        guard status == .authorized || status == .limited else { return false }
+
+        let result = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
+        guard let asset = result.firstObject, let location = asset.location else { return false }
+
+        let lat = location.coordinate.latitude
+        let lon = location.coordinate.longitude
+        draft.latitude  = lat
+        draft.longitude = lon
+        photoLocationNote = String(format: "Location read from photo: %.4f, %.4f", lat, lon)
+        return true
+    }
 
     /// Reads GPS latitude/longitude from image EXIF data and auto-fills coordinates.
     private func extractGPSFromImageData(_ data: Data) {
