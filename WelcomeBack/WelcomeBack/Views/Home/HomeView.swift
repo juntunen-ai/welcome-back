@@ -6,6 +6,7 @@ struct HomeView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
     @StateObject private var locationManager = HomeLocationManager()
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -114,14 +115,21 @@ struct HomeView: View {
             .frame(maxWidth: 150, alignment: .trailing)
         }
         .buttonStyle(.plain)
-        .disabled(locationManager.coordinate == nil)
     }
 
     private func openCurrentLocationInMaps() {
         guard let coord = locationManager.coordinate else { return }
-        let item = MKMapItem(placemark: MKPlacemark(coordinate: coord))
-        item.name = locationManager.city ?? "Your Location"
-        item.openInMaps(launchOptions: [MKLaunchOptionsMapTypeKey: MKMapType.standard.rawValue])
+        // Use the maps:// URL scheme — works on all iOS versions and respects
+        // the user's default map app.  MKMapItem.openInMaps() with launch options
+        // silently fails on some iOS 26 builds.
+        var components = URLComponents(string: "maps://")!
+        components.queryItems = [
+            URLQueryItem(name: "ll", value: "\(coord.latitude),\(coord.longitude)"),
+            URLQueryItem(name: "q",  value: locationManager.city ?? "Your Location")
+        ]
+        if let url = components.url {
+            openURL(url)
+        }
     }
 
     private var profileCircle: some View {
@@ -374,6 +382,10 @@ extension HomeLocationManager: CLLocationManagerDelegate {
 
 /// Renders text along an arc of a circle. `topArc: true` curves along the top,
 /// `topArc: false` curves along the bottom. Letters always read left-to-right.
+///
+/// Uses Canvas + CGContext transforms so rendering is identical on every iOS
+/// version — the previous ZStack/rotationEffect/offset approach produced
+/// reversed text on iOS 26.3.x device builds.
 struct CurvedText: View {
     let text: String
     let radius: CGFloat
@@ -381,49 +393,54 @@ struct CurvedText: View {
     var topArc: Bool = true
 
     var body: some View {
-        ZStack {
-            ForEach(Array(letterPositions.enumerated()), id: \.offset) { _, item in
-                Text(String(item.char))
-                    .font(.system(size: fontSize, weight: .bold, design: .default))
-                    .tracking(1)
-                    .foregroundColor(.black.opacity(0.5))
-                    .rotationEffect(.radians(item.rotation))
-                    .offset(x: item.x, y: item.y)
+        Canvas { context, size in
+            let cx = size.width  / 2
+            let cy = size.height / 2
+            let chars    = Array(text)
+            let step     = Double(fontSize) * 0.65          // approximate per-char angle step
+            let total    = step * Double(chars.count) / Double(radius)
+
+            for (i, char) in chars.enumerated() {
+                // Angle of this character's position on the circle
+                let angle: Double
+                // How much to rotate the letter so it stands upright on the arc
+                let letterRotation: Double
+
+                if topArc {
+                    // Top arc: sweep left-to-right (increasing angle)
+                    let start = -.pi / 2 - total / 2
+                    angle         = start + step / Double(radius) * (Double(i) + 0.5)
+                    letterRotation = angle + .pi / 2
+                } else {
+                    // Bottom arc: sweep left-to-right means DECREASING angle
+                    // (visual left = high angle, visual right = low angle)
+                    let start = .pi / 2 + total / 2
+                    angle         = start - step / Double(radius) * (Double(i) + 0.5)
+                    letterRotation = angle - .pi / 2
+                }
+
+                let px = cx + CGFloat(cos(angle)) * radius
+                let py = cy + CGFloat(sin(angle)) * radius
+
+                // Resolve text styling once from the unmodified context
+                let resolved = context.resolve(
+                    Text(String(char))
+                        .font(.system(size: fontSize, weight: .bold))
+                        .foregroundColor(.black.opacity(0.5))
+                )
+
+                // Draw via a transformed copy: translate to the arc position,
+                // then rotate so the letter aligns with the arc tangent.
+                var copy = context
+                copy.translateBy(x: px, y: py)
+                copy.rotate(by: Angle(radians: letterRotation))
+                copy.draw(resolved, at: .zero, anchor: .center)
             }
         }
-    }
-
-    private var letterPositions: [(char: Character, x: CGFloat, y: CGFloat, rotation: Double)] {
-        let chars = Array(text)
-        let charWidth = Double(fontSize) * 0.65
-        let totalAngle = charWidth * Double(chars.count) / Double(radius)
-
-        if topArc {
-            // Top arc: center at -π/2 (12 o'clock), letters spread left-to-right.
-            // Increasing angle = moving right along the top → correct reading order.
-            let startAngle = -.pi / 2 - totalAngle / 2
-            return chars.enumerated().map { i, char in
-                let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
-                let x = CGFloat(cos(angle)) * radius
-                let y = CGFloat(sin(angle)) * radius
-                let rotation = angle + .pi / 2
-                return (char, x, y, rotation)
-            }
-        } else {
-            // Bottom arc: center at π/2 (6 o'clock), letters spread left-to-right.
-            // Must sweep from HIGH angle → LOW angle because at the bottom of a circle
-            // the visual left corresponds to a larger angle (≈ 3/4 turn) and visual right
-            // corresponds to a smaller angle (≈ 1/4 turn).  Sweeping in the wrong
-            // direction reversed every word — "PRESS TO SPEAK" became "KAEPS OT SSERP".
-            let startAngle = .pi / 2 + totalAngle / 2
-            return chars.enumerated().map { i, char in
-                let angle = startAngle - charWidth / Double(radius) * (Double(i) + 0.5)
-                let x = CGFloat(cos(angle)) * radius
-                let y = CGFloat(sin(angle)) * radius
-                let rotation = angle - .pi / 2
-                return (char, x, y, rotation)
-            }
-        }
+        // Size just large enough to contain characters at the given radius
+        .frame(width:  (radius + fontSize) * 2,
+               height: (radius + fontSize) * 2)
+        .allowsHitTesting(false)
     }
 }
 
