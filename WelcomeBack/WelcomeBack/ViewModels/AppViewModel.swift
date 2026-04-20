@@ -58,11 +58,10 @@ final class AppViewModel: ObservableObject {
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
 
-    /// Returns `.local` only when user has chosen local mode AND the model is downloaded.
-    /// Otherwise falls back to `.cloud` (Gemini).
+    /// Returns `.local` when a local model is downloaded (always prefer on-device).
+    /// Falls back to `.cloud` (Gemini) only when no local model is available.
     var voiceMode: VoiceSessionBridge.Mode {
-        if userProfile.preferredVoiceMode == .local,
-           ModelDownloadService.shared.isModelReady {
+        if ModelDownloadService.shared.isModelReady {
             return .local
         }
         return .cloud
@@ -73,7 +72,6 @@ final class AppViewModel: ObservableObject {
     /// Pre-loads the LLM in background so tapping the mic is instant.
     func preloadLLMIfNeeded() {
         guard preloadedLLM == nil,
-              userProfile.preferredVoiceMode == .local,
               ModelDownloadService.shared.isModelReady else { return }
 
         preloadTask?.cancel()
@@ -168,7 +166,6 @@ final class AppViewModel: ObservableObject {
 
     func doneSpeaking() {
         listeningSheetPresented = false
-        selectedFamilyMember = userProfile.familyMembers.randomElement()
     }
 
     func selectFamilyMember(_ member: FamilyMember) {

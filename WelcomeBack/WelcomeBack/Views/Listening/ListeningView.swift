@@ -75,12 +75,11 @@ struct ListeningView: View {
                 AccessibilityNotification.Announcement(announcement).post()
             }
         }
-        // Fallback: if Live WebSocket fails, revert to REST + PlaybackView
+        // Fallback: only for cloud mode — if WebSocket fails, dismiss gracefully.
+        // Local mode errors are shown in-view via .error state; don't auto-dismiss.
         .onChange(of: voiceVM.useFallback) { _, isFallback in
-            if isFallback {
+            if isFallback && voiceVM.mode == .cloud {
                 dismiss()
-                // Delay slightly so the sheet dismissal completes before
-                // doneSpeaking() triggers the PlaybackView sheet
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     appVM.doneSpeaking()
                 }
@@ -207,7 +206,7 @@ struct ListeningView: View {
     private var statusLabel: String {
         switch voiceVM.sessionState {
         case .idle:          return ""
-        case .connecting:    return voiceVM.mode == .local ? "Loading AI model…" : "Connecting…"
+        case .connecting:    return voiceVM.mode == .local ? "Loading Gemma 4…" : "Connecting…"
         case .listening:     return "I'm listening. Take your time…"
         case .userSpeaking:  return "Go on, I'm listening…"
         case .aiThinking:    return "Just a moment…"

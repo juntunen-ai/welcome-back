@@ -49,20 +49,7 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertFalse(sut.listeningSheetPresented)
     }
 
-    func test_doneSpeaking_selectsAFamilyMember() {
-        sut.doneSpeaking()
-        XCTAssertNotNil(sut.selectedFamilyMember)
-    }
-
-    func test_doneSpeaking_selectsMemberFromExistingFamily() {
-        sut.doneSpeaking()
-        let selectedID = sut.selectedFamilyMember?.id
-        let allIDs = sut.familyMembers.map(\.id)
-        XCTAssertTrue(allIDs.contains(selectedID ?? ""))
-    }
-
-    func test_doneSpeaking_withNoFamilyMembers_selectedMemberIsNil() {
-        sut.userProfile.familyMembers = []
+    func test_doneSpeaking_doesNotSelectFamilyMember() {
         sut.doneSpeaking()
         XCTAssertNil(sut.selectedFamilyMember)
     }
