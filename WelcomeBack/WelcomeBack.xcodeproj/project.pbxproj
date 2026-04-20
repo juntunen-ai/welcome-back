@@ -946,7 +946,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
@@ -972,7 +972,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
