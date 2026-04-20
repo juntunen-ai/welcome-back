@@ -54,9 +54,10 @@ struct PlaceDetailView: View {
         var coord = modelCoordinate
 
         // If no coordinates stored, try extracting from the photo's EXIF data.
+        // We read raw file bytes (not UIImage) so EXIF is never stripped.
         if coord == nil, !place.imageURL.isEmpty,
-           let ui = PersistenceService.loadImage(imageURL: place.imageURL),
-           let extracted = extractGPS(from: ui) {
+           let rawData = PersistenceService.loadImageData(imageURL: place.imageURL),
+           let extracted = extractGPS(fromRawData: rawData) {
             coord = extracted
             await MainActor.run { resolvedCoordinate = extracted }
         }
@@ -77,10 +78,11 @@ struct PlaceDetailView: View {
         }
     }
 
-    /// Extracts GPS coordinates from a UIImage's EXIF metadata.
-    private func extractGPS(from image: UIImage) -> CLLocationCoordinate2D? {
-        guard let data = image.jpegData(compressionQuality: 1.0),
-              let source = CGImageSourceCreateWithData(data as CFData, nil),
+    /// Extracts GPS coordinates from raw image file bytes.
+    /// Must receive the original file data — never pass UIImage.jpegData() output,
+    /// as re-encoding strips all EXIF metadata.
+    private func extractGPS(fromRawData data: Data) -> CLLocationCoordinate2D? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let props = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
               let gps = props[kCGImagePropertyGPSDictionary] as? [CFString: Any],
               let lat = gps[kCGImagePropertyGPSLatitude] as? Double,

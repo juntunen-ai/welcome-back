@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import MapKit
 
 struct HomeView: View {
 
@@ -73,41 +74,54 @@ struct HomeView: View {
     }
 
     private var locationCard: some View {
-        VStack(alignment: .trailing, spacing: 5) {
-            HStack(spacing: 4) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.accentYellow)
-                Text("Your Location")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.accentYellow)
-            }
-
-            if locationManager.isLoading {
-                Text("Finding location…")
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.35))
-            } else if let city = locationManager.city {
-                Text(city)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.onSurface)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(2)
-
-                if let street = locationManager.streetAddress {
-                    Text(street)
-                        .font(.system(size: 12))
-                        .foregroundColor(.onSurface.opacity(0.55))
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(1)
+        Button {
+            openCurrentLocationInMaps()
+        } label: {
+            VStack(alignment: .trailing, spacing: 5) {
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.accentYellow)
+                    Text("Your Location")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.accentYellow)
                 }
-            } else {
-                Text("Location unavailable")
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.35))
+
+                if locationManager.isLoading {
+                    Text("Finding location…")
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.35))
+                } else if let city = locationManager.city {
+                    Text(city)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.onSurface)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(2)
+
+                    if let street = locationManager.streetAddress {
+                        Text(street)
+                            .font(.system(size: 12))
+                            .foregroundColor(.onSurface.opacity(0.55))
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(1)
+                    }
+                } else {
+                    Text("Location unavailable")
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.35))
+                }
             }
+            .frame(maxWidth: 150, alignment: .trailing)
         }
-        .frame(maxWidth: 150, alignment: .trailing)
+        .buttonStyle(.plain)
+        .disabled(locationManager.coordinate == nil)
+    }
+
+    private func openCurrentLocationInMaps() {
+        guard let coord = locationManager.coordinate else { return }
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: coord))
+        item.name = locationManager.city ?? "Your Location"
+        item.openInMaps(launchOptions: [MKLaunchOptionsMapTypeKey: MKMapType.standard.rawValue])
     }
 
     private var profileCircle: some View {
@@ -282,6 +296,7 @@ final class HomeLocationManager: NSObject, ObservableObject {
 
     @Published var city: String?
     @Published var streetAddress: String?
+    @Published var coordinate: CLLocationCoordinate2D?
     @Published var isLoading = true
 
     private let clManager = CLLocationManager()
@@ -307,6 +322,7 @@ final class HomeLocationManager: NSObject, ObservableObject {
     private func geocode(_ location: CLLocation) async {
         guard !geocoded else { return }
         geocoded = true
+        coordinate = location.coordinate
         do {
             if let p = try await CLGeocoder().reverseGeocodeLocation(location).first {
                 let parts = [p.locality, p.country].compactMap { $0 }
@@ -383,7 +399,8 @@ struct CurvedText: View {
         let totalAngle = charWidth * Double(chars.count) / Double(radius)
 
         if topArc {
-            // Top arc: center at -π/2 (12 o'clock), letters spread left-to-right
+            // Top arc: center at -π/2 (12 o'clock), letters spread left-to-right.
+            // Increasing angle = moving right along the top → correct reading order.
             let startAngle = -.pi / 2 - totalAngle / 2
             return chars.enumerated().map { i, char in
                 let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
@@ -393,10 +410,14 @@ struct CurvedText: View {
                 return (char, x, y, rotation)
             }
         } else {
-            // Bottom arc: center at π/2 (6 o'clock), letters spread left-to-right
-            let startAngle = .pi / 2 - totalAngle / 2
+            // Bottom arc: center at π/2 (6 o'clock), letters spread left-to-right.
+            // Must sweep from HIGH angle → LOW angle because at the bottom of a circle
+            // the visual left corresponds to a larger angle (≈ 3/4 turn) and visual right
+            // corresponds to a smaller angle (≈ 1/4 turn).  Sweeping in the wrong
+            // direction reversed every word — "PRESS TO SPEAK" became "KAEPS OT SSERP".
+            let startAngle = .pi / 2 + totalAngle / 2
             return chars.enumerated().map { i, char in
-                let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
+                let angle = startAngle - charWidth / Double(radius) * (Double(i) + 0.5)
                 let x = CGFloat(cos(angle)) * radius
                 let y = CGFloat(sin(angle)) * radius
                 let rotation = angle - .pi / 2

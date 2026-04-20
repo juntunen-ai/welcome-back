@@ -16,6 +16,7 @@ struct PlaceDetailEditView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var photoImage: Image?
     @State private var pickedUIImage: UIImage?
+    @State private var pickedRawData: Data?       // raw bytes from picker — preserves EXIF
     @State private var photoLocationNote: String?
 
     // MARK: - Init
@@ -66,8 +67,11 @@ struct PlaceDetailEditView: View {
             .onChange(of: selectedPhoto) { _, newItem in
                 Task {
                     guard let newItem else { return }
-                    // Load raw data for both display and EXIF extraction
+                    // Load raw data for both display and EXIF extraction.
+                    // Keeping raw bytes so savePhotoData can write them as-is,
+                    // preserving EXIF GPS metadata for map display in PlaceDetailView.
                     if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        pickedRawData = data
                         if let ui = UIImage(data: data) {
                             pickedUIImage = ui
                             photoImage = Image(uiImage: ui)
@@ -326,7 +330,11 @@ struct PlaceDetailEditView: View {
     // MARK: - Save
 
     private func save() {
-        if let ui = pickedUIImage {
+        if let rawData = pickedRawData {
+            // Prefer raw bytes — preserves EXIF GPS so the detail view can show a map.
+            draft.imageURL = PersistenceService.savePhotoData(rawData, memberID: "place_\(draft.id)")
+        } else if let ui = pickedUIImage {
+            // Fallback: no raw data available (shouldn't happen with PhotosPicker on iOS 16+).
             draft.imageURL = PersistenceService.savePhoto(ui, memberID: "place_\(draft.id)")
         }
 
