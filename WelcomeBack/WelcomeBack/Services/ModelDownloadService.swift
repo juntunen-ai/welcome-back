@@ -18,7 +18,6 @@ final class ModelDownloadService: NSObject, ObservableObject {
 
     /// Identifies the model family so LocalLLMService can apply the correct chat template.
     enum ModelFamily: String, Codable, Sendable {
-        case llama3
         case gemma4
     }
 
@@ -38,57 +37,28 @@ final class ModelDownloadService: NSObject, ObservableObject {
         }
     }
 
-    /// Recommended for iPhone — light enough to run within iOS memory limits.
-    /// 1B Q4 uses ~800 MB on disk, ~270 MB KV cache at n_ctx=1024.
+    /// Gemma 4 E2B — Google's latest on-device model with Gemma 4 architecture.
+    /// Uses Unsloth's Dynamic IQ2_M quant (~2.29 GB on disk) — the smallest
+    /// quant that preserves reasonable quality, required to fit within the
+    /// ~2 GB per-app memory budget of free personal provisioning profiles
+    /// (which cannot grant `increased-memory-limit`).
+    /// This is the ONLY supported model.
     nonisolated static let defaultModel: ModelConfig = {
-        guard let url = URL(string: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf") else {
-            preconditionFailure("Invalid hardcoded URL for default model")
-        }
-        return ModelConfig(
-            id: "llama-3.2-1b",
-            name: "Llama 3.2 1B",
-            fileName: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
-            downloadURL: url,
-            expectedSizeBytes: 876_000_000,
-            expectedSHA256: "0af83581e3f3efb0eda498b0d62ac11aff6b1e4cf9acf4346aa2eeb0e3d7d014",
-            family: .llama3
-        )
-    }()
-
-    /// Larger model — better quality but may crash on devices with < 8 GB RAM.
-    nonisolated static let largeModel: ModelConfig = {
-        guard let url = URL(string: "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf") else {
-            preconditionFailure("Invalid hardcoded URL for large model")
-        }
-        return ModelConfig(
-            id: "llama-3.2-3b",
-            name: "Llama 3.2 3B",
-            fileName: "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
-            downloadURL: url,
-            expectedSizeBytes: 1_920_000_000,
-            expectedSHA256: "6c1a3e0b4f1c1b3e0a2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5",
-            family: .llama3
-        )
-    }()
-
-    /// Gemma 4 E2B — Google's frontier on-device model with multimodal support.
-    /// ~3.1 GB on disk (Q4_K_M), needs ~4 GB RAM. Best quality for devices with 6+ GB RAM.
-    nonisolated static let gemma4E2B: ModelConfig = {
-        guard let url = URL(string: "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf") else {
+        guard let url = URL(string: "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-IQ2_M.gguf") else {
             preconditionFailure("Invalid hardcoded URL for Gemma 4 E2B model")
         }
         return ModelConfig(
             id: "gemma-4-e2b",
-            name: "Gemma 4 E2B (Recommended)",
-            fileName: "gemma-4-E2B-it-Q4_K_M.gguf",
+            name: "Gemma 4 E2B",
+            fileName: "gemma-4-E2B-it-UD-IQ2_M.gguf",
             downloadURL: url,
-            expectedSizeBytes: 3_110_000_000,
+            expectedSizeBytes: 2_290_000_000,
             expectedSHA256: "",
             family: .gemma4
         )
     }()
 
-    nonisolated static let allModels: [ModelConfig] = [gemma4E2B, defaultModel, largeModel]
+    nonisolated static let allModels: [ModelConfig] = [defaultModel]
 
     // MARK: - Active Model
 
@@ -140,14 +110,32 @@ final class ModelDownloadService: NSObject, ObservableObject {
 
     private override init() {
         super.init()
-        let savedID = UserDefaults.standard.string(forKey: "selectedLocalModelID") ?? Self.defaultModel.id
-        // If the saved model exists in allModels, use it; otherwise fall back to default
-        if Self.allModels.contains(where: { $0.id == savedID }) {
-            selectedModelID = savedID
-        } else {
-            selectedModelID = Self.defaultModel.id
-        }
+        // Always use Gemma 4 — it's the only model now
+        selectedModelID = Self.defaultModel.id
         refreshModelReadiness()
+        cleanupLegacyModels()
+    }
+
+    /// Removes old model files that are no longer supported, including the
+    /// previous Gemma 4 Q4_K_M variant that was too large for iPhone memory.
+    private func cleanupLegacyModels() {
+        let legacyFiles = [
+            "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+            "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+            "gemma-3-4b-it-Q4_K_M.gguf",
+            "gemma-4-E2B-it-Q4_K_M.gguf",       // too large — replaced
+            "gemma-4-E2B-it-UD-Q2_K_XL.gguf"    // still too large — replaced by UD-IQ2_M
+        ]
+        let fm = FileManager.default
+        for fileName in legacyFiles {
+            let url = modelsDirectoryURL.appendingPathComponent(fileName)
+            if fm.fileExists(atPath: url.path) {
+                try? fm.removeItem(at: url)
+                #if DEBUG
+                print("[ModelDownload] 🗑️ Removed legacy model: \(fileName)")
+                #endif
+            }
+        }
     }
 
     func refreshModelReadiness() {
@@ -179,7 +167,7 @@ final class ModelDownloadService: NSObject, ObservableObject {
         downloadProgress = 0
         errorMessage = nil
 
-        var sessionConfig = URLSessionConfiguration.default
+        let sessionConfig = URLSessionConfiguration.default
         sessionConfig.allowsCellularAccess = false
         let session = URLSession(configuration: sessionConfig, delegate: self, delegateQueue: nil)
         let task = session.downloadTask(with: config.downloadURL)

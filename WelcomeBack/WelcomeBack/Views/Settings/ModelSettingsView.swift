@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// Settings UI for downloading and managing the local voice AI model.
+/// Settings UI for downloading and managing the Gemma 4 voice AI model.
 struct ModelSettingsView: View {
 
     @StateObject private var downloadService = ModelDownloadService.shared
     @EnvironmentObject private var appVM: AppViewModel
+
+    private var model: ModelDownloadService.ModelConfig { ModelDownloadService.defaultModel }
 
     var body: some View {
         ZStack {
@@ -12,7 +14,6 @@ struct ModelSettingsView: View {
 
             List {
                 statusSection
-                modelSelectionSection
                 downloadSection
                 storageSection
             }
@@ -39,11 +40,11 @@ struct ModelSettingsView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(downloadService.isModelReady ? "Model Ready" : "Model Not Downloaded")
+                    Text(downloadService.isModelReady ? "Gemma 4 Ready" : "Model Not Downloaded")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.onSurface)
 
-                    Text(downloadService.selectedModel.name)
+                    Text("Google Gemma 4 E2B — best on-device AI")
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.5))
                 }
@@ -57,51 +58,6 @@ struct ModelSettingsView: View {
         }
     }
 
-    // MARK: - Model Selection
-
-    private var modelSelectionSection: some View {
-        Section {
-            ForEach(ModelDownloadService.allModels) { model in
-                Button {
-                    downloadService.selectedModelID = model.id
-                } label: {
-                    HStack(spacing: 14) {
-                        Image(systemName: downloadService.selectedModelID == model.id ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(downloadService.selectedModelID == model.id ? .accentYellow : .onSurface.opacity(0.3))
-                            .font(.system(size: 20))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(model.name)
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(.onSurface)
-
-                            Text("\(model.sizeDescription) • \(modelSubtitle(for: model))")
-                                .font(.system(size: 12))
-                                .foregroundColor(.onSurface.opacity(0.5))
-                        }
-
-                        Spacer()
-
-                        if downloadService.isModelDownloaded(model) {
-                            Text("Downloaded")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(.green)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Color.green.opacity(0.15))
-                                .clipShape(Capsule())
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                .buttonStyle(.plain)
-                .listRowBackground(Color.surfaceVariant.opacity(0.4))
-            }
-        } header: {
-            sectionHeader("Model")
-        }
-    }
-
     // MARK: - Download
 
     private var downloadSection: some View {
@@ -110,7 +66,7 @@ struct ModelSettingsView: View {
                 // Progress
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("Downloading…")
+                        Text("Downloading Gemma 4 E2B…")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.onSurface)
                         Spacer()
@@ -130,18 +86,18 @@ struct ModelSettingsView: View {
                 }
                 .padding(.vertical, 6)
                 .listRowBackground(Color.surfaceVariant.opacity(0.4))
-            } else if !downloadService.isModelDownloaded(downloadService.selectedModel) {
+            } else if !downloadService.isModelDownloaded(model) {
                 // Download button
                 Button {
-                    downloadService.downloadModel(downloadService.selectedModel)
+                    downloadService.downloadModel(model)
                 } label: {
                     HStack {
                         Image(systemName: "arrow.down.circle.fill")
                             .font(.system(size: 20))
-                        Text("Download \(downloadService.selectedModel.name)")
+                        Text("Download Gemma 4 E2B")
                             .font(.system(size: 15, weight: .semibold))
                         Spacer()
-                        Text(downloadService.selectedModel.sizeDescription)
+                        Text(model.sizeDescription)
                             .font(.system(size: 13))
                             .foregroundColor(.onSurface.opacity(0.5))
                     }
@@ -155,7 +111,7 @@ struct ModelSettingsView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Model downloaded and ready")
+                    Text("Gemma 4 downloaded and ready")
                         .font(.system(size: 15))
                         .foregroundColor(.onSurface)
                     Spacer()
@@ -178,7 +134,7 @@ struct ModelSettingsView: View {
         } header: {
             sectionHeader("Download")
         } footer: {
-            Text("Models are downloaded from Hugging Face. A Wi-Fi connection is recommended for the initial download.")
+            Text("Gemma 4 E2B is Google's best on-device AI model (~2.3 GB). A Wi-Fi connection is recommended.")
                 .font(.system(size: 11))
                 .foregroundColor(.onSurface.opacity(0.3))
         }
@@ -188,34 +144,32 @@ struct ModelSettingsView: View {
 
     private var storageSection: some View {
         Section {
-            ForEach(ModelDownloadService.allModels) { model in
-                if downloadService.isModelDownloaded(model) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(model.name)
-                                .font(.system(size: 15))
-                                .foregroundColor(.onSurface)
+            if downloadService.isModelDownloaded(model) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Gemma 4 E2B")
+                            .font(.system(size: 15))
+                            .foregroundColor(.onSurface)
 
-                            if let size = downloadService.modelFileSizeBytes(model) {
-                                let gb = Double(size) / 1_000_000_000
-                                Text(String(format: "%.1f GB on disk", gb))
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.onSurface.opacity(0.5))
-                            }
-                        }
-
-                        Spacer()
-
-                        Button(role: .destructive) {
-                            downloadService.deleteModel(model)
-                        } label: {
-                            Text("Delete")
-                                .font(.system(size: 13, weight: .medium))
+                        if let size = downloadService.modelFileSizeBytes(model) {
+                            let gb = Double(size) / 1_000_000_000
+                            Text(String(format: "%.1f GB on disk", gb))
+                                .font(.system(size: 12))
+                                .foregroundColor(.onSurface.opacity(0.5))
                         }
                     }
-                    .padding(.vertical, 4)
-                    .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+                    Spacer()
+
+                    Button(role: .destructive) {
+                        downloadService.deleteModel(model)
+                    } label: {
+                        Text("Delete")
+                            .font(.system(size: 13, weight: .medium))
+                    }
                 }
+                .padding(.vertical, 4)
+                .listRowBackground(Color.surfaceVariant.opacity(0.4))
             }
 
             let available = downloadService.availableStorageBytes()
@@ -236,15 +190,6 @@ struct ModelSettingsView: View {
     }
 
     // MARK: - Utility
-
-    private func modelSubtitle(for model: ModelDownloadService.ModelConfig) -> String {
-        switch model.id {
-        case "gemma-4-e2b":  return "Google's frontier on-device model, needs 6 GB RAM"
-        case "llama-3.2-1b": return "Smallest, best for older iPhones"
-        case "llama-3.2-3b": return "Best Llama quality, needs 8 GB RAM"
-        default:             return "On-device AI model"
-        }
-    }
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)

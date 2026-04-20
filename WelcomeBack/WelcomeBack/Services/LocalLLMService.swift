@@ -9,6 +9,21 @@ import llama
 /// 3. Call `setSystemPrompt(_:)` once per session
 /// 4. Call `generateResponse(userMessage:)` to get an `AsyncStream<String>` of token pieces
 /// 5. Call `unloadModel()` when done (or let deinit handle it)
+/// C callback for llama.cpp internal logs — captures errors/warnings during model load.
+private func llamaLogCallback(level: ggml_log_level, text: UnsafePointer<CChar>?, userData: UnsafeMutableRawPointer?) {
+    guard let text = text else { return }
+    let msg = String(cString: text).trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !msg.isEmpty else { return }
+    let prefix: String
+    switch level {
+    case GGML_LOG_LEVEL_ERROR: prefix = "❌ ERROR"
+    case GGML_LOG_LEVEL_WARN:  prefix = "⚠️ WARN"
+    case GGML_LOG_LEVEL_INFO:  prefix = "ℹ️ INFO"
+    default:                    prefix = "🔍 DEBUG"
+    }
+    print("[llama.cpp] \(prefix): \(msg)")
+}
+
 final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Types
@@ -35,7 +50,7 @@ final class LocalLLMService: @unchecked Sendable {
         var temperature: Float = 0.7
         var topP: Float = 0.9
         var topK: Int32 = 40
-        var maxTokens: Int = 150
+        var maxTokens: Int = 256
         var repeatPenalty: Float = 1.1
         var repeatPenaltyLastN: Int32 = 64
     }
@@ -66,7 +81,7 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Init / Deinit
 
-    init(modelPath: String, modelFamily: ModelDownloadService.ModelFamily = .llama3) {
+    init(modelPath: String, modelFamily: ModelDownloadService.ModelFamily = .gemma4) {
         self.modelPath = modelPath
         self.modelFamily = modelFamily
     }
@@ -93,80 +108,95 @@ final class LocalLLMService: @unchecked Sendable {
 
         let attrs = try? FileManager.default.attributesOfItem(atPath: modelPath)
         let fileSize = (attrs?[.size] as? Int64) ?? 0
-        #if DEBUG
-        print("[LocalLLM] 📦 Model file size: \(fileSize / 1_000_000) MB")
+        print("[LocalLLM] 📦 Model file: \(modelPath)")
+        print("[LocalLLM] 📦 Model file size: \(fileSize / 1_000_000) MB (\(fileSize) bytes)")
+
+        // Validate file size — Gemma 4 E2B Q4_K_M should be ~3.1 GB
+        if fileSize < 1_000_000_000 {
+            print("[LocalLLM] ❌ Model file too small (\(fileSize) bytes) — likely corrupt or incomplete download")
+            throw LLMError.modelLoadFailed
+        }
 
         // 1. Backend init (safe to call multiple times)
         print("[LocalLLM] 🔧 Initializing backend...")
-        #endif
+        llama_log_set(llamaLogCallback, nil)
         llama_backend_init()
 
-        // 2. Model parameters — GPU offload on real device, CPU-only on simulator
-        var modelParams = llama_model_default_params()
-        modelParams.use_mmap = true  // memory-map model file for faster loading
-        #if targetEnvironment(simulator)
-        modelParams.n_gpu_layers = 0
-        #if DEBUG
-        print("[LocalLLM] ⚠️ Simulator detected, forcing CPU-only")
-        #endif
-        #else
-        modelParams.n_gpu_layers = 99   // offload all layers to Metal GPU
-        #if DEBUG
-        print("[LocalLLM] 🚀 Metal GPU offload enabled (n_gpu_layers=99)")
-        #endif
-        #endif
-        #if DEBUG
-        print("[LocalLLM] 📂 Loading model file (mmap enabled)...")
-        #endif
+        // 2. Try to load model + create context, with CPU-only fallback if GPU path fails.
+        //    On real devices we first attempt full Metal offload; if either model load
+        //    or context creation returns nil (most common cause: memory pressure from
+        //    3.1 GB mmap + Metal KV cache on smaller iPhones), we retry with
+        //    n_gpu_layers=0 so the app can still run entirely on CPU.
+        // Force CPU-only on all targets when running under a personal (free)
+        // provisioning profile. Metal's heap is accounted separately by Jetsam,
+        // so disabling GPU offload reduces peak memory pressure. On unified-memory
+        // Apple Silicon, the quality penalty is mainly speed — the weights are
+        // still in the same RAM pool.
+        let gpuLayerAttempts: [Int32] = [0]
+        print("[LocalLLM] 🧠 CPU-only mode (personal provisioning profile limits memory)")
 
-        guard let loadedModel = llama_model_load_from_file(modelPath, modelParams) else {
-            #if DEBUG
-            print("[LocalLLM] ❌ llama_model_load_from_file returned nil")
-            #endif
-            throw LLMError.modelLoadFailed
+        let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
+        print("[LocalLLM] 🔧 Using \(nThreads) threads")
+
+        var loadedModel: OpaquePointer?
+        var createdCtx: OpaquePointer?
+        var lastFailure: LLMError = .modelLoadFailed
+
+        for attemptLayers in gpuLayerAttempts {
+            var modelParams = llama_model_default_params()
+            modelParams.use_mmap = true
+            modelParams.n_gpu_layers = attemptLayers
+
+            if attemptLayers > 0 {
+                print("[LocalLLM] 🚀 Attempt: Metal GPU offload (n_gpu_layers=\(attemptLayers))")
+            } else {
+                print("[LocalLLM] 🧠 Attempt: CPU-only (n_gpu_layers=0)")
+            }
+
+            print("[LocalLLM] 📂 Calling llama_model_load_from_file...")
+            guard let mdl = llama_model_load_from_file(modelPath, modelParams) else {
+                print("[LocalLLM] ❌ llama_model_load_from_file returned nil (n_gpu_layers=\(attemptLayers))")
+                lastFailure = .modelLoadFailed
+                continue
+            }
+            print("[LocalLLM] ✅ Model loaded into memory")
+
+            var ctxParams = llama_context_default_params()
+            ctxParams.n_ctx = 1024          // tight KV cache for personal-team memory budget
+            ctxParams.n_batch = 128
+            ctxParams.n_ubatch = 128
+            ctxParams.n_threads = Int32(nThreads)
+            ctxParams.n_threads_batch = Int32(nThreads)
+            ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO
+            print("[LocalLLM] 🔧 Creating context (n_ctx=1024, n_batch=128, flash_attn=auto)...")
+
+            guard let ctx = llama_init_from_model(mdl, ctxParams) else {
+                print("[LocalLLM] ❌ llama_init_from_model returned nil (n_gpu_layers=\(attemptLayers)) — will retry on CPU if possible")
+                llama_model_free(mdl)
+                lastFailure = .contextCreationFailed
+                continue
+            }
+
+            loadedModel = mdl
+            createdCtx = ctx
+            print("[LocalLLM] ✅ Context created (n_gpu_layers=\(attemptLayers))")
+            break
         }
-        model = loadedModel
-        #if DEBUG
-        print("[LocalLLM] ✅ Model loaded into memory")
-        #endif
+
+        guard let finalModel = loadedModel, let finalCtx = createdCtx else {
+            print("[LocalLLM] ❌ All load attempts failed — check [llama.cpp] logs above for reason")
+            throw lastFailure
+        }
+
+        model = finalModel
+        context = finalCtx
 
         // 3. Get vocabulary handle
-        vocab = llama_model_get_vocab(loadedModel)
-        #if DEBUG
+        vocab = llama_model_get_vocab(finalModel)
         print("[LocalLLM] ✅ Vocabulary obtained")
-        #endif
 
-        // 4. Context parameters — only set n_ctx and threads (like the official example)
-        let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
+        // 4. Build sampler chain
         #if DEBUG
-        print("[LocalLLM] 🔧 Using \(nThreads) threads")
-        #endif
-
-        var ctxParams = llama_context_default_params()
-        ctxParams.n_ctx = 4096
-        ctxParams.n_batch = 512         // process up to 512 tokens per decode (prefill speed)
-        ctxParams.n_ubatch = 512        // physical batch size matches logical
-        ctxParams.n_threads = Int32(nThreads)
-        ctxParams.n_threads_batch = Int32(nThreads)
-        ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO  // enable flash attention on Metal
-        #if DEBUG
-        print("[LocalLLM] 🔧 Creating context (n_ctx=4096, n_batch=512, flash_attn=auto)...")
-        #endif
-
-        guard let ctx = llama_init_from_model(loadedModel, ctxParams) else {
-            #if DEBUG
-            print("[LocalLLM] ❌ llama_init_from_model returned nil")
-            #endif
-            llama_model_free(loadedModel)
-            model = nil
-            vocab = nil
-            throw LLMError.contextCreationFailed
-        }
-        context = ctx
-        #if DEBUG
-        print("[LocalLLM] ✅ Context created")
-
-        // 5. Build sampler chain
         print("[LocalLLM] 🔧 Building sampler chain...")
         #endif
         try buildSamplerChain()
@@ -324,30 +354,13 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - System Prompt
 
-    /// Evaluates the system prompt once at the start of a session.
-    /// Format depends on the model family (Llama 3 vs Gemma 4).
+    /// Stores the system prompt for Gemma 4 (embedded in the first user turn).
+    /// Gemma 4 has no separate system role — instructions are prepended to the first user message.
     func setSystemPrompt(_ prompt: String) throws {
-        let formatted: String
-        switch modelFamily {
-        case .llama3:
-            formatted = "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n\(prompt)<|eot_id|>"
-        case .gemma4:
-            // Gemma 4 embeds system instructions in the first user turn preamble.
-            // We store the prompt and prepend it to the first user message instead.
-            gemmaSystemPrompt = prompt
-            systemPromptTokenCount = 0
-            #if DEBUG
-            print("[LocalLLM] Gemma system prompt stored (will prepend to first user turn)")
-            #endif
-            return
-        }
-        let tokens = tokenize(formatted, addSpecial: false)
-        guard !tokens.isEmpty else { return }
-
-        try evaluate(tokens: tokens)
-        systemPromptTokenCount = nPast
+        gemmaSystemPrompt = prompt
+        systemPromptTokenCount = 0
         #if DEBUG
-        print("[LocalLLM] System prompt set: \(tokens.count) tokens")
+        print("[LocalLLM] Gemma 4 system prompt stored (\(prompt.count) chars, will prepend to first user turn)")
         #endif
     }
 
@@ -373,21 +386,14 @@ final class LocalLLMService: @unchecked Sendable {
                 self.cancelGeneration = false
 
                 do {
-                    // 1. Format user turn + assistant header and evaluate in a single batch
-                    let prefill: String
-                    switch self.modelFamily {
-                    case .llama3:
-                        prefill = "<|start_header_id|>user<|end_header_id|>\n\n\(userMessage)<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
-                    case .gemma4:
-                        // For Gemma 4: embed system instructions in the first user turn
-                        var userContent = userMessage
-                        if self.gemmaFirstTurn, let sys = self.gemmaSystemPrompt, !sys.isEmpty {
-                            userContent = "System: \(sys)\n\n\(userMessage)"
-                            self.gemmaFirstTurn = false
-                        }
-                        let bos = self.nPast == 0 ? "<bos>" : ""
-                        prefill = "\(bos)<start_of_turn>user\n\(userContent)<end_of_turn>\n<start_of_turn>model\n"
+                    // 1. Format user turn + model header using Gemma 4 chat template
+                    var userContent = userMessage
+                    if self.gemmaFirstTurn, let sys = self.gemmaSystemPrompt, !sys.isEmpty {
+                        userContent = "System: \(sys)\n\n\(userMessage)"
+                        self.gemmaFirstTurn = false
                     }
+                    let bos = self.nPast == 0 ? "<bos>" : ""
+                    let prefill = "\(bos)<start_of_turn>user\n\(userContent)<end_of_turn>\n<start_of_turn>model\n"
                     let prefillTokens = self.tokenize(prefill)
                     #if DEBUG
                     print("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
@@ -452,16 +458,16 @@ final class LocalLLMService: @unchecked Sendable {
     /// Trims proactively at 75% capacity to leave room for the next turn.
     func trimContextIfNeeded() {
         guard isLoaded, let ctx = context else { return }
-        let maxCtx: Int32 = 4096
-        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (3072), not 88%
+        let maxCtx: Int32 = 1024
+        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (768)
 
         guard nPast > threshold else { return }
 
         let mem = llama_get_memory(ctx)
 
         // Keep system prompt tokens (0..<systemPromptTokenCount)
-        // and the most recent 1536 conversation tokens (~6-8 turns).
-        let keepRecent: Int32 = min(1536, nPast - systemPromptTokenCount)
+        // and the most recent 384 conversation tokens (~2 turns).
+        let keepRecent: Int32 = min(384, nPast - systemPromptTokenCount)
         let evictFrom = systemPromptTokenCount   // first token after system prompt
         let evictTo = nPast - keepRecent          // keep the tail
 

@@ -52,7 +52,7 @@ final class LocalVoiceSessionViewModel: ObservableObject {
                 print("[LocalVoiceVM] Session failed: \(error)")
                 #endif
                 self.errorMessage = error.localizedDescription
-                self.useFallback = true
+                self.sessionState = .error(error.localizedDescription)
             }
         }
     }

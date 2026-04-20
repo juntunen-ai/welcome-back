@@ -34,6 +34,9 @@ final class LocalVoiceAIService: @unchecked Sendable {
     /// Older turns are dropped to prevent unbounded memory growth.
     private let maxConversationTurns = 16
 
+    /// Tracks whether the greeting has finished so we can overlap listening.
+    private var greetingFinished = false
+
     /// Cached image descriptions for the session (fetched once at start).
     private var sessionImageDescriptions: [String: String] = [:]
 
@@ -54,8 +57,9 @@ final class LocalVoiceAIService: @unchecked Sendable {
     ///   - profile: The user's profile for building the system prompt.
     ///   - preloadedLLM: An already-loaded LLM instance (from pre-warming). If nil, loads fresh.
     func startSession(profile: UserProfile, preloadedLLM: LocalLLMService? = nil) async throws {
+        let modelConfig = await ModelDownloadService.shared.selectedModel
         #if DEBUG
-        print("[LocalVoiceAI] ▶️ Starting session...")
+        print("[LocalVoiceAI] ▶️ Starting session with model: \(modelConfig.name) (id=\(modelConfig.id), family=\(modelConfig.family))")
         #endif
         updateState(.connecting)   // UI shows "Loading AI model…"
 
@@ -127,14 +131,14 @@ final class LocalVoiceAIService: @unchecked Sendable {
         self.llmService = llm
         self.userName = profile.name
         self.userProfile = profile
+        self.greetingFinished = false
         #if DEBUG
         print("[LocalVoiceAI] ✅ LLM ready, generating greeting...")
         #endif
 
-        // Generate a warm greeting so the AI speaks first
+        // Generate greeting and start listening concurrently —
+        // don't wait for TTS to finish before the user can speak
         await generateGreeting()
-
-        // Begin listening after greeting finishes (or immediately if greeting fails)
     }
 
     /// Ends the session: stops audio, resets the model context, cleans up.
@@ -160,7 +164,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private func startListeningCycle() {
         do {
             try SpeechService.shared.startListeningWithVAD(
-                silenceThreshold: 1.5,
+                silenceThreshold: 0.8,
                 onPartialResult: { [weak self] text in
                     guard let self else { return }
                     self.currentTranscription = text
@@ -274,12 +278,16 @@ final class LocalVoiceAIService: @unchecked Sendable {
             }
             #endif
 
-            // Detect sentence boundaries: . ! ? optionally followed by whitespace
-            // Also break on commas/semicolons if the buffer is getting long (20+ words)
+            // Detect sentence/clause boundaries for streaming TTS.
+            // Break aggressively on the first chunk (8+ words at any punctuation)
+            // to minimize time-to-first-speech, then use normal sentence breaks.
             let wordCount = tokenBuffer.split(separator: " ").count
             let pattern: String
-            if wordCount >= 20 {
-                // Allow clause-level breaks for faster TTS start
+            if !isFirstSentenceSpoken && wordCount >= 8 {
+                // First chunk: break at any clause boundary for fastest TTS start
+                pattern = #"[.!?,;:\u{2014}\-][\"'\u{201D}\u{2019}]?[\s]*"#
+            } else if wordCount >= 15 {
+                // Long buffer: allow clause-level breaks
                 pattern = #"[.!?,;][\"'\u{201D}\u{2019}]?[\s]*"#
             } else {
                 pattern = #"[.!?][\"'\u{201D}\u{2019}]?[\s]*"#
@@ -371,6 +379,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
     // MARK: - Warm Greeting
 
     /// Generates a short greeting so the AI speaks first when the session starts.
+    /// Starts listening as soon as TTS begins — doesn't wait for greeting to finish.
     private func generateGreeting() async {
         guard let llm = llmService else { return }
 
@@ -397,7 +406,11 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
         await MainActor.run { [weak self] in
             SpeechService.shared.speakSentences([greeting]) { [weak self] in
-                self?.onAllSpeechFinished()
+                self?.greetingFinished = true
+                // Only restart listening if we're not already processing user input
+                if self?.isProcessing == false {
+                    self?.onAllSpeechFinished()
+                }
             }
         }
     }
@@ -562,7 +575,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
         Guidelines:
         - Be conversational, warm, and unhurried. Don't sound like a helper or assistant.
         - Follow \(profile.name)'s lead: if they want to chat about something, go with it.
-        - Keep replies to 2-4 sentences unless they ask for more.
+        - Keep replies to 1-2 sentences. This is a spoken conversation — short and natural.
+        - Start your response immediately with the main point, not filler words.
         - If they seem unsure about something, gently offer a detail or ask a light question — never make them feel tested.
         - Use the facts above as a natural backdrop, not a script. Bring them up when relevant.
         - Never invent names, people, or events beyond what's listed.

@@ -35,7 +35,7 @@ final class SpeechService: NSObject, ObservableObject {
     private var noiseFloorDb: Float = -40   // initial conservative estimate
     private var noiseCalibrationSamples: [Float] = []
     private var isCalibrating = true
-    private let calibrationSampleCount = 15  // ~960ms at 64ms/buffer
+    private let calibrationSampleCount = 8   // ~512ms at 64ms/buffer — faster start
     private let speechMarginDb: Float = 10   // speech must be this much louder than noise
 
     // Sentence TTS queue (AVSpeechSynthesizer path)
@@ -227,7 +227,7 @@ final class SpeechService: NSObject, ObservableObject {
         isListening = true
 
         // Periodically check for silence
-        silenceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { [weak self] _ in
+        silenceTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.checkSilence()
             }
@@ -314,7 +314,7 @@ final class SpeechService: NSObject, ObservableObject {
         }
 
         let utterance = AVSpeechUtterance(string: text)
-        utterance.rate = 0.48
+        utterance.rate = 0.52
         utterance.pitchMultiplier = 1.0
         utterance.volume = 1.0
 
@@ -372,7 +372,7 @@ final class SpeechService: NSObject, ObservableObject {
         pendingUtteranceCount = sentences.count
         for sentence in sentences {
             let utterance = AVSpeechUtterance(string: sentence)
-            utterance.rate = 0.48
+            utterance.rate = 0.52
             utterance.pitchMultiplier = 1.0
             utterance.volume = 1.0
             utterance.voice = resolveVoice(explicit: voiceIdentifier)
@@ -395,7 +395,7 @@ final class SpeechService: NSObject, ObservableObject {
         // Apple voice path
         pendingUtteranceCount += 1
         let utterance = AVSpeechUtterance(string: sentence)
-        utterance.rate = 0.48
+        utterance.rate = 0.52
         utterance.pitchMultiplier = 1.0
         utterance.volume = 1.0
         utterance.voice = resolveVoice(explicit: voiceIdentifier)
@@ -431,7 +431,7 @@ final class SpeechService: NSObject, ObservableObject {
                 print("[SpeechService] F5-TTS sentence failed, using Apple voice: \(error.localizedDescription)")
                 #endif
                 let utterance = AVSpeechUtterance(string: sentence)
-                utterance.rate = 0.48
+                utterance.rate = 0.52
                 utterance.voice = resolveVoice(explicit: nil)
                 // After this utterance finishes, the delegate will call playNextWavSentence
                 pendingUtteranceCount = 1
