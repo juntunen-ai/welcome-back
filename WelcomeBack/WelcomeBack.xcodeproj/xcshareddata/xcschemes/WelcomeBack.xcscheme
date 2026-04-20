@@ -7,17 +7,21 @@
       buildImplicitDependencies = "YES"
       runPostActionsOnFailure = "NO">
       <BuildActionEntries>
+         <!-- Widget excluded from Run/Profile builds (buildForRunning=NO, buildForProfiling=NO).
+              Xcode 26.2 auto-triggers "show widget preview" for every embedded extension,
+              and iOS 26.3.1 rejects this with SBAvocadoDebuggingControllerErrorDomain.
+              Widget still builds for Testing, Archiving, and Analysis so it ships in releases. -->
          <BuildActionEntry
             buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
             buildForArchiving = "YES"
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "15282737539D469CAF4A24B5"
-               BuildableName = "WelcomeBack.app"
-               BlueprintName = "WelcomeBack"
+               BlueprintIdentifier = "WGT005000000000000000001"
+               BuildableName = "WelcomeBackWidget.appex"
+               BlueprintName = "WelcomeBackWidget"
                ReferencedContainer = "container:WelcomeBack.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,9 +33,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "WGT005000000000000000001"
-               BuildableName = "WelcomeBackWidget.appex"
-               BlueprintName = "WelcomeBackWidget"
+               BlueprintIdentifier = "15282737539D469CAF4A24B5"
+               BuildableName = "WelcomeBack.app"
+               BlueprintName = "WelcomeBack"
                ReferencedContainer = "container:WelcomeBack.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
