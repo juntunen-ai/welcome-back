@@ -33,8 +33,8 @@ final class PlaybackViewModel: ObservableObject {
             speechService.stopSpeaking()
             isPlaying = false
         } else {
-            let voiceProfileID = (member?.isVoiceCloned == true) ? member?.voiceProfileID : nil
-            speechService.speak(story, voiceProfileID: voiceProfileID)
+            // Voice cloning is hidden for now — always use the system/personal voice.
+            speechService.speak(story, voiceProfileID: nil)
             isPlaying = true
         }
     }
