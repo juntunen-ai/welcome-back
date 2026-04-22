@@ -4,7 +4,6 @@ struct SettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
     @State private var showResetConfirm = false
-    @State private var showDemoConfirm  = false
 
     var body: some View {
         NavigationStack {
@@ -16,9 +15,6 @@ struct SettingsView: View {
                     aiSection
                     systemSection
                     legalSection
-                    #if DEBUG
-                    demoSection
-                    #endif
                     resetSection
                     footerSection
                 }
@@ -39,18 +35,6 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This will erase all profile data, family members, and saved photos. The onboarding flow will restart. This cannot be undone.")
-            }
-            .confirmationDialog(
-                "Load Demo Data?",
-                isPresented: $showDemoConfirm,
-                titleVisibility: .visible
-            ) {
-                Button("Load Demo Data", role: .destructive) {
-                    appVM.loadSampleData()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("This replaces all current data with the sample Finnish family profile (Harri, Anna, Toivo, Helmi & Pätkis). Your existing data will be lost.")
             }
         }
     }
@@ -187,28 +171,6 @@ struct SettingsView: View {
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
             Text("Legal")
-                .foregroundColor(.accentYellow)
-                .font(.system(size: 12, weight: .bold))
-                .tracking(1.5)
-        }
-    }
-
-    private var demoSection: some View {
-        Section {
-            Button {
-                showDemoConfirm = true
-            } label: {
-                SettingsRowView(
-                    icon: "person.3.sequence.fill",
-                    iconColor: .purple,
-                    title: "Load Demo Data",
-                    subtitle: "Harri, Anna, Toivo, Helmi & Pätkis"
-                )
-            }
-            .buttonStyle(.plain)
-            .listRowBackground(Color.surfaceVariant.opacity(0.4))
-        } header: {
-            Text("Demo")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
