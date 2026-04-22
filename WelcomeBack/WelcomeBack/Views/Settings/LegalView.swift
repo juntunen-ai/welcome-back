@@ -72,28 +72,18 @@ struct LegalView: View {
                 """
             }
 
-            legalSection(title: "Cloud Services") {
+            legalSection(title: "On-Device AI Processing") {
                 """
-                When using Cloud voice mode, your voice input is sent to Google Gemini \
-                for processing. When using voice cloning (optional), audio samples are \
-                processed by a local F5-TTS server on your home network — your voice \
-                data never leaves your local network. No data is shared with third \
-                parties for advertising or analytics.
-                """
-            }
-
-            legalSection(title: "On-Device Processing") {
-                """
-                When using Local voice mode, all AI processing happens entirely on your \
-                device using a downloaded language model. No data leaves your device in \
-                this mode.
+                All AI conversations are processed entirely on your device using a \
+                downloaded language model (Gemma 4). Your voice, messages, and personal \
+                data never leave your iPhone. No data is sent to any external server \
+                during AI conversations.
                 """
             }
 
             legalSection(title: "Data Security") {
                 """
                 All personal data is encrypted at rest using iOS Data Protection. \
-                Sensitive credentials (API keys) are stored in the iOS Keychain. \
                 Network communications use HTTPS/TLS encryption.
                 """
             }
@@ -110,7 +100,7 @@ struct LegalView: View {
                 "For questions about your privacy, contact us at privacy@juntunen.ai."
             }
 
-            Text("Last updated: March 2026")
+            Text("Last updated: April 2026")
                 .font(.system(size: 12))
                 .foregroundColor(.onSurface.opacity(0.4))
         }
@@ -166,7 +156,7 @@ struct LegalView: View {
                 """
             }
 
-            Text("Last updated: March 2026")
+            Text("Last updated: April 2026")
                 .font(.system(size: 12))
                 .foregroundColor(.onSurface.opacity(0.4))
         }
