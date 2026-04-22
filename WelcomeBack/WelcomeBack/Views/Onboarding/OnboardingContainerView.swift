@@ -30,6 +30,12 @@ struct OnboardingContainerView: View {
                         insertion: .move(edge: .trailing),
                         removal:   .move(edge: .leading)))
 
+            case .modelDownload:
+                OnboardingModelDownloadView(onContinue: advance)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing),
+                        removal:   .move(edge: .leading)))
+
             case .complete:
                 OnboardingCompleteView(onDone: {
                     appVM.completeOnboarding()
@@ -44,16 +50,17 @@ struct OnboardingContainerView: View {
 
     private func advance() {
         switch step {
-        case .welcome:     step = .profile
-        case .profile:     step = .permissions
-        case .permissions: step = .complete
-        case .complete:    break
+        case .welcome:       step = .profile
+        case .profile:       step = .permissions
+        case .permissions:   step = .modelDownload
+        case .modelDownload: step = .complete
+        case .complete:      break
         }
     }
 }
 
 enum OnboardingStep {
-    case welcome, profile, permissions, complete
+    case welcome, profile, permissions, modelDownload, complete
 }
 
 extension OnboardingStep: Equatable {}

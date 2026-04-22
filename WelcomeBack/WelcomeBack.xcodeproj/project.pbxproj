@@ -60,6 +60,7 @@
 		OB0010000000000000000003 /* OnboardingProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000003 /* OnboardingProfileView.swift */; };
 		OB0010000000000000000004 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000004 /* OnboardingPermissionsView.swift */; };
 		OB0010000000000000000005 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000005 /* OnboardingCompleteView.swift */; };
+		OB0010000000000000000006 /* OnboardingModelDownloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000006 /* OnboardingModelDownloadView.swift */; };
 		PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRI002000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		SE001000000000000000001 /* PersonalInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000001 /* PersonalInfoView.swift */; };
 		SE001000000000000000002 /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000002 /* NotificationsSettingsView.swift */; };
@@ -182,6 +183,7 @@
 		OB0020000000000000000003 /* OnboardingProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingProfileView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000004 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000005 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
+		OB0020000000000000000006 /* OnboardingModelDownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingModelDownloadView.swift; sourceTree = "<group>"; };
 		PRI002000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		SE002000000000000000001 /* PersonalInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInfoView.swift; sourceTree = "<group>"; };
 		SE002000000000000000002 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
@@ -475,6 +477,7 @@
 				OB0020000000000000000003 /* OnboardingProfileView.swift */,
 				OB0020000000000000000004 /* OnboardingPermissionsView.swift */,
 				OB0020000000000000000005 /* OnboardingCompleteView.swift */,
+				OB0020000000000000000006 /* OnboardingModelDownloadView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -669,6 +672,7 @@
 				OB0010000000000000000003 /* OnboardingProfileView.swift in Sources */,
 				OB0010000000000000000004 /* OnboardingPermissionsView.swift in Sources */,
 				OB0010000000000000000005 /* OnboardingCompleteView.swift in Sources */,
+				OB0010000000000000000006 /* OnboardingModelDownloadView.swift in Sources */,
 				887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */,
 				BC6926A6DB3A0A0A9CFB84D0 /* LocalLLMService.swift in Sources */,
 				C9E4108B2833F69113E4A884 /* LocalVoiceAIService.swift in Sources */,
@@ -796,7 +800,7 @@
 				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -826,7 +830,7 @@
 				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -946,7 +950,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
@@ -972,7 +976,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";

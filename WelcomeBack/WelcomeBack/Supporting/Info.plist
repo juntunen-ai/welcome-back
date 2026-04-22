@@ -70,9 +70,5 @@
 	<!-- Export compliance: app uses standard HTTPS only (exempt) -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-
-	<!-- Gemini API key — injected at build time from Config/Secrets.xcconfig (gitignored) -->
-	<key>GEMINI_API_KEY</key>
-	<string>$(GEMINI_API_KEY)</string>
 </dict>
 </plist>
