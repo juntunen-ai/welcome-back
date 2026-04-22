@@ -309,8 +309,10 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Evaluation
 
-    /// Maximum tokens per decode call — must match `ctxParams.n_batch`.
-    private let maxBatchSize = 512
+    /// Maximum tokens per decode call — must match `ctxParams.n_batch` (128).
+    /// Submitting more tokens than n_batch in a single llama_decode call triggers
+    /// a ggml_abort assertion inside ggml.c, causing a SIGABRT crash.
+    private let maxBatchSize = 128
 
     /// Evaluates a batch of tokens into the context.
     /// Automatically splits into chunks of `maxBatchSize` to avoid ggml assertion failures.
