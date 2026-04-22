@@ -128,7 +128,7 @@ struct SettingsView: View {
                     icon: "speaker.wave.2.fill",
                     iconColor: .cyan,
                     title: "Voice Mode",
-                    subtitle: appVM.userProfile.preferredVoiceMode == .local ? "Local (On-Device)" : "Cloud (Gemini)"
+                    subtitle: "Local (On-Device)"
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))

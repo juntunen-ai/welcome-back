@@ -1,16 +1,18 @@
 import SwiftUI
 
-/// Lets the user choose between cloud (Gemini) and local (llama.cpp) voice AI.
+/// Shows voice AI mode status and lets the user download the on-device model if needed.
+/// Cloud (Gemini) mode is reserved for a future release and is not shown here.
 struct VoiceModeSettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @StateObject private var downloadService = ModelDownloadService.shared
 
     var body: some View {
         ZStack {
             Color.backgroundDark.ignoresSafeArea()
 
             List {
-                modeSection
+                statusSection
                 infoSection
             }
             .scrollContentBackground(.hidden)
@@ -19,82 +21,88 @@ struct VoiceModeSettingsView: View {
         }
         .navigationTitle("Voice Mode")
         .navigationBarTitleDisplayMode(.large)
+        .onAppear {
+            // Ensure local is always selected (cloud path requires API key not yet configured)
+            appVM.userProfile.preferredVoiceMode = .local
+        }
     }
 
-    // MARK: - Mode Selection
+    // MARK: - Status
 
-    private var modeSection: some View {
+    private var statusSection: some View {
         Section {
-            // Cloud option
-            Button {
-                appVM.userProfile.preferredVoiceMode = .cloud
-            } label: {
-                HStack(spacing: 14) {
-                    Image(systemName: appVM.userProfile.preferredVoiceMode == .cloud
-                          ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(appVM.userProfile.preferredVoiceMode == .cloud
-                                         ? .accentYellow : .onSurface.opacity(0.3))
-                        .font(.system(size: 20))
+            HStack(spacing: 14) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.green)
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: "iphone")
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                    )
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Cloud (Gemini)")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.onSurface)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Local (On-Device)")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.onSurface)
 
-                        Text("Uses Google Gemini via internet • Best quality")
-                            .font(.system(size: 12))
-                            .foregroundColor(.onSurface.opacity(0.5))
-                    }
-
-                    Spacer()
+                    Text("Runs entirely offline · No data leaves your phone")
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.55))
                 }
-                .padding(.vertical, 4)
+
+                Spacer()
+
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.accentYellow)
+                    .font(.system(size: 20))
             }
-            .buttonStyle(.plain)
+            .padding(.vertical, 4)
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            // Local option
-            Button {
-                if ModelDownloadService.shared.isModelReady {
-                    appVM.userProfile.preferredVoiceMode = .local
-                }
-            } label: {
+            // Model download state
+            if downloadService.isModelReady {
                 HStack(spacing: 14) {
-                    Image(systemName: appVM.userProfile.preferredVoiceMode == .local
-                          ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(appVM.userProfile.preferredVoiceMode == .local
-                                         ? .accentYellow : .onSurface.opacity(0.3))
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(.green)
                         .font(.system(size: 20))
+                        .frame(width: 36, height: 36)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Local (On-Device)")
+                        Text("Gemma 4 Model Ready")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.onSurface)
-
-                        Text("Runs entirely offline • Requires downloaded model")
+                        Text("2.3 GB · Downloaded")
                             .font(.system(size: 12))
-                            .foregroundColor(.onSurface.opacity(0.5))
+                            .foregroundColor(.onSurface.opacity(0.55))
                     }
-
-                    Spacer()
-
-                    if !ModelDownloadService.shared.isModelReady {
-                        Text("No Model")
-                            .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.vertical, 4)
+                .listRowBackground(Color.surfaceVariant.opacity(0.4))
+            } else {
+                NavigationLink(destination: ModelSettingsView().environmentObject(appVM)) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "arrow.down.circle")
                             .foregroundColor(.orange)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Color.orange.opacity(0.15))
-                            .clipShape(Capsule())
+                            .font(.system(size: 20))
+                            .frame(width: 36, height: 36)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Gemma 4 Model Not Downloaded")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.onSurface)
+                            Text("Tap to download · 2.3 GB required")
+                                .font(.system(size: 12))
+                                .foregroundColor(.orange.opacity(0.85))
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
+                .listRowBackground(Color.surfaceVariant.opacity(0.4))
             }
-            .buttonStyle(.plain)
-            .disabled(!ModelDownloadService.shared.isModelReady)
-            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
         } header: {
-            sectionHeader("Voice Mode")
+            sectionHeader("Active Mode")
         }
     }
 
@@ -103,15 +111,15 @@ struct VoiceModeSettingsView: View {
     private var infoSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
-                infoRow(icon: "cloud.fill", color: .blue,
-                        title: "Cloud Mode",
-                        text: "Conversations are powered by Google Gemini over the internet. Offers the most natural, human-like responses. Requires an internet connection.")
+                infoRow(icon: "lock.shield.fill", color: .blue,
+                        title: "Your Privacy",
+                        text: "All conversations run entirely on your iPhone. No audio, no text, and no personal data is ever sent to external servers.")
 
                 Divider().background(Color.white.opacity(0.1))
 
-                infoRow(icon: "iphone", color: .green,
-                        title: "Local Mode",
-                        text: "Conversations run entirely on your iPhone using a downloaded AI model. Works offline. Download the model first in Voice AI Model settings.")
+                infoRow(icon: "bolt.fill", color: .accentYellow,
+                        title: "Works Offline",
+                        text: "Once the Gemma 4 model is downloaded, Welcome Back works without any internet connection.")
             }
             .padding(.vertical, 4)
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
@@ -141,6 +149,7 @@ struct VoiceModeSettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .padding(.vertical, 4)
     }
 
     private func sectionHeader(_ title: String) -> some View {

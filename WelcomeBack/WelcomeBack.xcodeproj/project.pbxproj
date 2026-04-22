@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB1100AA00BB1100AA00BB11 /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1100BB00BB1100BB00BB11 /* DebugLog.swift */; };
 		072B65D522534519B10231D7 /* FamilyMemberProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */; };
 		150F7B3F557940EA90CA8901 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */; };
 		1F7BD671EB4442D0AEF5D8CE /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06FA49070CC404EA37C543E /* AppViewModel.swift */; };
@@ -125,6 +126,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BB1100BB00BB1100BB00BB11 /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
 		1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberProfileView.swift; sourceTree = "<group>"; };
 		215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
 		23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionViewModel.swift; sourceTree = "<group>"; };
@@ -336,6 +338,7 @@
 			children = (
 				DE297EACA8384C47815D0178 /* Info.plist */,
 				ENT001000000000000000001 /* WelcomeBack.entitlements */,
+				BB1100BB00BB1100BB00BB11 /* DebugLog.swift */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -632,6 +635,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */,
+				BB1100AA00BB1100AA00BB11 /* DebugLog.swift in Sources */,
 				E4046ED6A3074741AC694A39 /* ContentView.swift in Sources */,
 				9875E7995D294CB988D762F3 /* HomeView.swift in Sources */,
 				F353BBAF955D422496144B7C /* ListeningView.swift in Sources */,

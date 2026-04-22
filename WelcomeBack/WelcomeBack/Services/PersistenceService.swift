@@ -35,7 +35,7 @@ enum PersistenceService {
             try data.write(to: profileURL, options: [.atomic, .completeFileProtection])
         } catch {
             #if DEBUG
-            print("[Persistence] Save failed: \(error)")
+            dprint("[Persistence] Save failed: \(error)")
             #endif
         }
     }
@@ -47,7 +47,7 @@ enum PersistenceService {
             return try JSONDecoder().decode(UserProfile.self, from: data)
         } catch {
             #if DEBUG
-            print("[Persistence] Load failed: \(error)")
+            dprint("[Persistence] Load failed: \(error)")
             #endif
             return nil
         }

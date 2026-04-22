@@ -51,32 +51,32 @@ final class F5TTSService: ObservableObject {
     func testConnection() async throws -> Bool {
         guard isConfigured else {
             #if DEBUG
-            print("[F5-TTS] Test failed: no server URL configured")
+            dprint("[F5-TTS] Test failed: no server URL configured")
             #endif
             throw F5TTSError.noServerURL
         }
 
         guard let url = URL(string: "\(cleanBaseURL)/v1/health") else {
             #if DEBUG
-            print("[F5-TTS] Test failed: invalid URL '\(serverURL)'")
+            dprint("[F5-TTS] Test failed: invalid URL '\(serverURL)'")
             #endif
             throw F5TTSError.serverUnreachable
         }
 
         #if DEBUG
-        print("[F5-TTS] Testing connection to \(url.absoluteString)...")
+        dprint("[F5-TTS] Testing connection to \(url.absoluteString)...")
         #endif
 
         let (data, response) = try await session.data(from: url)
         guard let http = response as? HTTPURLResponse else {
             #if DEBUG
-            print("[F5-TTS] Test failed: no HTTP response")
+            dprint("[F5-TTS] Test failed: no HTTP response")
             #endif
             return false
         }
 
         #if DEBUG
-        print("[F5-TTS] Server responded with status \(http.statusCode)")
+        dprint("[F5-TTS] Server responded with status \(http.statusCode)")
         #endif
 
         guard http.statusCode == 200 else { return false }
@@ -84,7 +84,7 @@ final class F5TTSService: ObservableObject {
         if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
            let status = json["status"] as? String {
             #if DEBUG
-            print("[F5-TTS] Health check: status=\(status)")
+            dprint("[F5-TTS] Health check: status=\(status)")
             #endif
             return status == "ok"
         }
@@ -138,7 +138,7 @@ final class F5TTSService: ObservableObject {
         }
 
         #if DEBUG
-        print("[F5-TTS] Voice reference uploaded: \(name) (\(refId))")
+        dprint("[F5-TTS] Voice reference uploaded: \(name) (\(refId))")
         #endif
         return refId
     }
@@ -183,7 +183,7 @@ final class F5TTSService: ObservableObject {
             throw F5TTSError.requestFailed
         }
         #if DEBUG
-        print("[F5-TTS] Voice reference deleted: \(id)")
+        dprint("[F5-TTS] Voice reference deleted: \(id)")
         #endif
     }
 
@@ -277,7 +277,7 @@ private class AudioDataPlayer: NSObject, AVAudioPlayerDelegate {
             player?.delegate = self
         } catch {
             #if DEBUG
-            print("[F5-TTS] Failed to create audio player: \(error)")
+            dprint("[F5-TTS] Failed to create audio player: \(error)")
             #endif
         }
     }

@@ -21,7 +21,7 @@ private func llamaLogCallback(level: ggml_log_level, text: UnsafePointer<CChar>?
     case GGML_LOG_LEVEL_INFO:  prefix = "ℹ️ INFO"
     default:                    prefix = "🔍 DEBUG"
     }
-    print("[llama.cpp] \(prefix): \(msg)")
+    dprint("[llama.cpp] \(prefix): \(msg)")
 }
 
 final class LocalLLMService: @unchecked Sendable {
@@ -96,29 +96,29 @@ final class LocalLLMService: @unchecked Sendable {
     /// Mirrors the official llama.cpp SwiftUI example's approach exactly.
     func loadModel() throws {
         #if DEBUG
-        print("[LocalLLM] ⏳ Starting model load...")
+        dprint("[LocalLLM] ⏳ Starting model load...")
         #endif
 
         guard FileManager.default.fileExists(atPath: modelPath) else {
             #if DEBUG
-            print("[LocalLLM] ❌ Model file not found at: \(modelPath)")
+            dprint("[LocalLLM] ❌ Model file not found at: \(modelPath)")
             #endif
             throw LLMError.modelNotFound
         }
 
         let attrs = try? FileManager.default.attributesOfItem(atPath: modelPath)
         let fileSize = (attrs?[.size] as? Int64) ?? 0
-        print("[LocalLLM] 📦 Model file: \(modelPath)")
-        print("[LocalLLM] 📦 Model file size: \(fileSize / 1_000_000) MB (\(fileSize) bytes)")
+        dprint("[LocalLLM] 📦 Model file: \(modelPath)")
+        dprint("[LocalLLM] 📦 Model file size: \(fileSize / 1_000_000) MB (\(fileSize) bytes)")
 
         // Validate file size — Gemma 4 E2B Q4_K_M should be ~3.1 GB
         if fileSize < 1_000_000_000 {
-            print("[LocalLLM] ❌ Model file too small (\(fileSize) bytes) — likely corrupt or incomplete download")
+            dprint("[LocalLLM] ❌ Model file too small (\(fileSize) bytes) — likely corrupt or incomplete download")
             throw LLMError.modelLoadFailed
         }
 
         // 1. Backend init (safe to call multiple times)
-        print("[LocalLLM] 🔧 Initializing backend...")
+        dprint("[LocalLLM] 🔧 Initializing backend...")
         llama_log_set(llamaLogCallback, nil)
         llama_backend_init()
 
@@ -133,10 +133,10 @@ final class LocalLLMService: @unchecked Sendable {
         // Apple Silicon, the quality penalty is mainly speed — the weights are
         // still in the same RAM pool.
         let gpuLayerAttempts: [Int32] = [0]
-        print("[LocalLLM] 🧠 CPU-only mode (personal provisioning profile limits memory)")
+        dprint("[LocalLLM] 🧠 CPU-only mode (personal provisioning profile limits memory)")
 
         let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
-        print("[LocalLLM] 🔧 Using \(nThreads) threads")
+        dprint("[LocalLLM] 🔧 Using \(nThreads) threads")
 
         var loadedModel: OpaquePointer?
         var createdCtx: OpaquePointer?
@@ -148,18 +148,18 @@ final class LocalLLMService: @unchecked Sendable {
             modelParams.n_gpu_layers = attemptLayers
 
             if attemptLayers > 0 {
-                print("[LocalLLM] 🚀 Attempt: Metal GPU offload (n_gpu_layers=\(attemptLayers))")
+                dprint("[LocalLLM] 🚀 Attempt: Metal GPU offload (n_gpu_layers=\(attemptLayers))")
             } else {
-                print("[LocalLLM] 🧠 Attempt: CPU-only (n_gpu_layers=0)")
+                dprint("[LocalLLM] 🧠 Attempt: CPU-only (n_gpu_layers=0)")
             }
 
-            print("[LocalLLM] 📂 Calling llama_model_load_from_file...")
+            dprint("[LocalLLM] 📂 Calling llama_model_load_from_file...")
             guard let mdl = llama_model_load_from_file(modelPath, modelParams) else {
-                print("[LocalLLM] ❌ llama_model_load_from_file returned nil (n_gpu_layers=\(attemptLayers))")
+                dprint("[LocalLLM] ❌ llama_model_load_from_file returned nil (n_gpu_layers=\(attemptLayers))")
                 lastFailure = .modelLoadFailed
                 continue
             }
-            print("[LocalLLM] ✅ Model loaded into memory")
+            dprint("[LocalLLM] ✅ Model loaded into memory")
 
             var ctxParams = llama_context_default_params()
             ctxParams.n_ctx = 1024          // tight KV cache for personal-team memory budget
@@ -168,10 +168,10 @@ final class LocalLLMService: @unchecked Sendable {
             ctxParams.n_threads = Int32(nThreads)
             ctxParams.n_threads_batch = Int32(nThreads)
             ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO
-            print("[LocalLLM] 🔧 Creating context (n_ctx=1024, n_batch=128, flash_attn=auto)...")
+            dprint("[LocalLLM] 🔧 Creating context (n_ctx=1024, n_batch=128, flash_attn=auto)...")
 
             guard let ctx = llama_init_from_model(mdl, ctxParams) else {
-                print("[LocalLLM] ❌ llama_init_from_model returned nil (n_gpu_layers=\(attemptLayers)) — will retry on CPU if possible")
+                dprint("[LocalLLM] ❌ llama_init_from_model returned nil (n_gpu_layers=\(attemptLayers)) — will retry on CPU if possible")
                 llama_model_free(mdl)
                 lastFailure = .contextCreationFailed
                 continue
@@ -179,12 +179,12 @@ final class LocalLLMService: @unchecked Sendable {
 
             loadedModel = mdl
             createdCtx = ctx
-            print("[LocalLLM] ✅ Context created (n_gpu_layers=\(attemptLayers))")
+            dprint("[LocalLLM] ✅ Context created (n_gpu_layers=\(attemptLayers))")
             break
         }
 
         guard let finalModel = loadedModel, let finalCtx = createdCtx else {
-            print("[LocalLLM] ❌ All load attempts failed — check [llama.cpp] logs above for reason")
+            dprint("[LocalLLM] ❌ All load attempts failed — check [llama.cpp] logs above for reason")
             throw lastFailure
         }
 
@@ -193,18 +193,18 @@ final class LocalLLMService: @unchecked Sendable {
 
         // 3. Get vocabulary handle
         vocab = llama_model_get_vocab(finalModel)
-        print("[LocalLLM] ✅ Vocabulary obtained")
+        dprint("[LocalLLM] ✅ Vocabulary obtained")
 
         // 4. Build sampler chain
         #if DEBUG
-        print("[LocalLLM] 🔧 Building sampler chain...")
+        dprint("[LocalLLM] 🔧 Building sampler chain...")
         #endif
         try buildSamplerChain()
 
         nPast = 0
         isLoaded = true
         #if DEBUG
-        print("[LocalLLM] ✅ Model fully ready")
+        dprint("[LocalLLM] ✅ Model fully ready")
         #endif
     }
 
@@ -219,7 +219,7 @@ final class LocalLLMService: @unchecked Sendable {
         let sparams = llama_sampler_chain_default_params()
         guard let chain = llama_sampler_chain_init(sparams) else {
             #if DEBUG
-            print("[LocalLLM] ❌ llama_sampler_chain_init returned nil")
+            dprint("[LocalLLM] ❌ llama_sampler_chain_init returned nil")
             #endif
             throw LLMError.generationFailed
         }
@@ -240,7 +240,7 @@ final class LocalLLMService: @unchecked Sendable {
 
         sampler = chain
         #if DEBUG
-        print("[LocalLLM] ✅ Sampler chain built")
+        dprint("[LocalLLM] ✅ Sampler chain built")
         #endif
     }
 
@@ -255,7 +255,7 @@ final class LocalLLMService: @unchecked Sendable {
         cancelGeneration = false
         gemmaFirstTurn = true
         #if DEBUG
-        print("[LocalLLM] 🔄 Context reset (model stays loaded)")
+        dprint("[LocalLLM] 🔄 Context reset (model stays loaded)")
         #endif
     }
 
@@ -279,7 +279,7 @@ final class LocalLLMService: @unchecked Sendable {
         nPast = 0
         systemPromptTokenCount = 0
         #if DEBUG
-        print("[LocalLLM] Model unloaded")
+        dprint("[LocalLLM] Model unloaded")
         #endif
     }
 
@@ -345,7 +345,7 @@ final class LocalLLMService: @unchecked Sendable {
             let result = llama_decode(ctx, batch)
             guard result == 0 else {
                 #if DEBUG
-                print("[LocalLLM] ❌ llama_decode failed with code: \(result)")
+                dprint("[LocalLLM] ❌ llama_decode failed with code: \(result)")
                 #endif
                 throw LLMError.generationFailed
             }
@@ -362,7 +362,7 @@ final class LocalLLMService: @unchecked Sendable {
         gemmaSystemPrompt = prompt
         systemPromptTokenCount = 0
         #if DEBUG
-        print("[LocalLLM] Gemma 4 system prompt stored (\(prompt.count) chars, will prepend to first user turn)")
+        dprint("[LocalLLM] Gemma 4 system prompt stored (\(prompt.count) chars, will prepend to first user turn)")
         #endif
     }
 
@@ -398,17 +398,17 @@ final class LocalLLMService: @unchecked Sendable {
                     let prefill = "\(bos)<start_of_turn>user\n\(userContent)<end_of_turn>\n<start_of_turn>model\n"
                     let prefillTokens = self.tokenize(prefill)
                     #if DEBUG
-                    print("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
+                    dprint("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
                     #endif
                     try self.evaluate(tokens: prefillTokens)
                     #if DEBUG
-                    print("[LocalLLM] ✅ Prefill evaluated, nPast=\(self.nPast)")
+                    dprint("[LocalLLM] ✅ Prefill evaluated, nPast=\(self.nPast)")
                     #endif
 
                     // 3. Sampling loop
                     guard let ctx = self.context, let voc = self.vocab, let smpl = self.sampler else {
                         #if DEBUG
-                        print("[LocalLLM] ❌ Missing context/vocab/sampler")
+                        dprint("[LocalLLM] ❌ Missing context/vocab/sampler")
                         #endif
                         continuation.finish()
                         return
@@ -416,7 +416,7 @@ final class LocalLLMService: @unchecked Sendable {
 
                     var generated: Int = 0
                     #if DEBUG
-                    print("[LocalLLM] 🔄 Starting sampling loop...")
+                    dprint("[LocalLLM] 🔄 Starting sampling loop...")
                     #endif
 
                     while generated < self.config.maxTokens && !self.cancelGeneration {
@@ -426,7 +426,7 @@ final class LocalLLMService: @unchecked Sendable {
                         // Check for ANY end-of-generation token (EOS, EOT, etc.)
                         if llama_vocab_is_eog(voc, newToken) {
                             #if DEBUG
-                            print("[LocalLLM] 🛑 EOG token after \(generated) tokens")
+                            dprint("[LocalLLM] 🛑 EOG token after \(generated) tokens")
                             #endif
                             break
                         }
@@ -440,11 +440,11 @@ final class LocalLLMService: @unchecked Sendable {
                         generated += 1
                     }
                     #if DEBUG
-                    print("[LocalLLM] ✅ Generation complete: \(generated) tokens")
+                    dprint("[LocalLLM] ✅ Generation complete: \(generated) tokens")
                     #endif
                 } catch {
                     #if DEBUG
-                    print("[LocalLLM] ❌ Generation error: \(error.localizedDescription)")
+                    dprint("[LocalLLM] ❌ Generation error: \(error.localizedDescription)")
                     #endif
                 }
 
@@ -482,7 +482,7 @@ final class LocalLLMService: @unchecked Sendable {
                 llama_memory_seq_add(mem, 0, evictTo, nPast, -shift)
                 nPast -= shift
                 #if DEBUG
-                print("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+                dprint("[LocalLLM] 🔄 Context trimmed: evicted \(shift) tokens, nPast=\(nPast)")
                 #endif
             } else {
                 // Gradual fallback: try evicting just the oldest quarter
@@ -493,7 +493,7 @@ final class LocalLLMService: @unchecked Sendable {
                     llama_memory_seq_add(mem, 0, fallbackTo, nPast, -shift)
                     nPast -= shift
                     #if DEBUG
-                    print("[LocalLLM] 🔄 Context partially trimmed: evicted \(shift) tokens, nPast=\(nPast)")
+                    dprint("[LocalLLM] 🔄 Context partially trimmed: evicted \(shift) tokens, nPast=\(nPast)")
                     #endif
                 } else {
                     // Last resort: full clear
@@ -501,7 +501,7 @@ final class LocalLLMService: @unchecked Sendable {
                     nPast = 0
                     systemPromptTokenCount = 0
                     #if DEBUG
-                    print("[LocalLLM] 🔄 Context fully cleared (all trim attempts failed)")
+                    dprint("[LocalLLM] 🔄 Context fully cleared (all trim attempts failed)")
                     #endif
                 }
             }

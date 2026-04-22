@@ -132,7 +132,7 @@ final class ModelDownloadService: NSObject, ObservableObject {
             if fm.fileExists(atPath: url.path) {
                 try? fm.removeItem(at: url)
                 #if DEBUG
-                print("[ModelDownload] 🗑️ Removed legacy model: \(fileName)")
+                dprint("[ModelDownload] 🗑️ Removed legacy model: \(fileName)")
                 #endif
             }
         }
@@ -255,7 +255,7 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
             // Move the temp file — must happen synchronously before delegate returns
             try fm.moveItem(at: location, to: destination)
             #if DEBUG
-            print("[ModelDownload] Model saved to \(destination.path)")
+            dprint("[ModelDownload] Model saved to \(destination.path)")
             #endif
 
             // Verify file integrity via streaming SHA256
@@ -263,7 +263,7 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
                 let computedHash = Self.sha256OfFile(at: destination)
                 if computedHash != config.expectedSHA256 {
                     #if DEBUG
-                    print("[ModelDownload] SHA256 mismatch: expected \(config.expectedSHA256), got \(computedHash ?? "nil")")
+                    dprint("[ModelDownload] SHA256 mismatch: expected \(config.expectedSHA256), got \(computedHash ?? "nil")")
                     #endif
                     try? fm.removeItem(at: destination)
                     Task { @MainActor [weak self] in
@@ -275,7 +275,7 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
                     return
                 }
                 #if DEBUG
-                print("[ModelDownload] SHA256 verified OK")
+                dprint("[ModelDownload] SHA256 verified OK")
                 #endif
             }
 
@@ -290,7 +290,7 @@ extension ModelDownloadService: URLSessionDownloadDelegate {
             }
         } catch {
             #if DEBUG
-            print("[ModelDownload] Failed to save: \(error)")
+            dprint("[ModelDownload] Failed to save: \(error)")
             #endif
             Task { @MainActor [weak self] in
                 self?.isDownloading = false

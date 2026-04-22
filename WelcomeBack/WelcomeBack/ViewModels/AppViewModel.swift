@@ -97,11 +97,11 @@ final class AppViewModel: ObservableObject {
                 }
                 self.preloadedLLM = llm
                 #if DEBUG
-                print("[AppVM] ✅ LLM pre-warmed and ready")
+                dprint("[AppVM] ✅ LLM pre-warmed and ready")
                 #endif
             } catch {
                 #if DEBUG
-                print("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
+                dprint("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
                 #endif
             }
         }
@@ -128,7 +128,7 @@ final class AppViewModel: ObservableObject {
         guard llm.isLoaded else { return }
         preloadedLLM = llm
         #if DEBUG
-        print("[AppVM] ♻️ Reclaimed loaded LLM for reuse")
+        dprint("[AppVM] ♻️ Reclaimed loaded LLM for reuse")
         #endif
     }
 
