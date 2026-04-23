@@ -10,8 +10,13 @@ struct OnboardingModelDownloadView: View {
 
     @StateObject private var downloadService = ModelDownloadService.shared
     @State private var didAutoAdvance = false
+    @State private var showCancelConfirm   = false
+    @State private var showLowStorageAlert = false
 
     private var model: ModelDownloadService.ModelConfig { ModelDownloadService.defaultModel }
+
+    // Required free space: model size + 20 % buffer
+    private let requiredBytes: Int64 = 2_800_000_000
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,18 +76,42 @@ struct OnboardingModelDownloadView: View {
         .onChange(of: downloadService.isModelReady) { _, ready in
             guard ready, !didAutoAdvance else { return }
             didAutoAdvance = true
-            // Brief pause so the user sees the checkmark, then advance.
+            // Brief pause so the user sees the "AI Ready!" checkmark before advancing.
             Task {
                 try? await Task.sleep(for: .seconds(1.2))
                 onContinue()
             }
         }
-        // If the model was already downloaded before this screen appeared, advance immediately.
+        // If the model was already downloaded before this screen appeared,
+        // show a brief "ready" state rather than advancing invisibly.
         .onAppear {
             if downloadService.isModelReady, !didAutoAdvance {
                 didAutoAdvance = true
-                onContinue()
+                Task {
+                    try? await Task.sleep(for: .seconds(0.8))
+                    onContinue()
+                }
             }
+        }
+        // Cancel confirmation
+        .confirmationDialog(
+            "Cancel Download?",
+            isPresented: $showCancelConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Cancel Download", role: .destructive) {
+                downloadService.cancelDownload()
+            }
+            Button("Continue Downloading", role: .cancel) {}
+        } message: {
+            Text("The download will need to start from the beginning if cancelled.")
+        }
+        // Low storage warning
+        .alert("Not Enough Storage", isPresented: $showLowStorageAlert) {
+            Button("OK", role: .cancel) {}
+            Button("Download Later") { onContinue() }
+        } message: {
+            Text("Your device needs at least 2.8 GB of free space to download the AI model. Free up some storage and try again, or download later from Settings.")
         }
     }
 
@@ -163,7 +192,7 @@ struct OnboardingModelDownloadView: View {
                     .tint(.accentYellow)
 
                 Button("Cancel Download") {
-                    downloadService.cancelDownload()
+                    showCancelConfirm = true
                 }
                 .font(.system(size: 14))
                 .foregroundColor(.red)
@@ -172,7 +201,11 @@ struct OnboardingModelDownloadView: View {
         } else {
             // Not yet downloaded
             Button {
-                downloadService.downloadModel(model)
+                if downloadService.availableStorageBytes() < requiredBytes {
+                    showLowStorageAlert = true
+                } else {
+                    downloadService.downloadModel(model)
+                }
             } label: {
                 Text("Download Now · \(model.sizeDescription)")
                     .font(.system(size: 18, weight: .bold))
@@ -188,7 +221,7 @@ struct OnboardingModelDownloadView: View {
             Button(action: onContinue) {
                 Text("Download later")
                     .font(.system(size: 15))
-                    .foregroundColor(.onSurface.opacity(0.4))
+                    .foregroundColor(.onSurface.opacity(0.6))
                     .underline()
             }
             .buttonStyle(.plain)

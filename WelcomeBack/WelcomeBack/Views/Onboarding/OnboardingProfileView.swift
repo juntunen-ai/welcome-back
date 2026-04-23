@@ -9,8 +9,10 @@ struct OnboardingProfileView: View {
     @State private var name: String = ""
     @State private var photoPickerItem: PhotosPickerItem? = nil
     @State private var profileImage: UIImage? = nil
+    @State private var isLoadingPhoto = false
     @FocusState private var nameFieldFocused: Bool
 
+    private let maxNameLength = 50
     private var canContinue: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
@@ -44,6 +46,14 @@ struct OnboardingProfileView: View {
                                 .font(.system(size: 36))
                                 .foregroundColor(.onSurface.opacity(0.4))
                         }
+
+                        // Loading overlay while photo is being read from library
+                        if isLoadingPhoto {
+                            Color.black.opacity(0.45)
+                            ProgressView()
+                                .tint(.accentYellow)
+                                .scaleEffect(1.2)
+                        }
                     }
                     .frame(width: 100, height: 100)
                     .clipShape(Circle())
@@ -54,21 +64,36 @@ struct OnboardingProfileView: View {
                 .accessibilityLabel("Add profile photo (optional)")
                 .onChange(of: photoPickerItem) { _, item in
                     Task {
+                        isLoadingPhoto = true
                         if let data = try? await item?.loadTransferable(type: Data.self),
                            let img = UIImage(data: data) {
                             profileImage = img
                         }
+                        isLoadingPhoto = false
                     }
                 }
 
                 // Name field
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Your Name")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.onSurface.opacity(0.45))
-                        .textCase(.uppercase)
-                        .tracking(0.8)
-                        .padding(.leading, 4)
+                    HStack {
+                        Text("Your Name")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.onSurface.opacity(0.45))
+                            .textCase(.uppercase)
+                            .tracking(0.8)
+                            .padding(.leading, 4)
+
+                        Spacer()
+
+                        // Character counter — appears when approaching the limit
+                        if name.count > maxNameLength - 15 {
+                            Text("\(name.count)/\(maxNameLength)")
+                                .font(.system(size: 11))
+                                .foregroundColor(name.count >= maxNameLength
+                                                 ? .orange : .onSurface.opacity(0.35))
+                                .padding(.trailing, 4)
+                        }
+                    }
 
                     TextField("e.g. Harri", text: $name)
                         .font(.system(size: 22, weight: .semibold))
@@ -84,6 +109,11 @@ struct OnboardingProfileView: View {
                         .disableAutocorrection(true)
                         .submitLabel(.continue)
                         .onSubmit { if canContinue { saveAndContinue() } }
+                        .onChange(of: name) { _, newValue in
+                            if newValue.count > maxNameLength {
+                                name = String(newValue.prefix(maxNameLength))
+                            }
+                        }
                         .accessibilityLabel("Enter your name")
                 }
                 .padding(.horizontal, 32)

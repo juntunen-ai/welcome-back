@@ -58,14 +58,10 @@ final class AppViewModel: ObservableObject {
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
 
-    /// Returns `.local` when a local model is downloaded (always prefer on-device).
-    /// Falls back to `.cloud` (Gemini) only when no local model is available.
-    var voiceMode: VoiceSessionBridge.Mode {
-        if ModelDownloadService.shared.isModelReady {
-            return .local
-        }
-        return .cloud
-    }
+    /// Always returns `.local` — all AI processing runs on-device via Gemma 4.
+    /// Cloud (Gemini) mode is reserved for a future release and requires
+    /// a configured API key; returning `.cloud` here would cause a silent failure.
+    var voiceMode: VoiceSessionBridge.Mode { .local }
 
     // MARK: - LLM Pre-warming
 
