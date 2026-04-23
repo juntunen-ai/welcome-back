@@ -119,10 +119,11 @@ struct SettingsView: View {
 
             NavigationLink(destination: VoiceSelectionView()) {
                 SettingsRowView(
-                    icon: "person.wave.2.fill",
+                    icon: "speaker.wave.2.fill",
                     iconColor: .purple,
-                    title: "AI Voice",
-                    subtitle: SpeechService.shared.selectedVoiceIdentifier != nil ? "Personal Voice" : "Default"
+                    title: "Companion Voice",
+                    subtitle: SpeechService.shared.selectedVoiceIdentifier != nil
+                        ? "iOS Personal Voice" : "Default system voice"
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))

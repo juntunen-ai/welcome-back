@@ -137,10 +137,10 @@ struct VoiceSelectionView: View {
                             .font(.system(size: 20))
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Enable Personal Voice")
+                            Text("Enable iOS Personal Voice")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.onSurface)
-                            Text("Use a voice you created in iOS Settings")
+                            Text("Apple's accessibility voice (set up in iPhone Settings)")
                                 .font(.system(size: 12))
                                 .foregroundColor(.onSurface.opacity(0.5))
                         }
@@ -168,12 +168,12 @@ struct VoiceSelectionView: View {
                 EmptyView()
             }
         } header: {
-            Text("Personal Voice")
+            Text("iOS Personal Voice")
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         } footer: {
-            Text("Create a Personal Voice in iOS Settings → Accessibility → Personal Voice. It takes about 15 minutes of reading phrases aloud.")
+            Text("iOS Personal Voice is Apple's own accessibility feature — not related to voice cloning. Set it up in iPhone Settings → Accessibility → Personal Voice (takes ~15 min).")
                 .font(.system(size: 11))
                 .foregroundColor(.onSurface.opacity(0.4))
         }
