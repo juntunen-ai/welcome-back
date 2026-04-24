@@ -15,7 +15,10 @@
 set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
-DEVICE_ID="00008130-001659462E8B803A"   # Dirti Harri
+# Hardware UDID — used by xcodebuild -destination
+DEVICE_ID="00008130-001659462E8B803A"   # Dirti Harri (hardware UDID)
+# CoreDevice UUID — used by xcrun devicectl (Xcode 15+)
+COREDEVICE_UUID="7ABD2D9D-DAAF-5F34-85DC-89BBBBC0DE38"
 DEVICE_NAME="Dirti Harri"
 SCHEME="WelcomeBack"
 CONFIGURATION="Debug"
@@ -44,9 +47,9 @@ BRANCH=$(git -C "$PROJECT_ROOT" branch --show-current 2>/dev/null || echo "unkno
 echo "  Branch : $BRANCH"
 echo "  Project: $PROJECT_FILE"
 
-# Verify device is reachable
-if ! xcrun devicectl list devices 2>/dev/null | grep -q "$DEVICE_ID"; then
-  red "  ✗ $DEVICE_NAME ($DEVICE_ID) not found."
+# Verify device is reachable (match by name to work with any ID format)
+if ! xcrun devicectl list devices 2>/dev/null | grep -q "$DEVICE_NAME"; then
+  red "  ✗ $DEVICE_NAME not found."
   echo "    Make sure the iPhone is connected, unlocked, and trusts this Mac."
   exit 1
 fi
@@ -135,10 +138,10 @@ echo "  Found: $APP_PATH"
 step "Installing on $DEVICE_NAME"
 
 xcrun devicectl device install app \
-  --device "$DEVICE_ID" \
+  --device "$COREDEVICE_UUID" \
   "$APP_PATH" 2>&1 | grep -v "^$"
 
 green ""
-green "✅ Welcome Back (build $NEW_BUILD) installed on $DEVICE_NAME"
+green "✅ Welcome Back (build ${NEW_BUILD:-$CURRENT_BUILD}) installed on $DEVICE_NAME"
 echo "   Open the app on your iPhone — changes are live."
 echo

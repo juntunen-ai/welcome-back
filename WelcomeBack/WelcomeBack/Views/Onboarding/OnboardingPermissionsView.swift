@@ -161,7 +161,7 @@ struct OnboardingPermissionsView: View {
 
         // Check for previously denied permissions — the OS won't show a dialog again.
         // Instead, guide the user to Settings.
-        let micStatus    = AVAudioSession.sharedInstance().recordPermission
+        let micStatus    = AVAudioApplication.shared.recordPermission
         let photosStatus = PHPhotoLibrary.authorizationStatus(for: .readWrite)
 
         let micDenied    = micStatus == .denied
@@ -175,8 +175,8 @@ struct OnboardingPermissionsView: View {
         // Request normally
         isRequesting = true
         Task {
-            // Microphone
-            let micOK = await AVAudioSession.sharedInstance().requestRecordPermission()
+            // Microphone (iOS 17+ async API)
+            let micOK = await AVAudioApplication.requestRecordPermission()
             await MainActor.run { micGranted = micOK }
 
             // Photo library
@@ -193,8 +193,8 @@ struct OnboardingPermissionsView: View {
     }
 
     private func checkExistingStatus() {
-        // Microphone
-        switch AVAudioSession.sharedInstance().recordPermission {
+        // Microphone (iOS 17+ API)
+        switch AVAudioApplication.shared.recordPermission {
         case .granted:  micGranted = true
         default:        micGranted = false
         }
