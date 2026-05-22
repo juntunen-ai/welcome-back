@@ -4,6 +4,7 @@ import SwiftUI
 struct FamilyManagementView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @State private var showingAddSheet = false
     @State private var editingMemberIndex: Int? = nil
 
@@ -31,11 +32,12 @@ struct FamilyManagementView: View {
                 .padding(.top, 8)
             }
         }
-        .navigationTitle("Family Members")
+        .navigationTitle(lang.t("family.management.title"))
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showingAddSheet) {
             FamilyMemberDetailView(memberIndex: nil)
                 .environmentObject(appVM)
+                .environmentObject(lang)
         }
         .sheet(item: $editingMemberIndex) { index in
             FamilyMemberDetailView(
@@ -43,6 +45,7 @@ struct FamilyManagementView: View {
                 existingMember: appVM.userProfile.familyMembers[index]
             )
             .environmentObject(appVM)
+            .environmentObject(lang)
         }
     }
 
@@ -62,7 +65,7 @@ struct FamilyManagementView: View {
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
-                Text("Add member")
+                Text(lang.t("family.add"))
                     .font(.system(size: 17, weight: .semibold))
             }
             .foregroundColor(.backgroundDark)
@@ -81,11 +84,11 @@ struct FamilyManagementView: View {
                 .foregroundColor(.onSurface.opacity(0.3))
 
             VStack(spacing: 6) {
-                Text("No family members yet")
+                Text(lang.t("family.empty"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Tap \"Add member\" to get started")
+                Text(lang.t("family.empty.management.hint"))
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
             }
@@ -101,5 +104,6 @@ struct FamilyManagementView: View {
     NavigationStack {
         FamilyManagementView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

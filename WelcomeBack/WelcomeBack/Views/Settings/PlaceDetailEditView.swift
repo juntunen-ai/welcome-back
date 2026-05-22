@@ -9,6 +9,7 @@ import Photos
 struct PlaceDetailEditView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
 
     let placeIndex: Int?
@@ -50,16 +51,16 @@ struct PlaceDetailEditView: View {
                     .padding(.bottom, 40)
                 }
             }
-            .navigationTitle(isAddMode ? "Add Place" : draft.name)
+            .navigationTitle(isAddMode ? lang.t("places.detail.add.title") : draft.name)
             .navigationBarTitleDisplayMode(.large)
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(lang.t("common.cancel")) { dismiss() }
                         .foregroundColor(.onSurface.opacity(0.6))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") { save() }
+                    Button(lang.t("common.save")) { save() }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(draft.name.isEmpty ? .onSurface.opacity(0.3) : .accentYellow)
                         .disabled(draft.name.isEmpty)
@@ -174,7 +175,7 @@ struct PlaceDetailEditView: View {
             }
 
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                Label("Choose Photo", systemImage: "photo.badge.plus")
+                Label(lang.t("places.detail.photo"), systemImage: "photo.badge.plus")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentYellow)
             }
@@ -199,11 +200,11 @@ struct PlaceDetailEditView: View {
 
     private var nameSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Name")
+            sectionHeader(lang.t("places.detail.name.label"))
 
             HStack(spacing: 14) {
                 iconBadge("mappin.circle.fill", color: .green)
-                TextField("e.g. Summer Cottage, Childhood Home", text: $draft.name)
+                TextField(lang.t("places.detail.name.placeholder"), text: $draft.name)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
             }
@@ -218,12 +219,12 @@ struct PlaceDetailEditView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Description")
+            sectionHeader(lang.t("places.detail.desc.label"))
 
             HStack(alignment: .top, spacing: 14) {
                 iconBadge("text.quote", color: .purple)
                     .padding(.top, 2)
-                TextField("Describe this place and why it matters…",
+                TextField(lang.t("places.detail.desc.placeholder"),
                           text: $draft.description, axis: .vertical)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
@@ -240,18 +241,19 @@ struct PlaceDetailEditView: View {
 
     private var coordinatesSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Coordinates")
+            sectionHeader(lang.t("places.detail.coords.title"))
 
             VStack(spacing: 0) {
                 HStack(spacing: 14) {
                     iconBadge("location.fill", color: .blue)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Latitude")
+                        Text(lang.t("places.detail.lat.label"))
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.onSurface.opacity(0.45))
                             .textCase(.uppercase)
                             .tracking(0.6)
-                        TextField("e.g. 61.50", value: $draft.latitude, format: .number)
+                        TextField(lang.t("places.detail.lat.placeholder"),
+                                  value: $draft.latitude, format: .number)
                             .font(.system(size: 15))
                             .foregroundColor(.onSurface)
                             .keyboardType(.decimalPad)
@@ -268,12 +270,13 @@ struct PlaceDetailEditView: View {
                 HStack(spacing: 14) {
                     iconBadge("location.fill", color: .cyan)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Longitude")
+                        Text(lang.t("places.detail.lon.label"))
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.onSurface.opacity(0.45))
                             .textCase(.uppercase)
                             .tracking(0.6)
-                        TextField("e.g. 28.10", value: $draft.longitude, format: .number)
+                        TextField(lang.t("places.detail.lon.placeholder"),
+                                  value: $draft.longitude, format: .number)
                             .font(.system(size: 15))
                             .foregroundColor(.onSurface)
                             .keyboardType(.decimalPad)
@@ -295,7 +298,7 @@ struct PlaceDetailEditView: View {
             let coord = CLLocationCoordinate2D(latitude: draft.latitude, longitude: draft.longitude)
 
             VStack(alignment: .leading, spacing: 4) {
-                sectionHeader("Preview")
+                sectionHeader(lang.t("places.detail.preview"))
 
                 Map(initialPosition: .camera(MapCamera(
                     centerCoordinate: coord,
@@ -324,7 +327,7 @@ struct PlaceDetailEditView: View {
             } label: {
                 HStack {
                     Spacer()
-                    Label("Delete Place", systemImage: "trash")
+                    Label(lang.t("places.detail.delete"), systemImage: "trash")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.red)
                     Spacer()
@@ -384,4 +387,5 @@ struct PlaceDetailEditView: View {
 #Preview {
     PlaceDetailEditView(placeIndex: nil)
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

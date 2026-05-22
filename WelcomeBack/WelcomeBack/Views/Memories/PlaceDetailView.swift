@@ -8,6 +8,8 @@ struct PlaceDetailView: View {
 
     let place: Place
 
+    @EnvironmentObject private var lang: LanguageManager
+
     // Resolved coordinate: from model if set, otherwise extracted from photo EXIF on appear.
     @State private var resolvedCoordinate: CLLocationCoordinate2D?
     // Human-readable address from reverse geocoding.
@@ -164,10 +166,10 @@ struct PlaceDetailView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionLabel("About This Place")
+            sectionLabel(lang.t("memories.place.about"))
 
             Text(place.description.isEmpty
-                 ? "No description added yet. Edit in Settings \u{2192} Places."
+                 ? lang.t("memories.place.no_desc")
                  : place.description)
                 .font(.system(size: 16))
                 .foregroundColor(place.description.isEmpty ? .onSurface.opacity(0.35) : .onSurface.opacity(0.85))
@@ -184,7 +186,7 @@ struct PlaceDetailView: View {
 
     private var mapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionLabel("Location")
+            sectionLabel(lang.t("memories.place.location"))
 
             if let coord = displayCoordinate {
                 ZStack(alignment: .bottomTrailing) {
@@ -204,7 +206,7 @@ struct PlaceDetailView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
                                 .font(.system(size: 14))
-                            Text("Open in Maps")
+                            Text(lang.t("memories.place.maps"))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundColor(.white)
@@ -222,7 +224,7 @@ struct PlaceDetailView: View {
                         Image(systemName: "photo.badge.checkmark")
                             .font(.system(size: 11))
                             .foregroundColor(.green)
-                        Text("Location read from photo")
+                        Text(lang.t("memories.place.photo_loc"))
                             .font(.system(size: 12))
                             .foregroundColor(.onSurface.opacity(0.5))
                     }
@@ -233,7 +235,7 @@ struct PlaceDetailView: View {
                     Image(systemName: "map")
                         .font(.system(size: 32))
                         .foregroundColor(.onSurface.opacity(0.2))
-                    Text("No location set.\nAdd a photo with GPS data or set coordinates in Settings \u{2192} Places.")
+                    Text(lang.t("memories.place.no_loc"))
                         .font(.system(size: 14))
                         .foregroundColor(.onSurface.opacity(0.35))
                         .multilineTextAlignment(.center)
@@ -315,5 +317,6 @@ private struct HybridMapView: UIViewRepresentable {
             latitude: 61.50, longitude: 28.10
         ))
     }
+    .environmentObject(LanguageManager())
     .preferredColorScheme(.dark)
 }

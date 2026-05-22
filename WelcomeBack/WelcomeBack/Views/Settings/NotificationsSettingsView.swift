@@ -3,6 +3,7 @@ import SwiftUI
 struct NotificationsSettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
 
     var body: some View {
         ZStack {
@@ -22,7 +23,7 @@ struct NotificationsSettingsView: View {
                 .animation(.easeInOut(duration: 0.2), value: appVM.userProfile.notificationsEnabled)
             }
         }
-        .navigationTitle("Notifications")
+        .navigationTitle(lang.t("notifications.title"))
         .navigationBarTitleDisplayMode(.large)
         .scrollDismissesKeyboard(.interactively)
         // Reschedule whenever enabled/times change
@@ -40,16 +41,16 @@ struct NotificationsSettingsView: View {
 
     private var enableSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Status")
+            sectionHeader(lang.t("notifications.status"))
 
             HStack(spacing: 14) {
                 iconBadge("bell.fill", color: .red)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Enable Notifications")
+                    Text(lang.t("notifications.enable"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.onSurface)
-                    Text("Daily check-in reminders")
+                    Text(lang.t("notifications.checkin"))
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.5))
                 }
@@ -69,7 +70,7 @@ struct NotificationsSettingsView: View {
 
     private var timingSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Remind Me At")
+            sectionHeader(lang.t("notifications.remind_at"))
 
             VStack(spacing: 0) {
                 ForEach(Array(NotificationTime.allCases.enumerated()), id: \.element.id) { index, time in
@@ -115,7 +116,7 @@ struct NotificationsSettingsView: View {
 
     private var topicsSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("What to Talk About")
+            sectionHeader(lang.t("notifications.topics.title"))
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 14) {
@@ -123,11 +124,11 @@ struct NotificationsSettingsView: View {
                         .padding(.top, 2)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Topics & Reminders")
+                        Text(lang.t("notifications.topics.header"))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.onSurface)
 
-                        Text("Describe what the daily check-in should focus on — e.g. medication, appointments, memories.")
+                        Text(lang.t("notifications.topics.placeholder"))
                             .font(.system(size: 12))
                             .foregroundColor(.onSurface.opacity(0.5))
                             .fixedSize(horizontal: false, vertical: true)
@@ -136,7 +137,7 @@ struct NotificationsSettingsView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 14)
 
-                TextField("e.g. Ask about today's lunch, remind to take medication at 10am…",
+                TextField(lang.t("notifications.topics.placeholder"),
                           text: $appVM.userProfile.notificationTopics,
                           axis: .vertical)
                     .font(.system(size: 14))
@@ -196,5 +197,6 @@ struct NotificationsSettingsView: View {
     NavigationStack {
         NotificationsSettingsView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

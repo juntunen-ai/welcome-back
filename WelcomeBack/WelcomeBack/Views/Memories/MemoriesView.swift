@@ -3,6 +3,7 @@ import SwiftUI
 struct MemoriesView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -25,7 +26,7 @@ struct MemoriesView: View {
                     .padding(.bottom, 32)
                 }
             }
-            .navigationTitle("Memories")
+            .navigationTitle(lang.t("memories.title"))
             .navigationBarTitleDisplayMode(.large)
         }
     }
@@ -35,13 +36,10 @@ struct MemoriesView: View {
     @ViewBuilder
     private var peopleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("People")
+            sectionHeader(lang.t("memories.people"))
 
             if appVM.userProfile.familyMembers.isEmpty {
-                emptySectionView(
-                    icon: "person.3",
-                    message: "Add family members in Settings to see them here."
-                )
+                emptySectionView(icon: "person.3", message: lang.t("memories.people.empty"))
             } else {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(appVM.userProfile.familyMembers) { member in
@@ -60,17 +58,14 @@ struct MemoriesView: View {
     @ViewBuilder
     private var placesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Places")
+            sectionHeader(lang.t("memories.places"))
 
             if appVM.userProfile.places.isEmpty {
-                emptySectionView(
-                    icon: "mappin.and.ellipse",
-                    message: "Add important places in Settings to see them here."
-                )
+                emptySectionView(icon: "mappin.and.ellipse", message: lang.t("memories.places.empty"))
             } else {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(appVM.userProfile.places) { place in
-                        NavigationLink(destination: PlaceDetailView(place: place)) {
+                        NavigationLink(destination: PlaceDetailView(place: place).environmentObject(lang)) {
                             PlaceTile(place: place)
                         }
                         .buttonStyle(.plain)
@@ -85,13 +80,10 @@ struct MemoriesView: View {
     @ViewBuilder
     private var memoriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Your Stories")
+            sectionHeader(lang.t("memories.stories"))
 
             if appVM.userProfile.memories.isEmpty {
-                emptySectionView(
-                    icon: "book.closed",
-                    message: "Add memories and stories in Settings to see them here."
-                )
+                emptySectionView(icon: "book.closed", message: lang.t("memories.stories.empty"))
             } else {
                 VStack(spacing: 12) {
                     ForEach(appVM.userProfile.memories) { memory in
@@ -341,4 +333,5 @@ struct MemoryStoryCard: View {
 #Preview {
     MemoriesView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

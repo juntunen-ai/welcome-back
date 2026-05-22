@@ -6,6 +6,7 @@ struct OnboardingPermissionsView: View {
 
     let onContinue: () -> Void
 
+    @EnvironmentObject private var lang: LanguageManager
     @State private var micGranted    = false
     @State private var photosGranted = false
     @State private var isRequesting  = false
@@ -24,13 +25,13 @@ struct OnboardingPermissionsView: View {
                 .padding(.bottom, 24)
 
             // Title
-            Text("A few permissions")
+            Text(lang.t("onboarding.permissions.title"))
                 .font(.system(size: 32, weight: .black))
                 .foregroundColor(.onSurface)
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 10)
 
-            Text("Welcome Back needs access to your\nmicrophone and photos.")
+            Text(lang.t("onboarding.permissions.subtitle"))
                 .font(.system(size: 16))
                 .foregroundColor(.onSurface.opacity(0.6))
                 .multilineTextAlignment(.center)
@@ -43,15 +44,15 @@ struct OnboardingPermissionsView: View {
                 permissionCard(
                     icon: "mic.fill",
                     iconColor: .red,
-                    title: "Microphone",
-                    description: "Listen to your voice so the AI companion can understand you.",
+                    title: lang.t("onboarding.permissions.mic.title"),
+                    description: lang.t("onboarding.permissions.mic.desc"),
                     granted: micGranted
                 )
                 permissionCard(
                     icon: "photo.on.rectangle",
                     iconColor: .blue,
-                    title: "Photo Library",
-                    description: "Show your memory photos in the Memories tab.",
+                    title: lang.t("onboarding.permissions.photos.title"),
+                    description: lang.t("onboarding.permissions.photos.desc"),
                     granted: photosGranted
                 )
             }
@@ -66,9 +67,9 @@ struct OnboardingPermissionsView: View {
                         ProgressView()
                             .tint(.black)
                     }
-                    Text(isRequesting ? "Requesting…"
-                         : allGranted  ? "Continue"
-                         : "Allow Access")
+                    Text(isRequesting ? lang.t("onboarding.permissions.requesting")
+                         : allGranted  ? lang.t("common.continue")
+                         : lang.t("onboarding.permissions.allow"))
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.black)
                 }
@@ -82,31 +83,31 @@ struct OnboardingPermissionsView: View {
             .padding(.horizontal, 32)
             .padding(.bottom, 12)
             .accessibilityLabel(allGranted
-                ? "Continue to next step"
-                : "Allow microphone and photo library access")
+                ? lang.t("common.continue")
+                : lang.t("onboarding.permissions.allow.a11y"))
 
             Button(action: onContinue) {
-                Text("Skip for now")
+                Text(lang.t("onboarding.permissions.skip"))
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .underline()
             }
             .buttonStyle(.plain)
             .padding(.bottom, 48)
-            .accessibilityLabel("Skip permissions and continue")
-            .accessibilityHint("You can grant access later in iOS Settings")
+            .accessibilityLabel(lang.t("onboarding.permissions.skip.a11y"))
+            .accessibilityHint(lang.t("onboarding.permissions.skip.hint"))
         }
         .onAppear { checkExistingStatus() }
         // Settings alert — shown when a permission has already been denied
-        .alert("Permission Denied", isPresented: $showSettingsAlert) {
-            Button("Open Settings") {
+        .alert(lang.t("onboarding.permissions.denied.title"), isPresented: $showSettingsAlert) {
+            Button(lang.t("onboarding.permissions.denied.open")) {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
             }
-            Button("Skip", role: .cancel) { onContinue() }
+            Button(lang.t("onboarding.permissions.denied.skip"), role: .cancel) { onContinue() }
         } message: {
-            Text("Microphone or photo access was previously denied. Open Settings to allow access, or skip to continue without these features.")
+            Text(lang.t("onboarding.permissions.denied.message"))
         }
     }
 
@@ -207,5 +208,6 @@ struct OnboardingPermissionsView: View {
 
 #Preview {
     OnboardingPermissionsView(onContinue: {})
+        .environmentObject(LanguageManager())
         .preferredColorScheme(.dark)
 }

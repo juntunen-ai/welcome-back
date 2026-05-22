@@ -1,13 +1,11 @@
 import SwiftUI
 
 /// Onboarding step that prompts the user to download the on-device Gemma 4 AI model.
-/// Placed between the permissions step and the completion screen.
-/// Auto-advances once the download finishes; also allows skipping so the user
-/// can download later from Settings → Voice AI Model.
 struct OnboardingModelDownloadView: View {
 
     let onContinue: () -> Void
 
+    @EnvironmentObject private var lang: LanguageManager
     @StateObject private var downloadService = ModelDownloadService.shared
     @State private var didAutoAdvance = false
     @State private var showCancelConfirm   = false
@@ -34,13 +32,13 @@ struct OnboardingModelDownloadView: View {
             .padding(.bottom, 28)
 
             // Title
-            Text("Download the AI")
+            Text(lang.t("onboarding.model.title"))
                 .font(.system(size: 32, weight: .black))
                 .foregroundColor(.onSurface)
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 10)
 
-            Text("Welcome Back uses an on-device AI.\nYour conversations are completely private\nand work without internet.")
+            Text(lang.t("onboarding.model.subtitle"))
                 .font(.system(size: 16))
                 .foregroundColor(.onSurface.opacity(0.6))
                 .multilineTextAlignment(.center)
@@ -76,14 +74,11 @@ struct OnboardingModelDownloadView: View {
         .onChange(of: downloadService.isModelReady) { _, ready in
             guard ready, !didAutoAdvance else { return }
             didAutoAdvance = true
-            // Brief pause so the user sees the "AI Ready!" checkmark before advancing.
             Task {
                 try? await Task.sleep(for: .seconds(1.2))
                 onContinue()
             }
         }
-        // If the model was already downloaded before this screen appeared,
-        // show a brief "ready" state rather than advancing invisibly.
         .onAppear {
             if downloadService.isModelReady, !didAutoAdvance {
                 didAutoAdvance = true
@@ -95,23 +90,23 @@ struct OnboardingModelDownloadView: View {
         }
         // Cancel confirmation
         .confirmationDialog(
-            "Cancel Download?",
+            lang.t("onboarding.model.cancel.confirm.title"),
             isPresented: $showCancelConfirm,
             titleVisibility: .visible
         ) {
-            Button("Cancel Download", role: .destructive) {
+            Button(lang.t("onboarding.model.cancel.confirm.action"), role: .destructive) {
                 downloadService.cancelDownload()
             }
-            Button("Continue Downloading", role: .cancel) {}
+            Button(lang.t("onboarding.model.cancel.continue"), role: .cancel) {}
         } message: {
-            Text("The download will need to start from the beginning if cancelled.")
+            Text(lang.t("onboarding.model.cancel.confirm.message"))
         }
         // Low storage warning
-        .alert("Not Enough Storage", isPresented: $showLowStorageAlert) {
-            Button("OK", role: .cancel) {}
-            Button("Download Later") { onContinue() }
+        .alert(lang.t("onboarding.model.storage.title"), isPresented: $showLowStorageAlert) {
+            Button(lang.t("common.ok"), role: .cancel) {}
+            Button(lang.t("onboarding.model.storage.later")) { onContinue() }
         } message: {
-            Text("Your device needs at least 2.8 GB of free space to download the AI model. Free up some storage and try again, or download later from Settings.")
+            Text(lang.t("onboarding.model.storage.message"))
         }
     }
 
@@ -132,7 +127,7 @@ struct OnboardingModelDownloadView: View {
                 Text(model.name)
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.onSurface)
-                Text("Google on-device AI · \(model.sizeDescription) · Wi-Fi recommended")
+                Text(String(format: lang.t("onboarding.model.card.subtitle"), model.sizeDescription))
                     .font(.system(size: 13))
                     .foregroundColor(.onSurface.opacity(0.55))
                     .fixedSize(horizontal: false, vertical: true)
@@ -162,11 +157,10 @@ struct OnboardingModelDownloadView: View {
     @ViewBuilder
     private var bottomButtons: some View {
         if downloadService.isModelReady {
-            // Download just finished — show a ready state before auto-advancing.
             HStack(spacing: 10) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.black)
-                Text("AI Ready!")
+                Text(lang.t("onboarding.model.ready"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
             }
@@ -176,10 +170,9 @@ struct OnboardingModelDownloadView: View {
             .clipShape(Capsule())
 
         } else if downloadService.isDownloading {
-            // Progress bar + cancel
             VStack(spacing: 14) {
                 HStack {
-                    Text("Downloading Gemma 4…")
+                    Text(lang.t("onboarding.model.downloading"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.onSurface)
                     Spacer()
@@ -191,7 +184,7 @@ struct OnboardingModelDownloadView: View {
                 ProgressView(value: downloadService.downloadProgress)
                     .tint(.accentYellow)
 
-                Button("Cancel Download") {
+                Button(lang.t("onboarding.model.cancel")) {
                     showCancelConfirm = true
                 }
                 .font(.system(size: 14))
@@ -199,7 +192,6 @@ struct OnboardingModelDownloadView: View {
             }
 
         } else {
-            // Not yet downloaded
             Button {
                 if downloadService.availableStorageBytes() < requiredBytes {
                     showLowStorageAlert = true
@@ -207,7 +199,7 @@ struct OnboardingModelDownloadView: View {
                     downloadService.downloadModel(model)
                 }
             } label: {
-                Text("Download Now · \(model.sizeDescription)")
+                Text(String(format: lang.t("onboarding.model.download.button"), model.sizeDescription))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
@@ -216,23 +208,24 @@ struct OnboardingModelDownloadView: View {
                     .clipShape(Capsule())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Download Gemma 4 AI model, \(model.sizeDescription)")
+            .accessibilityLabel(String(format: lang.t("onboarding.model.download.a11y"), model.sizeDescription))
 
             Button(action: onContinue) {
-                Text("Download later")
+                Text(lang.t("onboarding.model.download.later"))
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .underline()
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
-            .accessibilityLabel("Skip model download and continue")
-            .accessibilityHint("You can download the AI model later from Settings")
+            .accessibilityLabel(lang.t("onboarding.model.later.a11y"))
+            .accessibilityHint(lang.t("onboarding.model.later.hint"))
         }
     }
 }
 
 #Preview {
     OnboardingModelDownloadView(onContinue: {})
+        .environmentObject(LanguageManager())
         .preferredColorScheme(.dark)
 }

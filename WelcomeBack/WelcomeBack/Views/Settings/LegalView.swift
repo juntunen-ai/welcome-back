@@ -4,9 +4,11 @@ import SwiftUI
 /// Opens the hosted URL in Safari; includes an offline fallback summary.
 struct LegalView: View {
 
-    enum LegalDocument: String {
-        case privacyPolicy = "Privacy Policy"
-        case termsOfService = "Terms of Service"
+    @EnvironmentObject private var lang: LanguageManager
+
+    enum LegalDocument {
+        case privacyPolicy
+        case termsOfService
 
         var url: URL? {
             switch self {
@@ -30,7 +32,7 @@ struct LegalView: View {
                         Link(destination: url) {
                             HStack {
                                 Image(systemName: "safari")
-                                Text("Open in Safari")
+                                Text(lang.t("legal.open_safari"))
                             }
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.accentYellow)
@@ -48,8 +50,15 @@ struct LegalView: View {
                 .padding(24)
             }
         }
-        .navigationTitle(document.rawValue)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.large)
+    }
+
+    private var navigationTitle: String {
+        switch document {
+        case .privacyPolicy:  return lang.t("settings.legal.privacy.title")
+        case .termsOfService: return lang.t("settings.legal.terms.title")
+        }
     }
 
     // MARK: - Privacy Policy Summary

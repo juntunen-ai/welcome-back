@@ -5,6 +5,7 @@ import MapKit
 struct HomeView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @StateObject private var locationManager = HomeLocationManager()
     @Environment(\.openURL) private var openURL
 
@@ -48,20 +49,19 @@ struct HomeView: View {
 
     // MARK: - Hero section
 
-    /// Profile circle on the left, current location on the right.
     private var heroSection: some View {
         HStack(alignment: .center, spacing: 12) {
-            NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+            NavigationLink(destination: PersonalInfoView().environmentObject(appVM).environmentObject(lang)) {
                 profileCircle
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Welcome Back,")
+                Text(lang.t("home.greeting"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.onSurface.opacity(0.5))
 
-                Text(appVM.userName.isEmpty ? "Friend" : appVM.userName)
+                Text(appVM.userName.isEmpty ? lang.t("home.friend") : appVM.userName)
                     .font(.system(size: 22, weight: .black))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
@@ -83,13 +83,13 @@ struct HomeView: View {
                     Image(systemName: "location.fill")
                         .font(.system(size: 10))
                         .foregroundColor(.accentYellow)
-                    Text("Your Location")
+                    Text(lang.t("home.location.label"))
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundColor(.accentYellow)
                 }
 
                 if locationManager.isLoading {
-                    Text("Finding location…")
+                    Text(lang.t("home.location.finding"))
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.35))
                 } else if let city = locationManager.city {
@@ -107,7 +107,7 @@ struct HomeView: View {
                             .lineLimit(1)
                     }
                 } else {
-                    Text("Location unavailable")
+                    Text(lang.t("home.location.unavailable"))
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.35))
                 }
@@ -119,13 +119,10 @@ struct HomeView: View {
 
     private func openCurrentLocationInMaps() {
         guard let coord = locationManager.coordinate else { return }
-        // Use the maps:// URL scheme — works on all iOS versions and respects
-        // the user's default map app.  MKMapItem.openInMaps() with launch options
-        // silently fails on some iOS 26 builds.
         var components = URLComponents(string: "maps://")!
         components.queryItems = [
             URLQueryItem(name: "ll", value: "\(coord.latitude),\(coord.longitude)"),
-            URLQueryItem(name: "q",  value: locationManager.city ?? "Your Location")
+            URLQueryItem(name: "q",  value: locationManager.city ?? lang.t("home.location.label"))
         ]
         if let url = components.url {
             openURL(url)
@@ -152,7 +149,7 @@ struct HomeView: View {
         .clipShape(Circle())
         .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 2.5))
         .shadow(color: Color.accentYellow.opacity(0.3), radius: 8, y: 3)
-        .accessibilityLabel("Your profile photo — tap to edit")
+        .accessibilityLabel(lang.t("home.profile.accessibility"))
     }
 
     // MARK: - Mic button
@@ -174,15 +171,14 @@ struct HomeView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.black)
 
-                    // Curved text around the mic button
                     CurvedText(
-                        text: "REMEMBER WHO YOU ARE",
+                        text: lang.t("home.mic.arc.top"),
                         radius: 58,
                         fontSize: 11,
                         topArc: true
                     )
                     CurvedText(
-                        text: "PRESS TO SPEAK",
+                        text: lang.t("home.mic.arc.bottom"),
                         radius: 58,
                         fontSize: 11,
                         topArc: false
@@ -190,8 +186,8 @@ struct HomeView: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Start listening")
-            .accessibilityHint("Double-tap to begin a voice conversation about your memories")
+            .accessibilityLabel(lang.t("home.mic.accessibility"))
+            .accessibilityHint(lang.t("home.mic.accessibility.hint"))
         }
     }
 
@@ -244,11 +240,11 @@ struct HomeView: View {
 
     private var introSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("What is Welcome Back?")
+            Text(lang.t("home.intro.title"))
                 .font(.system(size: 15, weight: .bold))
                 .foregroundColor(.onSurface.opacity(0.9))
 
-            Text("A compassionate AI companion that helps you remember the people, places, and moments that matter most. Tap the microphone and start talking.")
+            Text(lang.t("home.intro.body"))
                 .font(.system(size: 13))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .fixedSize(horizontal: false, vertical: true)
@@ -260,7 +256,7 @@ struct HomeView: View {
 
     private var familyCircles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Your Family")
+            Text(lang.t("home.family.header"))
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.onSurface.opacity(0.9))
 
@@ -297,8 +293,6 @@ struct HomeView: View {
 
 // MARK: - Location manager
 
-/// Fetches the device's current location once and reverse-geocodes it to a
-/// city + street address for display on the Home screen.
 @MainActor
 final class HomeLocationManager: NSObject, ObservableObject {
 
@@ -380,12 +374,6 @@ extension HomeLocationManager: CLLocationManagerDelegate {
 
 // MARK: - Curved Text
 
-/// Renders text along an arc of a circle. `topArc: true` curves along the top,
-/// `topArc: false` curves along the bottom. Letters always read left-to-right.
-///
-/// Uses Canvas + CGContext transforms so rendering is identical on every iOS
-/// version — the previous ZStack/rotationEffect/offset approach produced
-/// reversed text on iOS 26.3.x device builds.
 struct CurvedText: View {
     let text: String
     let radius: CGFloat
@@ -397,23 +385,18 @@ struct CurvedText: View {
             let cx = size.width  / 2
             let cy = size.height / 2
             let chars    = Array(text)
-            let step     = Double(fontSize) * 0.65          // approximate per-char angle step
+            let step     = Double(fontSize) * 0.65
             let total    = step * Double(chars.count) / Double(radius)
 
             for (i, char) in chars.enumerated() {
-                // Angle of this character's position on the circle
                 let angle: Double
-                // How much to rotate the letter so it stands upright on the arc
                 let letterRotation: Double
 
                 if topArc {
-                    // Top arc: sweep left-to-right (increasing angle)
                     let start = -.pi / 2 - total / 2
                     angle         = start + step / Double(radius) * (Double(i) + 0.5)
                     letterRotation = angle + .pi / 2
                 } else {
-                    // Bottom arc: sweep left-to-right means DECREASING angle
-                    // (visual left = high angle, visual right = low angle)
                     let start = .pi / 2 + total / 2
                     angle         = start - step / Double(radius) * (Double(i) + 0.5)
                     letterRotation = angle - .pi / 2
@@ -422,22 +405,18 @@ struct CurvedText: View {
                 let px = cx + CGFloat(cos(angle)) * radius
                 let py = cy + CGFloat(sin(angle)) * radius
 
-                // Resolve text styling once from the unmodified context
                 let resolved = context.resolve(
                     Text(String(char))
                         .font(.system(size: fontSize, weight: .bold))
                         .foregroundColor(.black.opacity(0.5))
                 )
 
-                // Draw via a transformed copy: translate to the arc position,
-                // then rotate so the letter aligns with the arc tangent.
                 var copy = context
                 copy.translateBy(x: px, y: py)
                 copy.rotate(by: Angle(radians: letterRotation))
                 copy.draw(resolved, at: .zero, anchor: .center)
             }
         }
-        // Size just large enough to contain characters at the given radius
         .frame(width:  (radius + fontSize) * 2,
                height: (radius + fontSize) * 2)
         .allowsHitTesting(false)
@@ -447,4 +426,5 @@ struct CurvedText: View {
 #Preview {
     HomeView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

@@ -5,6 +5,7 @@ import SwiftUI
 struct VoiceModeSettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @StateObject private var downloadService = ModelDownloadService.shared
 
     var body: some View {
@@ -19,7 +20,7 @@ struct VoiceModeSettingsView: View {
             .listStyle(.insetGrouped)
             .listRowSeparatorTint(Color.white.opacity(0.07))
         }
-        .navigationTitle("Voice Mode")
+        .navigationTitle(lang.t("settings.ai.voice_mode.title"))
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             // Ensure local is always selected (cloud path requires API key not yet configured)
@@ -42,11 +43,11 @@ struct VoiceModeSettingsView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Local (On-Device)")
+                    Text(lang.t("settings.ai.voice_mode.local"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.onSurface)
 
-                    Text("Runs entirely offline · No data leaves your phone")
+                    Text(lang.t("voicemode.offline_desc"))
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.55))
                 }
@@ -69,10 +70,10 @@ struct VoiceModeSettingsView: View {
                         .frame(width: 36, height: 36)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Gemma 4 Model Ready")
+                        Text(lang.t("voicemode.model.ready"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.onSurface)
-                        Text("2.3 GB · Downloaded")
+                        Text(lang.t("voicemode.model.ready.desc"))
                             .font(.system(size: 12))
                             .foregroundColor(.onSurface.opacity(0.55))
                     }
@@ -80,7 +81,9 @@ struct VoiceModeSettingsView: View {
                 .padding(.vertical, 4)
                 .listRowBackground(Color.surfaceVariant.opacity(0.4))
             } else {
-                NavigationLink(destination: ModelSettingsView().environmentObject(appVM)) {
+                NavigationLink(destination: ModelSettingsView()
+                    .environmentObject(appVM)
+                    .environmentObject(lang)) {
                     HStack(spacing: 14) {
                         Image(systemName: "arrow.down.circle")
                             .foregroundColor(.orange)
@@ -88,10 +91,10 @@ struct VoiceModeSettingsView: View {
                             .frame(width: 36, height: 36)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Gemma 4 Model Not Downloaded")
+                            Text(lang.t("voicemode.model.not_downloaded"))
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.onSurface)
-                            Text("Tap to download · 2.3 GB required")
+                            Text(lang.t("voicemode.model.download_hint"))
                                 .font(.system(size: 12))
                                 .foregroundColor(.orange.opacity(0.85))
                         }
@@ -102,7 +105,7 @@ struct VoiceModeSettingsView: View {
             }
 
         } header: {
-            sectionHeader("Active Mode")
+            sectionHeader(lang.t("voicemode.active"))
         }
     }
 
@@ -112,19 +115,19 @@ struct VoiceModeSettingsView: View {
         Section {
             VStack(alignment: .leading, spacing: 12) {
                 infoRow(icon: "lock.shield.fill", color: .blue,
-                        title: "Your Privacy",
-                        text: "All conversations run entirely on your iPhone. No audio, no text, and no personal data is ever sent to external servers.")
+                        title: lang.t("voicemode.privacy.title"),
+                        text: lang.t("voicemode.privacy.text"))
 
                 Divider().background(Color.white.opacity(0.1))
 
                 infoRow(icon: "bolt.fill", color: .accentYellow,
-                        title: "Works Offline",
-                        text: "Once the Gemma 4 model is downloaded, Welcome Back works without any internet connection.")
+                        title: lang.t("voicemode.offline.title"),
+                        text: lang.t("voicemode.offline.text"))
             }
             .padding(.vertical, 4)
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            sectionHeader("About")
+            sectionHeader(lang.t("voicemode.about"))
         }
     }
 
@@ -165,5 +168,6 @@ struct VoiceModeSettingsView: View {
     NavigationStack {
         VoiceModeSettingsView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

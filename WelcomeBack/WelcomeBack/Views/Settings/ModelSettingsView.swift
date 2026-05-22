@@ -5,6 +5,7 @@ struct ModelSettingsView: View {
 
     @StateObject private var downloadService = ModelDownloadService.shared
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
 
     private var model: ModelDownloadService.ModelConfig { ModelDownloadService.defaultModel }
 
@@ -21,7 +22,7 @@ struct ModelSettingsView: View {
             .listStyle(.insetGrouped)
             .listRowSeparatorTint(Color.white.opacity(0.07))
         }
-        .navigationTitle("Voice AI Model")
+        .navigationTitle(lang.t("modelsettings.title"))
         .navigationBarTitleDisplayMode(.large)
     }
 
@@ -40,11 +41,11 @@ struct ModelSettingsView: View {
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(downloadService.isModelReady ? "Gemma 4 Ready" : "Model Not Downloaded")
+                    Text(downloadService.isModelReady ? lang.t("modelsettings.ready") : lang.t("modelsettings.not_downloaded"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.onSurface)
 
-                    Text("Google Gemma 4 E2B — best on-device AI")
+                    Text(lang.t("modelsettings.model.desc"))
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.5))
                 }
@@ -54,7 +55,7 @@ struct ModelSettingsView: View {
             .padding(.vertical, 4)
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            sectionHeader("Status")
+            sectionHeader(lang.t("modelsettings.status"))
         }
     }
 
@@ -66,7 +67,7 @@ struct ModelSettingsView: View {
                 // Progress
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("Downloading Gemma 4 E2B…")
+                        Text(lang.t("modelsettings.downloading"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.onSurface)
                         Spacer()
@@ -78,7 +79,7 @@ struct ModelSettingsView: View {
                     ProgressView(value: downloadService.downloadProgress)
                         .tint(.accentYellow)
 
-                    Button("Cancel Download") {
+                    Button(lang.t("modelsettings.download.cancel")) {
                         downloadService.cancelDownload()
                     }
                     .font(.system(size: 14))
@@ -94,7 +95,7 @@ struct ModelSettingsView: View {
                     HStack {
                         Image(systemName: "arrow.down.circle.fill")
                             .font(.system(size: 20))
-                        Text("Download Gemma 4 E2B")
+                        Text(lang.t("modelsettings.download.button"))
                             .font(.system(size: 15, weight: .semibold))
                         Spacer()
                         Text(model.sizeDescription)
@@ -111,7 +112,7 @@ struct ModelSettingsView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Gemma 4 downloaded and ready")
+                    Text(lang.t("modelsettings.download.done"))
                         .font(.system(size: 15))
                         .foregroundColor(.onSurface)
                     Spacer()
@@ -132,9 +133,9 @@ struct ModelSettingsView: View {
                 .listRowBackground(Color.surfaceVariant.opacity(0.4))
             }
         } header: {
-            sectionHeader("Download")
+            sectionHeader(lang.t("modelsettings.download"))
         } footer: {
-            Text("Gemma 4 E2B is Google's best on-device AI model (~2.3 GB). A Wi-Fi connection is recommended.")
+            Text(lang.t("modelsettings.download.desc"))
                 .font(.system(size: 11))
                 .foregroundColor(.onSurface.opacity(0.3))
         }
@@ -153,7 +154,7 @@ struct ModelSettingsView: View {
 
                         if let size = downloadService.modelFileSizeBytes(model) {
                             let gb = Double(size) / 1_000_000_000
-                            Text(String(format: "%.1f GB on disk", gb))
+                            Text(String(format: lang.t("modelsettings.storage.on_disk"), gb))
                                 .font(.system(size: 12))
                                 .foregroundColor(.onSurface.opacity(0.5))
                         }
@@ -164,7 +165,7 @@ struct ModelSettingsView: View {
                     Button(role: .destructive) {
                         downloadService.deleteModel(model)
                     } label: {
-                        Text("Delete")
+                        Text(lang.t("modelsettings.storage.delete"))
                             .font(.system(size: 13, weight: .medium))
                     }
                 }
@@ -175,7 +176,7 @@ struct ModelSettingsView: View {
             let available = downloadService.availableStorageBytes()
             let availableGB = Double(available) / 1_000_000_000
             HStack {
-                Text("Available Storage")
+                Text(lang.t("modelsettings.storage.available"))
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
                 Spacer()
@@ -185,7 +186,7 @@ struct ModelSettingsView: View {
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            sectionHeader("Storage")
+            sectionHeader(lang.t("modelsettings.storage"))
         }
     }
 
@@ -204,5 +205,6 @@ struct ModelSettingsView: View {
     NavigationStack {
         ModelSettingsView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

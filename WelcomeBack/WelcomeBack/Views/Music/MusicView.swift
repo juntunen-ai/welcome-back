@@ -4,6 +4,7 @@ import SwiftUI
 struct MusicView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @StateObject private var musicVM = MusicViewModel()
 
     private let trackColumns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
@@ -38,7 +39,7 @@ struct MusicView: View {
                 }
             }
             .animation(.spring(response: 0.4), value: musicVM.currentTrack?.id)
-            .navigationTitle("Memory Lane")
+            .navigationTitle(lang.t("music.title"))
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -80,7 +81,7 @@ struct MusicView: View {
                     .multilineTextAlignment(.center)
             } else if musicVM.memoryLaneIsPlaying, let track = musicVM.currentTrack {
                 VStack(spacing: 2) {
-                    Text("Now playing")
+                    Text(lang.t("music.now_playing"))
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.5))
                     Text(track.title)
@@ -160,7 +161,7 @@ struct MusicView: View {
 
     private var appleMusicSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Apple Music")
+            sectionHeader("Apple Music") // brand name, not translated
 
             switch musicVM.authorizationStatus {
             case .notDetermined:
@@ -180,7 +181,7 @@ struct MusicView: View {
     @ViewBuilder
     private var authorizedContent: some View {
         if musicVM.isLoading {
-            ProgressView("Loading your music\u{2026}")
+            ProgressView(lang.t("music.loading"))
                 .tint(.accentYellow)
                 .foregroundColor(.onSurface.opacity(0.6))
                 .frame(maxWidth: .infinity, minHeight: 120)
@@ -191,7 +192,7 @@ struct MusicView: View {
                 .multilineTextAlignment(.center)
                 .padding()
         } else if musicVM.recentTracks.isEmpty {
-            Text("No songs found in your library.\nAdd music to Apple Music and come back.")
+            Text(lang.t("music.no_songs"))
                 .font(.system(size: 14))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -214,7 +215,7 @@ struct MusicView: View {
 
     private var memoryMixesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Memory Mixes")
+            sectionHeader(lang.t("music.mixes"))
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 MemoryMixCard(icon: "drop.fill",          iconColor: .blue,   title: "Summer Lake 1965", trackCount: 12)
@@ -236,6 +237,7 @@ struct MusicView: View {
 
 struct ConnectAppleMusicCard: View {
     let onConnect: () -> Void
+    @EnvironmentObject private var lang: LanguageManager
 
     var body: some View {
         VStack(spacing: 16) {
@@ -244,18 +246,18 @@ struct ConnectAppleMusicCard: View {
                 .foregroundColor(Color(red: 0.99, green: 0.24, blue: 0.27))
 
             VStack(spacing: 6) {
-                Text("Connect Apple Music")
+                Text(lang.t("music.connect.title"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Allow access to play your favourite songs from your Apple Music library.")
+                Text(lang.t("music.connect.desc"))
                     .font(.system(size: 13))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
 
             Button(action: onConnect) {
-                Text("Connect")
+                Text(lang.t("music.connect.btn"))
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
@@ -277,13 +279,15 @@ struct ConnectAppleMusicCard: View {
 // MARK: - Denied / Restricted Card
 
 struct AppleMusicDeniedCard: View {
+    @EnvironmentObject private var lang: LanguageManager
+
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "music.note.list")
                 .font(.system(size: 28))
                 .foregroundColor(.onSurface.opacity(0.3))
 
-            Text("Apple Music access was denied.\nPlease enable it in Settings \u{203A} Privacy \u{203A} Media & Apple Music.")
+            Text(lang.t("music.denied"))
                 .font(.system(size: 13))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .multilineTextAlignment(.center)
@@ -462,4 +466,5 @@ struct MemoryMixCard: View {
 #Preview {
     MusicView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

@@ -4,9 +4,9 @@ struct OnboardingWelcomeView: View {
 
     let onContinue: () -> Void
 
+    @EnvironmentObject private var lang: LanguageManager
     @State private var glowOpacity: Double = 0.4
     @State private var iconScale: CGFloat = 0.85
-    @State private var appeared = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -30,13 +30,13 @@ struct OnboardingWelcomeView: View {
             .padding(.bottom, 40)
 
             // Title
-            Text("Welcome Back")
+            Text(lang.t("onboarding.welcome.title"))
                 .font(.system(size: 42, weight: .black))
                 .foregroundColor(.onSurface)
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 12)
 
-            Text("A compassionate companion\nfor your most precious memories.")
+            Text(lang.t("onboarding.welcome.subtitle"))
                 .font(.system(size: 18, weight: .medium))
                 .foregroundColor(.onSurface.opacity(0.7))
                 .multilineTextAlignment(.center)
@@ -47,7 +47,7 @@ struct OnboardingWelcomeView: View {
 
             // CTA
             Button(action: onContinue) {
-                Text("Get Started")
+                Text(lang.t("onboarding.welcome.cta"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
@@ -58,9 +58,9 @@ struct OnboardingWelcomeView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 32)
             .padding(.bottom, 16)
-            .accessibilityLabel("Get started with Welcome Back")
+            .accessibilityLabel(lang.t("onboarding.welcome.a11y"))
 
-            Text("Set up takes about 1 minute")
+            Text(lang.t("onboarding.welcome.time"))
                 .font(.system(size: 13))
                 .foregroundColor(.onSurface.opacity(0.35))
                 .padding(.bottom, 48)
@@ -79,5 +79,6 @@ struct OnboardingWelcomeView: View {
 
 #Preview {
     OnboardingWelcomeView(onContinue: {})
+        .environmentObject(LanguageManager())
         .preferredColorScheme(.dark)
 }

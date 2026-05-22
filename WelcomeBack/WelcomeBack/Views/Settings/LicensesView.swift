@@ -3,6 +3,8 @@ import SwiftUI
 /// Displays open-source licenses for third-party dependencies.
 struct LicensesView: View {
 
+    @EnvironmentObject private var lang: LanguageManager
+
     var body: some View {
         ZStack {
             Color.backgroundDark.ignoresSafeArea()
@@ -19,7 +21,7 @@ struct LicensesView: View {
                 .padding(24)
             }
         }
-        .navigationTitle("Open Source Licenses")
+        .navigationTitle(lang.t("settings.system.licenses.title"))
         .navigationBarTitleDisplayMode(.large)
     }
 

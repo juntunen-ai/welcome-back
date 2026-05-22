@@ -7,6 +7,7 @@ import PhotosUI
 struct FamilyMemberDetailView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
 
     /// `nil` → add-new mode.  Non-nil → edit existing member at this index.
@@ -60,16 +61,16 @@ struct FamilyMemberDetailView: View {
                     .padding(.bottom, 40)
                 }
             }
-            .navigationTitle(isAddMode ? "Add Family Member" : draft.name)
+            .navigationTitle(isAddMode ? lang.t("family.detail.add.title") : draft.name)
             .navigationBarTitleDisplayMode(.large)
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(lang.t("common.cancel")) { dismiss() }
                         .foregroundColor(.onSurface.opacity(0.6))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") { save() }
+                    Button(lang.t("common.save")) { save() }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(draft.name.isEmpty ? .onSurface.opacity(0.3) : .accentYellow)
                         .disabled(draft.name.isEmpty)
@@ -128,7 +129,7 @@ struct FamilyMemberDetailView: View {
             }
 
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                Label("Choose Profile Photo", systemImage: "person.crop.circle.badge.plus")
+                Label(lang.t("family.detail.choose.photo"), systemImage: "person.crop.circle.badge.plus")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentYellow)
             }
@@ -143,7 +144,7 @@ struct FamilyMemberDetailView: View {
 
     private var gallerySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader("Photo Gallery")
+            sectionHeader(lang.t("family.detail.photos.title"))
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -175,7 +176,7 @@ struct FamilyMemberDetailView: View {
                                 Image(systemName: "plus")
                                     .font(.system(size: 22, weight: .semibold))
                                     .foregroundColor(.accentYellow)
-                                Text("Add")
+                                Text(lang.t("family.detail.add.photo"))
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundColor(.onSurface.opacity(0.5))
                             }
@@ -226,19 +227,22 @@ struct FamilyMemberDetailView: View {
 
     private var basicSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("About")
+            sectionHeader(lang.t("family.detail.about.title"))
 
             VStack(spacing: 0) {
                 formField(icon: "person.fill",   iconColor: .blue,
-                          label: "Name",          placeholder: "Full name",
+                          label: lang.t("family.detail.name.label"),
+                          placeholder: lang.t("family.detail.name.placeholder"),
                           binding: $draft.name)
                 divider
                 formField(icon: "heart.fill",    iconColor: .pink,
-                          label: "Relationship",  placeholder: "e.g. Daughter, Son, Wife",
+                          label: lang.t("family.detail.relationship.label"),
+                          placeholder: lang.t("family.detail.relationship.placeholder"),
                           binding: $draft.relationship)
                 divider
                 formField(icon: "phone.fill",    iconColor: .green,
-                          label: "Phone",         placeholder: "+358 …",
+                          label: lang.t("family.detail.phone.label"),
+                          placeholder: "+358 …",
                           binding: $draft.phone,
                           keyboardType: .phonePad)
             }
@@ -251,13 +255,13 @@ struct FamilyMemberDetailView: View {
 
     private var biographySection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Biography")
+            sectionHeader(lang.t("family.detail.biography.label"))
 
             HStack(alignment: .top, spacing: 14) {
                 iconBadge("text.quote", color: .purple)
                     .padding(.top, 2)
 
-                TextField("A few words about this person…",
+                TextField(lang.t("family.detail.biography.placeholder"),
                           text: $draft.biography, axis: .vertical)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
@@ -274,15 +278,17 @@ struct FamilyMemberDetailView: View {
 
     private var memoriesSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Shared Memories")
+            sectionHeader(lang.t("family.detail.memories.title"))
 
             VStack(spacing: 0) {
                 memoryField(icon: "star.fill",  iconColor: .accentYellow,
-                            label: "Memory 1",  placeholder: "A special moment together…",
+                            label: lang.t("family.detail.memory1.label"),
+                            placeholder: lang.t("family.detail.memory1.placeholder"),
                             binding: $draft.memory1)
                 divider
                 memoryField(icon: "star.fill",  iconColor: Color(red: 1, green: 0.6, blue: 0),
-                            label: "Memory 2",  placeholder: "Another cherished memory…",
+                            label: lang.t("family.detail.memory2.label"),
+                            placeholder: lang.t("family.detail.memory2.placeholder"),
                             binding: $draft.memory2)
             }
             .background(Color.surfaceVariant.opacity(0.4))
@@ -399,4 +405,5 @@ struct FamilyMemberDetailView: View {
 #Preview {
     FamilyMemberDetailView(memberIndex: nil)
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

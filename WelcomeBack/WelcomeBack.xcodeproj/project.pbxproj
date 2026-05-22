@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		BB1100AA00BB1100AA00BB11 /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1100BB00BB1100BB00BB11 /* DebugLog.swift */; };
+		CC2200AA00CC2200AA00CC22 /* LanguageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2200BB00CC2200BB00CC22 /* LanguageManager.swift */; };
+		DD3300AA00DD3300AA00DD33 /* Strings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD3300BB00DD3300BB00DD33 /* Strings.swift */; };
 		072B65D522534519B10231D7 /* FamilyMemberProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */; };
 		150F7B3F557940EA90CA8901 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26BB825D49B64EE8A15B1EE7 /* UserProfile.swift */; };
 		1F7BD671EB4442D0AEF5D8CE /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A06FA49070CC404EA37C543E /* AppViewModel.swift */; };
@@ -57,11 +59,21 @@
 		LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		NS0010000000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NS0020000000000000000001 /* NotificationService.swift */; };
 		OB0010000000000000000001 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000001 /* OnboardingContainerView.swift */; };
+		OB0010000000000000000007 /* OnboardingLanguageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000007 /* OnboardingLanguageView.swift */; };
+		LS0010000000000000000001 /* LanguageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LS0020000000000000000001 /* LanguageSettingsView.swift */; };
 		OB0010000000000000000002 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000002 /* OnboardingWelcomeView.swift */; };
 		OB0010000000000000000003 /* OnboardingProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000003 /* OnboardingProfileView.swift */; };
 		OB0010000000000000000004 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000004 /* OnboardingPermissionsView.swift */; };
 		OB0010000000000000000005 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000005 /* OnboardingCompleteView.swift */; };
 		OB0010000000000000000006 /* OnboardingModelDownloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000006 /* OnboardingModelDownloadView.swift */; };
+		OB0031000000000000000001 /* OnboardingPhotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000001 /* OnboardingPhotoView.swift */; };
+		OB0031000000000000000002 /* OnboardingAddFamilyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000002 /* OnboardingAddFamilyView.swift */; };
+		OB0031000000000000000003 /* OnboardingFamilyTipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000003 /* OnboardingFamilyTipView.swift */; };
+		OB0031000000000000000004 /* OnboardingAddPlaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000004 /* OnboardingAddPlaceView.swift */; };
+		OB0031000000000000000005 /* OnboardingPlaceTipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000005 /* OnboardingPlaceTipView.swift */; };
+		OB0031000000000000000006 /* OnboardingAddStoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000006 /* OnboardingAddStoryView.swift */; };
+		OB0031000000000000000007 /* OnboardingStoryTipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000007 /* OnboardingStoryTipView.swift */; };
+		OB0031000000000000000008 /* OnboardingMusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0032000000000000000008 /* OnboardingMusicView.swift */; };
 		PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = PRI002000000000000000001 /* PrivacyInfo.xcprivacy */; };
 		SE001000000000000000001 /* PersonalInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000001 /* PersonalInfoView.swift */; };
 		SE001000000000000000002 /* NotificationsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE002000000000000000002 /* NotificationsSettingsView.swift */; };
@@ -127,6 +139,8 @@
 
 /* Begin PBXFileReference section */
 		BB1100BB00BB1100BB00BB11 /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
+		CC2200BB00CC2200BB00CC22 /* LanguageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		DD3300BB00DD3300BB00DD33 /* Strings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Strings.swift; sourceTree = "<group>"; };
 		1E32D90B99614272B6BC0CAE /* FamilyMemberProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberProfileView.swift; sourceTree = "<group>"; };
 		215C6D7287E548F6B377A7B6 /* GeminiLiveService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiLiveService.swift; sourceTree = "<group>"; };
 		23EA2C91E8E74A92A218B84C /* LiveSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSessionViewModel.swift; sourceTree = "<group>"; };
@@ -186,6 +200,16 @@
 		OB0020000000000000000004 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000005 /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000006 /* OnboardingModelDownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingModelDownloadView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000001 /* OnboardingPhotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPhotoView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000002 /* OnboardingAddFamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingAddFamilyView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000003 /* OnboardingFamilyTipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFamilyTipView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000004 /* OnboardingAddPlaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingAddPlaceView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000005 /* OnboardingPlaceTipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPlaceTipView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000006 /* OnboardingAddStoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingAddStoryView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000007 /* OnboardingStoryTipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStoryTipView.swift; sourceTree = "<group>"; };
+		OB0032000000000000000008 /* OnboardingMusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingMusicView.swift; sourceTree = "<group>"; };
+		OB0020000000000000000007 /* OnboardingLanguageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingLanguageView.swift; sourceTree = "<group>"; };
+		LS0020000000000000000001 /* LanguageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSettingsView.swift; sourceTree = "<group>"; };
 		PRI002000000000000000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		SE002000000000000000001 /* PersonalInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalInfoView.swift; sourceTree = "<group>"; };
 		SE002000000000000000002 /* NotificationsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsSettingsView.swift; sourceTree = "<group>"; };
@@ -315,6 +339,7 @@
 				V02D000000000000000002 /* F5TTSSettingsView.swift */,
 				LG002000000000000000001 /* LegalView.swift */,
 				LI002000000000000000001 /* LicensesView.swift */,
+				LS0020000000000000000001 /* LanguageSettingsView.swift */,
 				PPS002000000000000000003 /* PlacesManagementView.swift */,
 				PPS002000000000000000004 /* PlaceDetailEditView.swift */,
 				PPS002000000000000000005 /* MemoriesManagementView.swift */,
@@ -339,6 +364,8 @@
 				DE297EACA8384C47815D0178 /* Info.plist */,
 				ENT001000000000000000001 /* WelcomeBack.entitlements */,
 				BB1100BB00BB1100BB00BB11 /* DebugLog.swift */,
+				CC2200BB00CC2200BB00CC22 /* LanguageManager.swift */,
+				DD3300BB00DD3300BB00DD33 /* Strings.swift */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -477,10 +504,19 @@
 			children = (
 				OB0020000000000000000001 /* OnboardingContainerView.swift */,
 				OB0020000000000000000002 /* OnboardingWelcomeView.swift */,
+				OB0020000000000000000007 /* OnboardingLanguageView.swift */,
 				OB0020000000000000000003 /* OnboardingProfileView.swift */,
 				OB0020000000000000000004 /* OnboardingPermissionsView.swift */,
 				OB0020000000000000000005 /* OnboardingCompleteView.swift */,
 				OB0020000000000000000006 /* OnboardingModelDownloadView.swift */,
+			OB0032000000000000000001 /* OnboardingPhotoView.swift */,
+			OB0032000000000000000002 /* OnboardingAddFamilyView.swift */,
+			OB0032000000000000000003 /* OnboardingFamilyTipView.swift */,
+			OB0032000000000000000004 /* OnboardingAddPlaceView.swift */,
+			OB0032000000000000000005 /* OnboardingPlaceTipView.swift */,
+			OB0032000000000000000006 /* OnboardingAddStoryView.swift */,
+			OB0032000000000000000007 /* OnboardingStoryTipView.swift */,
+			OB0032000000000000000008 /* OnboardingMusicView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -636,6 +672,8 @@
 			files = (
 				A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */,
 				BB1100AA00BB1100AA00BB11 /* DebugLog.swift in Sources */,
+				CC2200AA00CC2200AA00CC22 /* LanguageManager.swift in Sources */,
+				DD3300AA00DD3300AA00DD33 /* Strings.swift in Sources */,
 				E4046ED6A3074741AC694A39 /* ContentView.swift in Sources */,
 				9875E7995D294CB988D762F3 /* HomeView.swift in Sources */,
 				F353BBAF955D422496144B7C /* ListeningView.swift in Sources */,
@@ -677,6 +715,14 @@
 				OB0010000000000000000004 /* OnboardingPermissionsView.swift in Sources */,
 				OB0010000000000000000005 /* OnboardingCompleteView.swift in Sources */,
 				OB0010000000000000000006 /* OnboardingModelDownloadView.swift in Sources */,
+				OB0031000000000000000001 /* OnboardingPhotoView.swift in Sources */,
+				OB0031000000000000000002 /* OnboardingAddFamilyView.swift in Sources */,
+				OB0031000000000000000003 /* OnboardingFamilyTipView.swift in Sources */,
+				OB0031000000000000000004 /* OnboardingAddPlaceView.swift in Sources */,
+				OB0031000000000000000005 /* OnboardingPlaceTipView.swift in Sources */,
+				OB0031000000000000000006 /* OnboardingAddStoryView.swift in Sources */,
+				OB0031000000000000000007 /* OnboardingStoryTipView.swift in Sources */,
+				OB0031000000000000000008 /* OnboardingMusicView.swift in Sources */,
 				887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */,
 				BC6926A6DB3A0A0A9CFB84D0 /* LocalLLMService.swift in Sources */,
 				C9E4108B2833F69113E4A884 /* LocalVoiceAIService.swift in Sources */,
@@ -691,6 +737,8 @@
 				KC001000000000000000001 /* KeychainService.swift in Sources */,
 				LG001000000000000000001 /* LegalView.swift in Sources */,
 				LI001000000000000000001 /* LicensesView.swift in Sources */,
+				LS0010000000000000000001 /* LanguageSettingsView.swift in Sources */,
+				OB0010000000000000000007 /* OnboardingLanguageView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -804,7 +852,7 @@
 				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -815,7 +863,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -834,7 +882,7 @@
 				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -845,7 +893,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -917,10 +965,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -935,10 +983,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -954,7 +1002,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
@@ -964,7 +1012,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -980,7 +1028,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
@@ -990,7 +1038,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.2;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
