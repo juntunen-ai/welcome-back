@@ -3,6 +3,7 @@ import SwiftUI
 struct FamilyView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
 
     var body: some View {
         NavigationStack {
@@ -29,7 +30,7 @@ struct FamilyView: View {
                     .padding(.top, 8)
                 }
             }
-            .navigationTitle("Family")
+            .navigationTitle(lang.t("family.title"))
             .navigationBarTitleDisplayMode(.large)
         }
     }
@@ -41,11 +42,11 @@ struct FamilyView: View {
                 .foregroundColor(.onSurface.opacity(0.3))
 
             VStack(spacing: 6) {
-                Text("No family members yet")
+                Text(lang.t("family.empty"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Add family members in Settings")
+                Text(lang.t("family.empty.hint"))
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
             }
@@ -205,4 +206,5 @@ struct PersonAvatarPlaceholder: View {
 #Preview {
     FamilyView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

@@ -1,10 +1,13 @@
 import SwiftUI
 import CoreLocation
+import MapKit
 
 struct HomeView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @StateObject private var locationManager = HomeLocationManager()
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -46,20 +49,19 @@ struct HomeView: View {
 
     // MARK: - Hero section
 
-    /// Profile circle on the left, current location on the right.
     private var heroSection: some View {
         HStack(alignment: .center, spacing: 12) {
-            NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+            NavigationLink(destination: PersonalInfoView().environmentObject(appVM).environmentObject(lang)) {
                 profileCircle
             }
             .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Welcome Back,")
+                Text(lang.t("home.greeting"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.onSurface.opacity(0.5))
 
-                Text(appVM.userName.isEmpty ? "Friend" : appVM.userName)
+                Text(appVM.userName.isEmpty ? lang.t("home.friend") : appVM.userName)
                     .font(.system(size: 22, weight: .black))
                     .foregroundColor(.onSurface)
                     .lineLimit(1)
@@ -73,41 +75,58 @@ struct HomeView: View {
     }
 
     private var locationCard: some View {
-        VStack(alignment: .trailing, spacing: 5) {
-            HStack(spacing: 4) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 10))
-                    .foregroundColor(.accentYellow)
-                Text("Your Location")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.accentYellow)
-            }
-
-            if locationManager.isLoading {
-                Text("Finding location…")
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.35))
-            } else if let city = locationManager.city {
-                Text(city)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.onSurface)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(2)
-
-                if let street = locationManager.streetAddress {
-                    Text(street)
-                        .font(.system(size: 12))
-                        .foregroundColor(.onSurface.opacity(0.55))
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(1)
+        Button {
+            openCurrentLocationInMaps()
+        } label: {
+            VStack(alignment: .trailing, spacing: 5) {
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.accentYellow)
+                    Text(lang.t("home.location.label"))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.accentYellow)
                 }
-            } else {
-                Text("Location unavailable")
-                    .font(.system(size: 12))
-                    .foregroundColor(.onSurface.opacity(0.35))
+
+                if locationManager.isLoading {
+                    Text(lang.t("home.location.finding"))
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.35))
+                } else if let city = locationManager.city {
+                    Text(city)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.onSurface)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(2)
+
+                    if let street = locationManager.streetAddress {
+                        Text(street)
+                            .font(.system(size: 12))
+                            .foregroundColor(.onSurface.opacity(0.55))
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(1)
+                    }
+                } else {
+                    Text(lang.t("home.location.unavailable"))
+                        .font(.system(size: 12))
+                        .foregroundColor(.onSurface.opacity(0.35))
+                }
             }
+            .frame(maxWidth: 150, alignment: .trailing)
         }
-        .frame(maxWidth: 150, alignment: .trailing)
+        .buttonStyle(.plain)
+    }
+
+    private func openCurrentLocationInMaps() {
+        guard let coord = locationManager.coordinate else { return }
+        var components = URLComponents(string: "maps://")!
+        components.queryItems = [
+            URLQueryItem(name: "ll", value: "\(coord.latitude),\(coord.longitude)"),
+            URLQueryItem(name: "q",  value: locationManager.city ?? lang.t("home.location.label"))
+        ]
+        if let url = components.url {
+            openURL(url)
+        }
     }
 
     private var profileCircle: some View {
@@ -130,7 +149,7 @@ struct HomeView: View {
         .clipShape(Circle())
         .overlay(Circle().strokeBorder(Color.accentYellow, lineWidth: 2.5))
         .shadow(color: Color.accentYellow.opacity(0.3), radius: 8, y: 3)
-        .accessibilityLabel("Your profile photo — tap to edit")
+        .accessibilityLabel(lang.t("home.profile.accessibility"))
     }
 
     // MARK: - Mic button
@@ -152,15 +171,14 @@ struct HomeView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.black)
 
-                    // Curved text around the mic button
                     CurvedText(
-                        text: "REMEMBER WHO YOU ARE",
+                        text: lang.t("home.mic.arc.top"),
                         radius: 58,
                         fontSize: 11,
                         topArc: true
                     )
                     CurvedText(
-                        text: "PRESS TO SPEAK",
+                        text: lang.t("home.mic.arc.bottom"),
                         radius: 58,
                         fontSize: 11,
                         topArc: false
@@ -168,8 +186,8 @@ struct HomeView: View {
                 }
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Start listening")
-            .accessibilityHint("Double-tap to begin a voice conversation about your memories")
+            .accessibilityLabel(lang.t("home.mic.accessibility"))
+            .accessibilityHint(lang.t("home.mic.accessibility.hint"))
         }
     }
 
@@ -222,11 +240,11 @@ struct HomeView: View {
 
     private var introSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("What is Welcome Back?")
+            Text(lang.t("home.intro.title"))
                 .font(.system(size: 15, weight: .bold))
                 .foregroundColor(.onSurface.opacity(0.9))
 
-            Text("A compassionate AI companion that helps you remember the people, places, and moments that matter most. Tap the microphone and start talking.")
+            Text(lang.t("home.intro.body"))
                 .font(.system(size: 13))
                 .foregroundColor(.onSurface.opacity(0.5))
                 .fixedSize(horizontal: false, vertical: true)
@@ -238,7 +256,7 @@ struct HomeView: View {
 
     private var familyCircles: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Your Family")
+            Text(lang.t("home.family.header"))
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.onSurface.opacity(0.9))
 
@@ -275,13 +293,12 @@ struct HomeView: View {
 
 // MARK: - Location manager
 
-/// Fetches the device's current location once and reverse-geocodes it to a
-/// city + street address for display on the Home screen.
 @MainActor
 final class HomeLocationManager: NSObject, ObservableObject {
 
     @Published var city: String?
     @Published var streetAddress: String?
+    @Published var coordinate: CLLocationCoordinate2D?
     @Published var isLoading = true
 
     private let clManager = CLLocationManager()
@@ -307,6 +324,7 @@ final class HomeLocationManager: NSObject, ObservableObject {
     private func geocode(_ location: CLLocation) async {
         guard !geocoded else { return }
         geocoded = true
+        coordinate = location.coordinate
         do {
             if let p = try await CLGeocoder().reverseGeocodeLocation(location).first {
                 let parts = [p.locality, p.country].compactMap { $0 }
@@ -356,8 +374,6 @@ extension HomeLocationManager: CLLocationManagerDelegate {
 
 // MARK: - Curved Text
 
-/// Renders text along an arc of a circle. `topArc: true` curves along the top,
-/// `topArc: false` curves along the bottom. Letters always read left-to-right.
 struct CurvedText: View {
     let text: String
     let radius: CGFloat
@@ -365,48 +381,50 @@ struct CurvedText: View {
     var topArc: Bool = true
 
     var body: some View {
-        ZStack {
-            ForEach(Array(letterPositions.enumerated()), id: \.offset) { _, item in
-                Text(String(item.char))
-                    .font(.system(size: fontSize, weight: .bold, design: .default))
-                    .tracking(1)
-                    .foregroundColor(.black.opacity(0.5))
-                    .rotationEffect(.radians(item.rotation))
-                    .offset(x: item.x, y: item.y)
+        Canvas { context, size in
+            let cx = size.width  / 2
+            let cy = size.height / 2
+            let chars    = Array(text)
+            let step     = Double(fontSize) * 0.65
+            let total    = step * Double(chars.count) / Double(radius)
+
+            for (i, char) in chars.enumerated() {
+                let angle: Double
+                let letterRotation: Double
+
+                if topArc {
+                    let start = -.pi / 2 - total / 2
+                    angle         = start + step / Double(radius) * (Double(i) + 0.5)
+                    letterRotation = angle + .pi / 2
+                } else {
+                    let start = .pi / 2 + total / 2
+                    angle         = start - step / Double(radius) * (Double(i) + 0.5)
+                    letterRotation = angle - .pi / 2
+                }
+
+                let px = cx + CGFloat(cos(angle)) * radius
+                let py = cy + CGFloat(sin(angle)) * radius
+
+                let resolved = context.resolve(
+                    Text(String(char))
+                        .font(.system(size: fontSize, weight: .bold))
+                        .foregroundColor(.black.opacity(0.5))
+                )
+
+                var copy = context
+                copy.translateBy(x: px, y: py)
+                copy.rotate(by: Angle(radians: letterRotation))
+                copy.draw(resolved, at: .zero, anchor: .center)
             }
         }
-    }
-
-    private var letterPositions: [(char: Character, x: CGFloat, y: CGFloat, rotation: Double)] {
-        let chars = Array(text)
-        let charWidth = Double(fontSize) * 0.65
-        let totalAngle = charWidth * Double(chars.count) / Double(radius)
-
-        if topArc {
-            // Top arc: center at -π/2 (12 o'clock), letters spread left-to-right
-            let startAngle = -.pi / 2 - totalAngle / 2
-            return chars.enumerated().map { i, char in
-                let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
-                let x = CGFloat(cos(angle)) * radius
-                let y = CGFloat(sin(angle)) * radius
-                let rotation = angle + .pi / 2
-                return (char, x, y, rotation)
-            }
-        } else {
-            // Bottom arc: center at π/2 (6 o'clock), letters spread left-to-right
-            let startAngle = .pi / 2 - totalAngle / 2
-            return chars.enumerated().map { i, char in
-                let angle = startAngle + charWidth / Double(radius) * (Double(i) + 0.5)
-                let x = CGFloat(cos(angle)) * radius
-                let y = CGFloat(sin(angle)) * radius
-                let rotation = angle - .pi / 2
-                return (char, x, y, rotation)
-            }
-        }
+        .frame(width:  (radius + fontSize) * 2,
+               height: (radius + fontSize) * 2)
+        .allowsHitTesting(false)
     }
 }
 
 #Preview {
     HomeView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

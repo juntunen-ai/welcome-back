@@ -3,14 +3,8 @@ import SwiftUI
 struct SettingsView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @State private var showResetConfirm = false
-    @State private var showDemoConfirm  = false
-
-    private var voiceCloneSubtitle: String {
-        let count = appVM.userProfile.familyMembers.filter(\.isVoiceCloned).count
-        if count == 0 { return "No voices cloned" }
-        return "\(count) voice\(count == 1 ? "" : "s") cloned"
-    }
 
     var body: some View {
         NavigationStack {
@@ -22,9 +16,6 @@ struct SettingsView: View {
                     aiSection
                     systemSection
                     legalSection
-                    #if DEBUG
-                    demoSection
-                    #endif
                     resetSection
                     footerSection
                 }
@@ -32,31 +23,19 @@ struct SettingsView: View {
                 .listStyle(.insetGrouped)
                 .listRowSeparatorTint(Color.white.opacity(0.07))
             }
-            .navigationTitle("Settings")
+            .navigationTitle(lang.t("settings.title"))
             .navigationBarTitleDisplayMode(.large)
             .confirmationDialog(
-                "Reset to New User?",
+                lang.t("settings.reset.confirm.title"),
                 isPresented: $showResetConfirm,
                 titleVisibility: .visible
             ) {
-                Button("Reset Everything", role: .destructive) {
+                Button(lang.t("settings.reset.confirm.action"), role: .destructive) {
                     appVM.resetToNewUser()
                 }
-                Button("Cancel", role: .cancel) {}
+                Button(lang.t("common.cancel"), role: .cancel) {}
             } message: {
-                Text("This will erase all profile data, family members, and saved photos. The onboarding flow will restart. This cannot be undone.")
-            }
-            .confirmationDialog(
-                "Load Demo Data?",
-                isPresented: $showDemoConfirm,
-                titleVisibility: .visible
-            ) {
-                Button("Load Demo Data", role: .destructive) {
-                    appVM.loadSampleData()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("This replaces all current data with the sample Finnish family profile (Harri, Anna, Toivo, Helmi & Pätkis). Your existing data will be lost.")
+                Text(lang.t("settings.reset.confirm.message"))
             }
         }
     }
@@ -65,51 +44,64 @@ struct SettingsView: View {
 
     private var generalSection: some View {
         Section {
-            NavigationLink(destination: PersonalInfoView().environmentObject(appVM)) {
+            NavigationLink(destination: PersonalInfoView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(icon: "person.fill", iconColor: .blue,
-                                title: "Personal Info",
-                                subtitle: "Name, address, biography")
+                                title: lang.t("settings.personal.title"),
+                                subtitle: lang.t("settings.personal.subtitle"))
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: FamilyManagementView().environmentObject(appVM)) {
+            NavigationLink(destination: FamilyManagementView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(
                     icon: "person.3.fill",
                     iconColor: .green,
-                    title: "Family Members",
-                    subtitle: "\(appVM.userProfile.familyMembers.count) member\(appVM.userProfile.familyMembers.count == 1 ? "" : "s")"
+                    title: lang.t("settings.family.title"),
+                    subtitle: lang.memberCount(appVM.userProfile.familyMembers.count)
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: PlacesManagementView().environmentObject(appVM)) {
+            NavigationLink(destination: PlacesManagementView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(
                     icon: "mappin.and.ellipse",
                     iconColor: .green,
-                    title: "Places",
-                    subtitle: "\(appVM.userProfile.places.count) place\(appVM.userProfile.places.count == 1 ? "" : "s")"
+                    title: lang.t("settings.places.title"),
+                    subtitle: lang.placeCount(appVM.userProfile.places.count)
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: MemoriesManagementView().environmentObject(appVM)) {
+            NavigationLink(destination: MemoriesManagementView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(
                     icon: "book.fill",
                     iconColor: .orange,
-                    title: "Memories & Stories",
-                    subtitle: "\(appVM.userProfile.memories.count) memor\(appVM.userProfile.memories.count == 1 ? "y" : "ies")"
+                    title: lang.t("settings.memories.title"),
+                    subtitle: lang.memoryCount(appVM.userProfile.memories.count)
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: NotificationsSettingsView().environmentObject(appVM)) {
+            NavigationLink(destination: NotificationsSettingsView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(icon: "bell.fill", iconColor: .red,
-                                title: "Notifications",
-                                subtitle: appVM.userProfile.notificationsEnabled ? "Enabled" : "Disabled")
+                                title: lang.t("settings.notifications.title"),
+                                subtitle: appVM.userProfile.notificationsEnabled
+                                    ? lang.t("settings.notifications.enabled")
+                                    : lang.t("settings.notifications.disabled"))
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
+            NavigationLink(destination: LanguageSettingsView().environmentObject(lang)) {
+                SettingsRowView(
+                    icon: "globe",
+                    iconColor: .teal,
+                    title: lang.t("settings.language.title"),
+                    subtitle: "\(lang.language.flag) \(lang.language.displayName)"
+                )
+            }
+            .listRowBackground(Color.surfaceVariant.opacity(0.4))
+
         } header: {
-            Text("General")
+            Text(lang.t("settings.section.general"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
@@ -118,61 +110,42 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         Section {
-            NavigationLink(destination: ModelSettingsView().environmentObject(appVM)) {
+            NavigationLink(destination: ModelSettingsView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(
                     icon: "brain",
                     iconColor: .orange,
-                    title: "Voice AI Model",
-                    subtitle: ModelDownloadService.shared.isModelReady ? "Ready" : "Not Downloaded"
+                    title: lang.t("settings.ai.model.title"),
+                    subtitle: ModelDownloadService.shared.isModelReady
+                        ? lang.t("settings.ai.model.ready")
+                        : lang.t("settings.ai.model.not_downloaded")
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            // Voice mode toggle
-            NavigationLink(destination: VoiceModeSettingsView().environmentObject(appVM)) {
+            NavigationLink(destination: VoiceModeSettingsView().environmentObject(appVM).environmentObject(lang)) {
                 SettingsRowView(
                     icon: "speaker.wave.2.fill",
                     iconColor: .cyan,
-                    title: "Voice Mode",
-                    subtitle: appVM.userProfile.preferredVoiceMode == .local ? "Local (On-Device)" : "Cloud (Gemini)"
+                    title: lang.t("settings.ai.voice_mode.title"),
+                    subtitle: lang.t("settings.ai.voice_mode.local")
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: VoiceSelectionView()) {
+            NavigationLink(destination: VoiceSelectionView().environmentObject(lang)) {
                 SettingsRowView(
-                    icon: "person.wave.2.fill",
+                    icon: "speaker.wave.2.fill",
                     iconColor: .purple,
-                    title: "AI Voice",
-                    subtitle: SpeechService.shared.selectedVoiceIdentifier != nil ? "Personal Voice" : "Default"
+                    title: lang.t("settings.ai.companion.title"),
+                    subtitle: SpeechService.shared.selectedVoiceIdentifier != nil
+                        ? lang.t("settings.ai.companion.personal")
+                        : lang.t("settings.ai.companion.default")
                 )
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: F5TTSSettingsView()) {
-                SettingsRowView(
-                    icon: "waveform.badge.mic",
-                    iconColor: .accentYellow,
-                    title: "Voice Cloning Server",
-                    subtitle: F5TTSService.shared.isConfigured ? "Connected" : "Set Up"
-                )
-            }
-            .listRowBackground(Color.surfaceVariant.opacity(0.4))
-
-            if let idx = appVM.userProfile.familyMembers.firstIndex(where: { !$0.isVoiceCloned })
-                ?? appVM.userProfile.familyMembers.indices.first {
-                NavigationLink(destination: RecordVoiceView(member: $appVM.userProfile.familyMembers[idx]).environmentObject(appVM)) {
-                    SettingsRowView(
-                        icon: "mic.badge.plus",
-                        iconColor: .red,
-                        title: "Record Voice Sample",
-                        subtitle: voiceCloneSubtitle
-                    )
-                }
-                .listRowBackground(Color.surfaceVariant.opacity(0.4))
-            }
         } header: {
-            Text("Artificial Intelligence")
+            Text(lang.t("settings.section.ai"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
@@ -181,17 +154,19 @@ struct SettingsView: View {
 
     private var systemSection: some View {
         Section {
-            SettingsRowView(icon: "info.circle.fill", iconColor: .gray, title: "About", subtitle: "Version 1.0.0")
+            SettingsRowView(icon: "info.circle.fill", iconColor: .gray,
+                            title: lang.t("settings.system.about.title"),
+                            subtitle: lang.t("settings.system.about.subtitle"))
                 .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: LicensesView()) {
+            NavigationLink(destination: LicensesView().environmentObject(lang)) {
                 SettingsRowView(icon: "doc.plaintext", iconColor: .gray,
-                                title: "Open Source Licenses",
-                                subtitle: "llama.cpp (MIT)")
+                                title: lang.t("settings.system.licenses.title"),
+                                subtitle: lang.t("settings.system.licenses.subtitle"))
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            Text("System")
+            Text(lang.t("settings.section.system"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
@@ -200,43 +175,21 @@ struct SettingsView: View {
 
     private var legalSection: some View {
         Section {
-            NavigationLink(destination: LegalView(document: .privacyPolicy)) {
+            NavigationLink(destination: LegalView(document: .privacyPolicy).environmentObject(lang)) {
                 SettingsRowView(icon: "hand.raised.fill", iconColor: .blue,
-                                title: "Privacy Policy",
-                                subtitle: "How your data is handled")
+                                title: lang.t("settings.legal.privacy.title"),
+                                subtitle: lang.t("settings.legal.privacy.subtitle"))
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
 
-            NavigationLink(destination: LegalView(document: .termsOfService)) {
+            NavigationLink(destination: LegalView(document: .termsOfService).environmentObject(lang)) {
                 SettingsRowView(icon: "doc.text.fill", iconColor: .gray,
-                                title: "Terms of Service",
-                                subtitle: "Usage terms and disclaimers")
+                                title: lang.t("settings.legal.terms.title"),
+                                subtitle: lang.t("settings.legal.terms.subtitle"))
             }
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            Text("Legal")
-                .foregroundColor(.accentYellow)
-                .font(.system(size: 12, weight: .bold))
-                .tracking(1.5)
-        }
-    }
-
-    private var demoSection: some View {
-        Section {
-            Button {
-                showDemoConfirm = true
-            } label: {
-                SettingsRowView(
-                    icon: "person.3.sequence.fill",
-                    iconColor: .purple,
-                    title: "Load Demo Data",
-                    subtitle: "Harri, Anna, Toivo, Helmi & Pätkis"
-                )
-            }
-            .buttonStyle(.plain)
-            .listRowBackground(Color.surfaceVariant.opacity(0.4))
-        } header: {
-            Text("Demo")
+            Text(lang.t("settings.section.legal"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
@@ -249,13 +202,13 @@ struct SettingsView: View {
                 showResetConfirm = true
             } label: {
                 SettingsRowView(icon: "arrow.counterclockwise", iconColor: .red,
-                                title: "Reset to New User",
-                                subtitle: "Erase all data and restart onboarding")
+                                title: lang.t("settings.reset.title"),
+                                subtitle: lang.t("settings.reset.subtitle"))
             }
             .buttonStyle(.plain)
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            Text("Reset")
+            Text(lang.t("settings.section.reset"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
@@ -267,12 +220,12 @@ struct SettingsView: View {
             EmptyView()
         } footer: {
             VStack(spacing: 6) {
-                Text("Welcome Back is powered by Google Gemini and local AI")
+                Text(lang.t("settings.footer"))
                     .font(.system(size: 12))
                     .foregroundColor(.onSurface.opacity(0.4))
 
                 if let url = URL(string: "https://juntunen.ai/welcomeback/privacy") {
-                    Link("Privacy Policy", destination: url)
+                    Link(lang.t("settings.privacy_link"), destination: url)
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.3))
                 }
@@ -333,4 +286,5 @@ struct SettingsRowView: View {
 #Preview {
     SettingsView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

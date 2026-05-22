@@ -16,25 +16,49 @@ final class PlaybackViewModel: ObservableObject {
         self.member = member
         isLoading = true
         errorMessage = nil
-        do {
-            story = try await GeminiService.shared.generateMemoryStory(
-                userName: userName,
-                familyMember: member
-            )
-        } catch {
-            errorMessage = error.localizedDescription
-            story = "Hi \(userName), it's \(member.name). We love you and are thinking of you."
-        }
+
+        // Build a warm, personalised story from the data the caregiver entered.
+        // GeminiService is not configured in this release (no API key); using a
+        // template avoids a silent network failure and works offline.
+        story = buildStory(for: member, userName: userName)
+
         isLoading = false
     }
+
+    // MARK: - Story builder
+
+    /// Assembles a natural-sounding message from the family member's profile data.
+    private func buildStory(for member: FamilyMember, userName: String) -> String {
+        var sentences: [String] = []
+
+        sentences.append("Hi \(userName), it's \(member.name).")
+
+        if !member.biography.isEmpty {
+            sentences.append(member.biography)
+        }
+
+        if !member.memory1.isEmpty {
+            sentences.append("I was just thinking about \(member.memory1)")
+        }
+
+        if !member.memory2.isEmpty {
+            sentences.append("I also remember \(member.memory2)")
+        }
+
+        sentences.append("I love you and I'm thinking of you.")
+
+        return sentences.joined(separator: " ")
+    }
+
+    // MARK: - Playback
 
     func togglePlayback() {
         if isPlaying {
             speechService.stopSpeaking()
             isPlaying = false
         } else {
-            let voiceProfileID = (member?.isVoiceCloned == true) ? member?.voiceProfileID : nil
-            speechService.speak(story, voiceProfileID: voiceProfileID)
+            // Voice cloning is reserved for a future release — always use system/personal voice.
+            speechService.speak(story, voiceProfileID: nil)
             isPlaying = true
         }
     }

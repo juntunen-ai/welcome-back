@@ -5,6 +5,7 @@ import AVFoundation
 /// Supports default Apple voices and Personal Voice (iOS 17+).
 struct VoiceSelectionView: View {
 
+    @EnvironmentObject private var lang: LanguageManager
     @State private var personalVoices: [AVSpeechSynthesisVoice] = []
     @State private var authStatus: AVSpeechSynthesizer.PersonalVoiceAuthorizationStatus = .notDetermined
     @State private var selectedID: String? = SpeechService.shared.selectedVoiceIdentifier
@@ -19,7 +20,7 @@ struct VoiceSelectionView: View {
             }
             .scrollContentBackground(.hidden)
         }
-        .navigationTitle("AI Voice")
+        .navigationTitle(lang.t("voiceselection.title"))
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             authStatus = SpeechService.shared.personalVoiceAuthStatus
@@ -43,10 +44,10 @@ struct VoiceSelectionView: View {
                         .font(.system(size: 20))
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Default Voice")
+                        Text(lang.t("voiceselection.default"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.onSurface)
-                        Text("Apple TTS (English)")
+                        Text(lang.t("voiceselection.default.subtitle"))
                             .font(.system(size: 12))
                             .foregroundColor(.onSurface.opacity(0.5))
                     }
@@ -58,7 +59,7 @@ struct VoiceSelectionView: View {
             .buttonStyle(.plain)
             .listRowBackground(Color.surfaceVariant.opacity(0.4))
         } header: {
-            Text("AI Companion Voice")
+            Text(lang.t("voiceselection.section.companion"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
@@ -75,7 +76,7 @@ struct VoiceSelectionView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "info.circle")
                             .foregroundColor(.orange)
-                        Text("No Personal Voices found. Create one in iOS Settings → Accessibility → Personal Voice.")
+                        Text(lang.t("voiceselection.personal.empty"))
                             .font(.system(size: 13))
                             .foregroundColor(.onSurface.opacity(0.6))
                     }
@@ -97,7 +98,7 @@ struct VoiceSelectionView: View {
                                     Text(voice.name)
                                         .font(.system(size: 15, weight: .semibold))
                                         .foregroundColor(.onSurface)
-                                    Text("Personal Voice")
+                                    Text(lang.t("voiceselection.personal.label"))
                                         .font(.system(size: 12))
                                         .foregroundColor(.purple)
                                 }
@@ -137,10 +138,10 @@ struct VoiceSelectionView: View {
                             .font(.system(size: 20))
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Enable Personal Voice")
+                            Text(lang.t("voiceselection.personal.enable"))
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.onSurface)
-                            Text("Use a voice you created in iOS Settings")
+                            Text(lang.t("voiceselection.personal.subtitle"))
                                 .font(.system(size: 12))
                                 .foregroundColor(.onSurface.opacity(0.5))
                         }
@@ -157,8 +158,8 @@ struct VoiceSelectionView: View {
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundColor(.orange)
                     Text(authStatus == .denied
-                         ? "Personal Voice access denied. Enable in iOS Settings → Privacy → Personal Voice."
-                         : "Personal Voice is not supported on this device.")
+                         ? lang.t("voiceselection.personal.denied")
+                         : lang.t("voiceselection.personal.unsupported"))
                         .font(.system(size: 13))
                         .foregroundColor(.onSurface.opacity(0.6))
                 }
@@ -168,12 +169,12 @@ struct VoiceSelectionView: View {
                 EmptyView()
             }
         } header: {
-            Text("Personal Voice")
+            Text(lang.t("voiceselection.personal.section"))
                 .foregroundColor(.accentYellow)
                 .font(.system(size: 12, weight: .bold))
                 .tracking(1.5)
         } footer: {
-            Text("Create a Personal Voice in iOS Settings → Accessibility → Personal Voice. It takes about 15 minutes of reading phrases aloud.")
+            Text(lang.t("voiceselection.footer"))
                 .font(.system(size: 11))
                 .foregroundColor(.onSurface.opacity(0.4))
         }
@@ -182,9 +183,6 @@ struct VoiceSelectionView: View {
     // MARK: - Preview
 
     private func previewVoice(_ voice: AVSpeechSynthesisVoice) {
-        let utterance = AVSpeechUtterance(string: "Hello! It's so nice to talk with you today.")
-        utterance.voice = voice
-        utterance.rate = 0.48
         SpeechService.shared.speakSentences(
             ["Hello! It's so nice to talk with you today."],
             voiceIdentifier: voice.identifier,
@@ -195,5 +193,6 @@ struct VoiceSelectionView: View {
 
 #Preview {
     NavigationStack { VoiceSelectionView() }
+        .environmentObject(LanguageManager())
         .preferredColorScheme(.dark)
 }

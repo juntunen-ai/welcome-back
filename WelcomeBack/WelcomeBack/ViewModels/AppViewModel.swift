@@ -58,14 +58,10 @@ final class AppViewModel: ObservableObject {
     var familyMembers: [FamilyMember] { userProfile.familyMembers }
     var memories: [Memory] { userProfile.memories }
 
-    /// Returns `.local` when a local model is downloaded (always prefer on-device).
-    /// Falls back to `.cloud` (Gemini) only when no local model is available.
-    var voiceMode: VoiceSessionBridge.Mode {
-        if ModelDownloadService.shared.isModelReady {
-            return .local
-        }
-        return .cloud
-    }
+    /// Always returns `.local` — all AI processing runs on-device via Gemma 4.
+    /// Cloud (Gemini) mode is reserved for a future release and requires
+    /// a configured API key; returning `.cloud` here would cause a silent failure.
+    var voiceMode: VoiceSessionBridge.Mode { .local }
 
     // MARK: - LLM Pre-warming
 
@@ -97,11 +93,11 @@ final class AppViewModel: ObservableObject {
                 }
                 self.preloadedLLM = llm
                 #if DEBUG
-                print("[AppVM] ✅ LLM pre-warmed and ready")
+                dprint("[AppVM] ✅ LLM pre-warmed and ready")
                 #endif
             } catch {
                 #if DEBUG
-                print("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
+                dprint("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
                 #endif
             }
         }
@@ -128,7 +124,7 @@ final class AppViewModel: ObservableObject {
         guard llm.isLoaded else { return }
         preloadedLLM = llm
         #if DEBUG
-        print("[AppVM] ♻️ Reclaimed loaded LLM for reuse")
+        dprint("[AppVM] ♻️ Reclaimed loaded LLM for reuse")
         #endif
     }
 

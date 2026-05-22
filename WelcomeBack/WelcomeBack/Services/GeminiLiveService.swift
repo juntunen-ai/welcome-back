@@ -170,7 +170,7 @@ final class GeminiLiveService: @unchecked Sendable {
         }
 
         #if DEBUG
-        print("[GeminiLive] → setup sent")
+        dprint("[GeminiLive] → setup sent")
         #endif
 
         try await webSocketTask?.send(.string(jsonString))
@@ -247,7 +247,7 @@ final class GeminiLiveService: @unchecked Sendable {
         else { return }
 
         #if DEBUG
-        print("[GeminiLive] ← \(text.prefix(300))")
+        dprint("[GeminiLive] ← \(text.prefix(300))")
         #endif
 
         if json["setupComplete"] != nil {

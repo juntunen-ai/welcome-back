@@ -3,11 +3,13 @@ import PhotosUI
 import MapKit
 import CoreLocation
 import ImageIO
+import Photos
 
 /// Add or edit a Place — presented as a sheet from PlacesManagementView.
 struct PlaceDetailEditView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
 
     let placeIndex: Int?
@@ -16,6 +18,7 @@ struct PlaceDetailEditView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var photoImage: Image?
     @State private var pickedUIImage: UIImage?
+    @State private var pickedRawData: Data?       // raw bytes from picker — preserves EXIF
     @State private var photoLocationNote: String?
 
     // MARK: - Init
@@ -48,16 +51,16 @@ struct PlaceDetailEditView: View {
                     .padding(.bottom, 40)
                 }
             }
-            .navigationTitle(isAddMode ? "Add Place" : draft.name)
+            .navigationTitle(isAddMode ? lang.t("places.detail.add.title") : draft.name)
             .navigationBarTitleDisplayMode(.large)
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(lang.t("common.cancel")) { dismiss() }
                         .foregroundColor(.onSurface.opacity(0.6))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") { save() }
+                    Button(lang.t("common.save")) { save() }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(draft.name.isEmpty ? .onSurface.opacity(0.3) : .accentYellow)
                         .disabled(draft.name.isEmpty)
@@ -66,13 +69,26 @@ struct PlaceDetailEditView: View {
             .onChange(of: selectedPhoto) { _, newItem in
                 Task {
                     guard let newItem else { return }
-                    // Load raw data for both display and EXIF extraction
+
+                    // Load raw data first (for display and EXIF fallback).
                     if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        pickedRawData = data
                         if let ui = UIImage(data: data) {
                             pickedUIImage = ui
                             photoImage = Image(uiImage: ui)
                         }
-                        // Extract GPS coordinates from EXIF
+                    }
+
+                    // PRIMARY: read GPS from PHAsset.location — works regardless of
+                    // whether the picker returns HEIC, transcoded JPEG, etc.
+                    var gotLocationFromAsset = false
+                    if let identifier = newItem.itemIdentifier {
+                        gotLocationFromAsset = await readLocationFromPHAsset(identifier: identifier)
+                    }
+
+                    // FALLBACK: parse EXIF from raw bytes (works for JPEG photos that
+                    // carry GPS in their EXIF and weren't transcoded by the picker).
+                    if !gotLocationFromAsset, let data = pickedRawData {
                         extractGPSFromImageData(data)
                     }
                 }
@@ -81,6 +97,29 @@ struct PlaceDetailEditView: View {
     }
 
     // MARK: - GPS Extraction
+
+    /// Reads location from the PHAsset identified by `identifier`.
+    /// Returns `true` and updates draft coordinates if a location was found.
+    /// Requests photo-library authorization if not already determined.
+    @discardableResult
+    private func readLocationFromPHAsset(identifier: String) async -> Bool {
+        // Ensure we have at least read-only access.
+        var status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        if status == .notDetermined {
+            status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+        }
+        guard status == .authorized || status == .limited else { return false }
+
+        let result = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil)
+        guard let asset = result.firstObject, let location = asset.location else { return false }
+
+        let lat = location.coordinate.latitude
+        let lon = location.coordinate.longitude
+        draft.latitude  = lat
+        draft.longitude = lon
+        photoLocationNote = String(format: "Location read from photo: %.4f, %.4f", lat, lon)
+        return true
+    }
 
     /// Reads GPS latitude/longitude from image EXIF data and auto-fills coordinates.
     private func extractGPSFromImageData(_ data: Data) {
@@ -136,7 +175,7 @@ struct PlaceDetailEditView: View {
             }
 
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                Label("Choose Photo", systemImage: "photo.badge.plus")
+                Label(lang.t("places.detail.photo"), systemImage: "photo.badge.plus")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentYellow)
             }
@@ -161,11 +200,11 @@ struct PlaceDetailEditView: View {
 
     private var nameSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Name")
+            sectionHeader(lang.t("places.detail.name.label"))
 
             HStack(spacing: 14) {
                 iconBadge("mappin.circle.fill", color: .green)
-                TextField("e.g. Summer Cottage, Childhood Home", text: $draft.name)
+                TextField(lang.t("places.detail.name.placeholder"), text: $draft.name)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
             }
@@ -180,12 +219,12 @@ struct PlaceDetailEditView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Description")
+            sectionHeader(lang.t("places.detail.desc.label"))
 
             HStack(alignment: .top, spacing: 14) {
                 iconBadge("text.quote", color: .purple)
                     .padding(.top, 2)
-                TextField("Describe this place and why it matters…",
+                TextField(lang.t("places.detail.desc.placeholder"),
                           text: $draft.description, axis: .vertical)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
@@ -202,18 +241,19 @@ struct PlaceDetailEditView: View {
 
     private var coordinatesSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Coordinates")
+            sectionHeader(lang.t("places.detail.coords.title"))
 
             VStack(spacing: 0) {
                 HStack(spacing: 14) {
                     iconBadge("location.fill", color: .blue)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Latitude")
+                        Text(lang.t("places.detail.lat.label"))
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.onSurface.opacity(0.45))
                             .textCase(.uppercase)
                             .tracking(0.6)
-                        TextField("e.g. 61.50", value: $draft.latitude, format: .number)
+                        TextField(lang.t("places.detail.lat.placeholder"),
+                                  value: $draft.latitude, format: .number)
                             .font(.system(size: 15))
                             .foregroundColor(.onSurface)
                             .keyboardType(.decimalPad)
@@ -230,12 +270,13 @@ struct PlaceDetailEditView: View {
                 HStack(spacing: 14) {
                     iconBadge("location.fill", color: .cyan)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Longitude")
+                        Text(lang.t("places.detail.lon.label"))
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(.onSurface.opacity(0.45))
                             .textCase(.uppercase)
                             .tracking(0.6)
-                        TextField("e.g. 28.10", value: $draft.longitude, format: .number)
+                        TextField(lang.t("places.detail.lon.placeholder"),
+                                  value: $draft.longitude, format: .number)
                             .font(.system(size: 15))
                             .foregroundColor(.onSurface)
                             .keyboardType(.decimalPad)
@@ -257,7 +298,7 @@ struct PlaceDetailEditView: View {
             let coord = CLLocationCoordinate2D(latitude: draft.latitude, longitude: draft.longitude)
 
             VStack(alignment: .leading, spacing: 4) {
-                sectionHeader("Preview")
+                sectionHeader(lang.t("places.detail.preview"))
 
                 Map(initialPosition: .camera(MapCamera(
                     centerCoordinate: coord,
@@ -286,7 +327,7 @@ struct PlaceDetailEditView: View {
             } label: {
                 HStack {
                     Spacer()
-                    Label("Delete Place", systemImage: "trash")
+                    Label(lang.t("places.detail.delete"), systemImage: "trash")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.red)
                     Spacer()
@@ -326,7 +367,11 @@ struct PlaceDetailEditView: View {
     // MARK: - Save
 
     private func save() {
-        if let ui = pickedUIImage {
+        if let rawData = pickedRawData {
+            // Prefer raw bytes — preserves EXIF GPS so the detail view can show a map.
+            draft.imageURL = PersistenceService.savePhotoData(rawData, memberID: "place_\(draft.id)")
+        } else if let ui = pickedUIImage {
+            // Fallback: no raw data available (shouldn't happen with PhotosPicker on iOS 16+).
             draft.imageURL = PersistenceService.savePhoto(ui, memberID: "place_\(draft.id)")
         }
 
@@ -342,4 +387,5 @@ struct PlaceDetailEditView: View {
 #Preview {
     PlaceDetailEditView(placeIndex: nil)
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

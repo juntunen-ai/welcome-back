@@ -3,6 +3,7 @@ import SwiftUI
 struct ListeningView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var voiceVM: VoiceSessionBridge
@@ -64,11 +65,11 @@ struct ListeningView: View {
         .onChange(of: voiceVM.sessionState) { _, newState in
             let announcement: String?
             switch newState {
-            case .listening:     announcement = "Listening. Take your time."
-            case .aiSpeaking:    announcement = "AI is speaking."
-            case .aiThinking:    announcement = "Thinking."
+            case .listening:     announcement = lang.t("listening.a11y.listen")
+            case .aiSpeaking:    announcement = lang.t("listening.a11y.speak")
+            case .aiThinking:    announcement = lang.t("listening.a11y.think")
             case .error(let m):  announcement = "Error: \(m)"
-            case .disconnected:  announcement = "Session ended."
+            case .disconnected:  announcement = lang.t("listening.ended")
             default:             announcement = nil
             }
             if let announcement {
@@ -181,15 +182,15 @@ struct ListeningView: View {
                 voiceVM.endSession()
                 dismiss()
             }) {
-                Text("End")
+                Text(lang.t("listening.end"))
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.onSurface.opacity(0.7))
                     .frame(width: 140, height: 56)
                     .background(Color.surfaceVariant.opacity(0.5))
                     .clipShape(Capsule())
             }
-            .accessibilityLabel("End conversation")
-            .accessibilityHint("Stops the AI conversation and closes this screen")
+            .accessibilityLabel(lang.t("listening.end.a11y"))
+            .accessibilityHint(lang.t("listening.end.hint"))
         }
     }
 
@@ -197,23 +198,26 @@ struct ListeningView: View {
 
     private var headerTitle: String {
         switch voiceVM.sessionState {
-        case .connecting:    return voiceVM.mode == .local ? "Loading…" : "Connecting..."
-        case .aiSpeaking:   return "Listening..."
-        default:             return "Listening..."
+        case .connecting:
+            return voiceVM.mode == .local ? lang.t("listening.header.loading") : lang.t("listening.connecting")
+        case .aiSpeaking:
+            return lang.t("listening.header")
+        default:
+            return lang.t("listening.header")
         }
     }
 
     private var statusLabel: String {
         switch voiceVM.sessionState {
         case .idle:          return ""
-        case .connecting:    return voiceVM.mode == .local ? "Loading Gemma 4…" : "Connecting…"
-        case .listening:     return "I'm listening. Take your time…"
-        case .userSpeaking:  return "Go on, I'm listening…"
-        case .aiThinking:    return "Just a moment…"
-        case .aiSpeaking:    return "Listening to response…"
-        case .interrupted:   return "I'm listening…"
+        case .connecting:    return voiceVM.mode == .local ? lang.t("listening.loading") : lang.t("listening.connecting")
+        case .listening:     return lang.t("listening.ready")
+        case .userSpeaking:  return lang.t("listening.go_on")
+        case .aiThinking:    return lang.t("listening.moment")
+        case .aiSpeaking:    return lang.t("listening.response")
+        case .interrupted:   return lang.t("listening.done")
         case .error(let m):  return m
-        case .disconnected:  return "Session ended."
+        case .disconnected:  return lang.t("listening.ended")
         }
     }
 
@@ -254,4 +258,5 @@ struct ListeningView: View {
 #Preview {
     ListeningView(mode: .cloud)
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

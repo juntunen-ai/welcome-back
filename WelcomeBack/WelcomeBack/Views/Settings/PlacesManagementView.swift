@@ -4,6 +4,7 @@ import SwiftUI
 struct PlacesManagementView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @State private var showingAddSheet = false
     @State private var editingPlaceIndex: Int? = nil
 
@@ -31,11 +32,12 @@ struct PlacesManagementView: View {
                 .padding(.top, 8)
             }
         }
-        .navigationTitle("Places")
+        .navigationTitle(lang.t("places.title"))
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showingAddSheet) {
             PlaceDetailEditView(placeIndex: nil)
                 .environmentObject(appVM)
+                .environmentObject(lang)
         }
         .sheet(item: $editingPlaceIndex) { index in
             PlaceDetailEditView(
@@ -43,6 +45,7 @@ struct PlacesManagementView: View {
                 existingPlace: appVM.userProfile.places[index]
             )
             .environmentObject(appVM)
+            .environmentObject(lang)
         }
     }
 
@@ -62,7 +65,7 @@ struct PlacesManagementView: View {
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
-                Text("Add place")
+                Text(lang.t("places.add"))
                     .font(.system(size: 17, weight: .semibold))
             }
             .foregroundColor(.backgroundDark)
@@ -81,11 +84,11 @@ struct PlacesManagementView: View {
                 .foregroundColor(.onSurface.opacity(0.3))
 
             VStack(spacing: 6) {
-                Text("No places yet")
+                Text(lang.t("places.empty"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Tap \"Add place\" to save important locations")
+                Text(lang.t("places.empty.hint"))
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
             }
@@ -148,5 +151,6 @@ struct PlaceRowView: View {
     NavigationStack {
         PlacesManagementView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

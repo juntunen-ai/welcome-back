@@ -4,6 +4,7 @@ import PhotosUI
 struct PersonalInfoView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
     @State private var editingMemberIndex: Int? = nil
     @State private var photoPickerItem: PhotosPickerItem? = nil
@@ -23,7 +24,7 @@ struct PersonalInfoView: View {
                 .padding(.bottom, 32)
             }
         }
-        .navigationTitle("Personal Info")
+        .navigationTitle(lang.t("personalinfo.title"))
         .navigationBarTitleDisplayMode(.large)
         .scrollDismissesKeyboard(.interactively)
         .sheet(item: $editingMemberIndex) { index in
@@ -32,6 +33,7 @@ struct PersonalInfoView: View {
                 existingMember: appVM.userProfile.familyMembers[index]
             )
             .environmentObject(appVM)
+            .environmentObject(lang)
         }
         .onChange(of: photoPickerItem) { _, newItem in
             Task {
@@ -48,7 +50,7 @@ struct PersonalInfoView: View {
 
     private var profilePhotoSection: some View {
         VStack(spacing: 12) {
-            sectionHeader("Your Photo")
+            sectionHeader(lang.t("personalinfo.photo.title"))
 
             HStack(spacing: 20) {
                 // Current photo / avatar
@@ -71,10 +73,10 @@ struct PersonalInfoView: View {
                              matching: .images,
                              photoLibrary: .shared()) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Change Photo")
+                        Text(lang.t("personalinfo.photo.change"))
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.accentYellow)
-                        Text("Tap to choose from your photo library")
+                        Text(lang.t("personalinfo.photo.hint"))
                             .font(.system(size: 12))
                             .foregroundColor(.onSurface.opacity(0.5))
                             .fixedSize(horizontal: false, vertical: true)
@@ -94,19 +96,19 @@ struct PersonalInfoView: View {
 
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("About You")
+            sectionHeader(lang.t("personalinfo.about.title"))
 
             VStack(spacing: 0) {
                 infoField(icon: "person.fill",        iconColor: .blue,
-                          label: "Name",
+                          label: lang.t("personalinfo.name"),
                           binding: $appVM.userProfile.name)
                 divider
                 infoField(icon: "house.fill",         iconColor: .orange,
-                          label: "Address",
+                          label: lang.t("personalinfo.address"),
                           binding: $appVM.userProfile.address)
                 divider
                 infoField(icon: "mappin.circle.fill",  iconColor: .red,
-                          label: "Current Location",
+                          label: lang.t("home.location.label"),
                           binding: $appVM.userProfile.currentLocation)
                 divider
                 bioField
@@ -118,7 +120,7 @@ struct PersonalInfoView: View {
 
     private var familySection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Family Members")
+            sectionHeader(lang.t("personalinfo.family.title"))
 
             VStack(spacing: 0) {
                 ForEach(Array(appVM.userProfile.familyMembers.enumerated()), id: \.element.id) { index, member in
@@ -162,13 +164,13 @@ struct PersonalInfoView: View {
                 .padding(.top, 2)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Biography")
+                Text(lang.t("personalinfo.biography"))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.onSurface.opacity(0.45))
                     .textCase(.uppercase)
                     .tracking(0.6)
 
-                TextField("A few words about yourself…", text: $appVM.userProfile.biography, axis: .vertical)
+                TextField(lang.t("personalinfo.biography.placeholder"), text: $appVM.userProfile.biography, axis: .vertical)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
                     .lineLimit(4, reservesSpace: true)
@@ -239,5 +241,6 @@ struct PersonalInfoView: View {
     NavigationStack {
         PersonalInfoView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

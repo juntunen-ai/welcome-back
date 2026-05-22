@@ -4,6 +4,7 @@ import SwiftUI
 struct MemoriesManagementView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @State private var showingAddSheet = false
     @State private var editingMemoryIndex: Int? = nil
 
@@ -31,11 +32,12 @@ struct MemoriesManagementView: View {
                 .padding(.top, 8)
             }
         }
-        .navigationTitle("Memories & Stories")
+        .navigationTitle(lang.t("memories.management.title"))
         .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showingAddSheet) {
             MemoryDetailEditView(memoryIndex: nil)
                 .environmentObject(appVM)
+                .environmentObject(lang)
         }
         .sheet(item: $editingMemoryIndex) { index in
             MemoryDetailEditView(
@@ -43,6 +45,7 @@ struct MemoriesManagementView: View {
                 existingMemory: appVM.userProfile.memories[index]
             )
             .environmentObject(appVM)
+            .environmentObject(lang)
         }
     }
 
@@ -62,7 +65,7 @@ struct MemoriesManagementView: View {
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))
-                Text("Add memory")
+                Text(lang.t("memories.management.add"))
                     .font(.system(size: 17, weight: .semibold))
             }
             .foregroundColor(.backgroundDark)
@@ -81,11 +84,11 @@ struct MemoriesManagementView: View {
                 .foregroundColor(.onSurface.opacity(0.3))
 
             VStack(spacing: 6) {
-                Text("No memories yet")
+                Text(lang.t("memories.management.empty"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.onSurface)
 
-                Text("Tap \"Add memory\" to save important stories and moments")
+                Text(lang.t("memories.management.empty.hint"))
                     .font(.system(size: 14))
                     .foregroundColor(.onSurface.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -178,5 +181,6 @@ struct MemoryRowView: View {
     NavigationStack {
         MemoriesManagementView()
             .environmentObject(AppViewModel())
+            .environmentObject(LanguageManager())
     }
 }

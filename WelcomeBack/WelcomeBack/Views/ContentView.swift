@@ -3,36 +3,37 @@ import SwiftUI
 struct ContentView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
 
     var body: some View {
         TabView(selection: $appVM.selectedTab) {
             HomeView()
                 .tabItem {
-                    Label(AppTab.home.rawValue, systemImage: AppTab.home.icon)
+                    Label(lang.t("tab.home"), systemImage: AppTab.home.icon)
                 }
                 .tag(AppTab.home)
 
             MemoriesView()
                 .tabItem {
-                    Label(AppTab.memories.rawValue, systemImage: AppTab.memories.icon)
+                    Label(lang.t("tab.memories"), systemImage: AppTab.memories.icon)
                 }
                 .tag(AppTab.memories)
 
             FamilyView()
                 .tabItem {
-                    Label(AppTab.family.rawValue, systemImage: AppTab.family.icon)
+                    Label(lang.t("tab.family"), systemImage: AppTab.family.icon)
                 }
                 .tag(AppTab.family)
 
             MusicView()
                 .tabItem {
-                    Label(AppTab.music.rawValue, systemImage: AppTab.music.icon)
+                    Label(lang.t("tab.music"), systemImage: AppTab.music.icon)
                 }
                 .tag(AppTab.music)
 
             SettingsView()
                 .tabItem {
-                    Label(AppTab.settings.rawValue, systemImage: AppTab.settings.icon)
+                    Label(lang.t("tab.settings"), systemImage: AppTab.settings.icon)
                 }
                 .tag(AppTab.settings)
         }
@@ -46,10 +47,12 @@ struct ContentView: View {
         .sheet(isPresented: $appVM.listeningSheetPresented) {
             ListeningView(mode: appVM.voiceMode)
                 .environmentObject(appVM)
+                .environmentObject(lang)
         }
         .sheet(item: $appVM.selectedFamilyMember) { member in
             PlaybackView(member: member)
                 .environmentObject(appVM)
+                .environmentObject(lang)
         }
     }
 }
@@ -57,4 +60,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

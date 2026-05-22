@@ -5,6 +5,7 @@ struct OnboardingCompleteView: View {
     let onDone: () -> Void
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @State private var checkScale: CGFloat = 0.3
     @State private var checkOpacity: Double = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -28,14 +29,14 @@ struct OnboardingCompleteView: View {
             .padding(.bottom, 36)
 
             // Heading
-            Text("You're all set\(nameGreeting)!")
+            Text(String(format: lang.t("onboarding.complete.title"), nameGreeting))
                 .font(.system(size: 34, weight: .black))
                 .foregroundColor(.onSurface)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 12)
 
-            Text("Welcome Back is ready to help you\nrediscover your memories.")
+            Text(lang.t("onboarding.complete.subtitle"))
                 .font(.system(size: 17))
                 .foregroundColor(.onSurface.opacity(0.65))
                 .multilineTextAlignment(.center)
@@ -51,7 +52,7 @@ struct OnboardingCompleteView: View {
 
             // Start button
             Button(action: onDone) {
-                Text("Start Remembering")
+                Text(lang.t("onboarding.complete.cta"))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
@@ -62,7 +63,7 @@ struct OnboardingCompleteView: View {
             .buttonStyle(.plain)
             .padding(.horizontal, 32)
             .padding(.bottom, 48)
-            .accessibilityLabel("Start using Welcome Back")
+            .accessibilityLabel(lang.t("onboarding.complete.cta.a11y"))
         }
         .onAppear {
             if reduceMotion {
@@ -85,11 +86,11 @@ struct OnboardingCompleteView: View {
     private var tipsCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             tipRow(icon: "mic.fill",           color: .accentYellow,
-                   text: "Tap the big mic button on the Home screen to start a conversation.")
+                   text: lang.t("onboarding.complete.tip1"))
             tipRow(icon: "person.3.fill",      color: .green,
-                   text: "Add family members in Settings so the app can introduce them.")
+                   text: lang.t("onboarding.complete.tip2"))
             tipRow(icon: "photo.on.rectangle", color: .blue,
-                   text: "Your Memories tab shows photos from your photo library grouped by month.")
+                   text: lang.t("onboarding.complete.tip3"))
         }
         .padding(20)
         .background(Color.surfaceVariant.opacity(0.35))
@@ -118,5 +119,6 @@ struct OnboardingCompleteView: View {
 #Preview {
     OnboardingCompleteView(onDone: {})
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
         .preferredColorScheme(.dark)
 }

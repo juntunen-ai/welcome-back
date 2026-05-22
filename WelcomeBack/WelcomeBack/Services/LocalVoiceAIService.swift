@@ -59,7 +59,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
     func startSession(profile: UserProfile, preloadedLLM: LocalLLMService? = nil) async throws {
         let modelConfig = await ModelDownloadService.shared.selectedModel
         #if DEBUG
-        print("[LocalVoiceAI] ▶️ Starting session with model: \(modelConfig.name) (id=\(modelConfig.id), family=\(modelConfig.family))")
+        dprint("[LocalVoiceAI] ▶️ Starting session with model: \(modelConfig.name) (id=\(modelConfig.id), family=\(modelConfig.family))")
         #endif
         updateState(.connecting)   // UI shows "Loading AI model…"
 
@@ -70,7 +70,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         if let preloaded = preloadedLLM, preloaded.isLoaded {
             // Use pre-warmed LLM — just set the system prompt
             #if DEBUG
-            print("[LocalVoiceAI] ⚡ Using pre-warmed LLM")
+            dprint("[LocalVoiceAI] ⚡ Using pre-warmed LLM")
             #endif
             llm = preloaded
             do {
@@ -94,7 +94,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
             let isReady = await ModelDownloadService.shared.isModelDownloaded(config)
             guard isReady else {
                 #if DEBUG
-                print("[LocalVoiceAI] ❌ Model not downloaded")
+                dprint("[LocalVoiceAI] ❌ Model not downloaded")
                 #endif
                 updateState(.error("Voice AI model not downloaded. Please download in Settings → Voice AI Model."))
                 throw LocalVoiceError.modelNotDownloaded
@@ -102,7 +102,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
             let modelPath = await ModelDownloadService.shared.modelFileURL(for: config).path
             #if DEBUG
-            print("[LocalVoiceAI] 📂 Model path: \(modelPath)")
+            dprint("[LocalVoiceAI] 📂 Model path: \(modelPath)")
             #endif
 
             let freshLLM = LocalLLMService(modelPath: modelPath, modelFamily: config.family)
@@ -120,7 +120,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 }
             } catch {
                 #if DEBUG
-                print("[LocalVoiceAI] ❌ Model loading failed: \(error)")
+                dprint("[LocalVoiceAI] ❌ Model loading failed: \(error)")
                 #endif
                 updateState(.error("Failed to load AI model: \(error.localizedDescription)"))
                 throw error
@@ -133,7 +133,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         self.userProfile = profile
         self.greetingFinished = false
         #if DEBUG
-        print("[LocalVoiceAI] ✅ LLM ready, generating greeting...")
+        dprint("[LocalVoiceAI] ✅ LLM ready, generating greeting...")
         #endif
 
         // Generate greeting and start listening concurrently —
@@ -169,7 +169,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     guard let self else { return }
                     self.currentTranscription = text
                     #if DEBUG
-                    print("[LocalVoiceAI] 🎙️ Partial: \(text)")
+                    dprint("[LocalVoiceAI] 🎙️ Partial: \(text)")
                     #endif
                     if self.sessionState == .listening {
                         self.updateState(.userSpeaking)
@@ -178,7 +178,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 onSilenceDetected: { [weak self] in
                     guard let self else { return }
                     #if DEBUG
-                    print("[LocalVoiceAI] 🔇 Silence detected")
+                    dprint("[LocalVoiceAI] 🔇 Silence detected")
                     #endif
                     if self.sessionState == .userSpeaking {
                         self.updateState(.aiThinking)
@@ -186,11 +186,11 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 },
                 onFinalResult: { [weak self] finalText in
                     #if DEBUG
-                    print("[LocalVoiceAI] 📝 Final result: '\(finalText)'")
+                    dprint("[LocalVoiceAI] 📝 Final result: '\(finalText)'")
                     #endif
                     guard let self, !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                         #if DEBUG
-                        print("[LocalVoiceAI] ⚠️ Final text was empty, skipping")
+                        dprint("[LocalVoiceAI] ⚠️ Final text was empty, skipping")
                         #endif
                         return
                     }
@@ -209,13 +209,13 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private func processUserInput(_ text: String) async {
         guard !isProcessing else {
             #if DEBUG
-            print("[LocalVoiceAI] ⚠️ Already processing, skipping")
+            dprint("[LocalVoiceAI] ⚠️ Already processing, skipping")
             #endif
             return
         }
         isProcessing = true
         #if DEBUG
-        print("[LocalVoiceAI] 🧠 Processing user input: '\(text)'")
+        dprint("[LocalVoiceAI] 🧠 Processing user input: '\(text)'")
         #endif
 
         updateState(.aiThinking)
@@ -233,14 +233,14 @@ final class LocalVoiceAIService: @unchecked Sendable {
             let excess = conversationHistory.count - maxConversationTurns
             conversationHistory.removeFirst(excess)
             #if DEBUG
-            print("[LocalVoiceAI] 🔄 Trimmed \(excess) old conversation turns")
+            dprint("[LocalVoiceAI] 🔄 Trimmed \(excess) old conversation turns")
             #endif
         }
 
         // Stream LLM response
         guard let llm = llmService else {
             #if DEBUG
-            print("[LocalVoiceAI] ❌ llmService is nil!")
+            dprint("[LocalVoiceAI] ❌ llmService is nil!")
             #endif
             isProcessing = false
             return
@@ -257,7 +257,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         var receivedFirstToken = false
 
         #if DEBUG
-        print("[LocalVoiceAI] 📤 Sending to LLM: '\(text)'")
+        dprint("[LocalVoiceAI] 📤 Sending to LLM: '\(text)'")
         #endif
 
         for await token in llm.generateResponse(userMessage: text) {
@@ -265,7 +265,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 receivedFirstToken = true
                 let latency = Date().timeIntervalSince(generationStartTime)
                 #if DEBUG
-                print("[LocalVoiceAI] ⏱️ First token latency: \(String(format: "%.2f", latency))s")
+                dprint("[LocalVoiceAI] ⏱️ First token latency: \(String(format: "%.2f", latency))s")
                 #endif
             }
 
@@ -274,7 +274,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
             tokenBuffer += token
             #if DEBUG
             if tokenCount <= 10 {
-                print("[LocalVoiceAI] 🔤 Token \(tokenCount): '\(token)'")
+                dprint("[LocalVoiceAI] 🔤 Token \(tokenCount): '\(token)'")
             }
             #endif
 
@@ -299,7 +299,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
                 guard !sentence.isEmpty else { continue }
                 #if DEBUG
-                print("[LocalVoiceAI] 💬 Sentence ready: '\(sentence)'")
+                dprint("[LocalVoiceAI] 💬 Sentence ready: '\(sentence)'")
                 #endif
 
                 if !isFirstSentenceSpoken {
@@ -320,7 +320,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
             // Timeout: if generation is taking too long (>45s total), stop
             if Date().timeIntervalSince(generationStartTime) > 45 {
                 #if DEBUG
-                print("[LocalVoiceAI] ⏰ Generation timeout after 45s")
+                dprint("[LocalVoiceAI] ⏰ Generation timeout after 45s")
                 #endif
                 llm.cancelGeneration = true
                 break
@@ -329,14 +329,14 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
         let totalTime = Date().timeIntervalSince(generationStartTime)
         #if DEBUG
-        print("[LocalVoiceAI] 📊 Generation done: \(tokenCount) tokens in \(String(format: "%.1f", totalTime))s, response: '\(fullResponse.prefix(200))'")
+        dprint("[LocalVoiceAI] 📊 Generation done: \(tokenCount) tokens in \(String(format: "%.1f", totalTime))s, response: '\(fullResponse.prefix(200))'")
         #endif
 
         // Flush remaining buffer
         let remaining = tokenBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
         if !remaining.isEmpty {
             #if DEBUG
-            print("[LocalVoiceAI] 💬 Flushing remaining buffer: '\(remaining)'")
+            dprint("[LocalVoiceAI] 💬 Flushing remaining buffer: '\(remaining)'")
             #endif
             if !isFirstSentenceSpoken {
                 isFirstSentenceSpoken = true
@@ -356,7 +356,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         // If nothing was generated at all, show error and go back to listening
         if fullResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             #if DEBUG
-            print("[LocalVoiceAI] ❌ No tokens generated! receivedFirstToken=\(receivedFirstToken)")
+            dprint("[LocalVoiceAI] ❌ No tokens generated! receivedFirstToken=\(receivedFirstToken)")
             #endif
             isProcessing = false
             if !receivedFirstToken {
@@ -389,7 +389,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !greeting.isEmpty else {
             #if DEBUG
-            print("[LocalVoiceAI] ⚠️ Greeting was empty, skipping")
+            dprint("[LocalVoiceAI] ⚠️ Greeting was empty, skipping")
             #endif
             updateState(.listening)
             await MainActor.run { [weak self] in
@@ -399,7 +399,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         }
 
         #if DEBUG
-        print("[LocalVoiceAI] 👋 Greeting: '\(greeting)'")
+        dprint("[LocalVoiceAI] 👋 Greeting: '\(greeting)'")
         #endif
         conversationHistory.append((role: "assistant", content: greeting))
         updateState(.aiSpeaking)

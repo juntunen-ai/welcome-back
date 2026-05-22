@@ -261,7 +261,7 @@ final class SpeechService: NSObject, ObservableObject {
                     self.noiseFloorDb = max(-55, min(-20, median))
                     self.isCalibrating = false
                     #if DEBUG
-                    print("[SpeechService] 🎤 Noise floor calibrated: \(String(format: "%.1f", self.noiseFloorDb)) dB, threshold: \(String(format: "%.1f", self.noiseFloorDb + self.speechMarginDb)) dB")
+                    dprint("[SpeechService] 🎤 Noise floor calibrated: \(String(format: "%.1f", self.noiseFloorDb)) dB, threshold: \(String(format: "%.1f", self.noiseFloorDb + self.speechMarginDb)) dB")
                     #endif
                 }
                 return
@@ -298,7 +298,7 @@ final class SpeechService: NSObject, ObservableObject {
 
             // Deliver final result AFTER stopping
             #if DEBUG
-            print("[SpeechService] 📝 Delivering final VAD result: '\(finalText)'")
+            dprint("[SpeechService] 📝 Delivering final VAD result: '\(finalText)'")
             #endif
             finalCallback?(finalText)
         }
@@ -338,7 +338,7 @@ final class SpeechService: NSObject, ObservableObject {
                 try await F5TTSService.shared.playAudioData(wavData)
             } catch {
                 #if DEBUG
-                print("[SpeechService] F5-TTS failed, falling back to Apple voice: \(error.localizedDescription)")
+                dprint("[SpeechService] F5-TTS failed, falling back to Apple voice: \(error.localizedDescription)")
                 #endif
                 speak(text)
                 return
@@ -428,7 +428,7 @@ final class SpeechService: NSObject, ObservableObject {
             } catch {
                 // Fallback: speak this sentence with Apple voice, then continue queue
                 #if DEBUG
-                print("[SpeechService] F5-TTS sentence failed, using Apple voice: \(error.localizedDescription)")
+                dprint("[SpeechService] F5-TTS sentence failed, using Apple voice: \(error.localizedDescription)")
                 #endif
                 let utterance = AVSpeechUtterance(string: sentence)
                 utterance.rate = 0.52

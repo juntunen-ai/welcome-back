@@ -5,6 +5,7 @@ import PhotosUI
 struct MemoryDetailEditView: View {
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
 
     let memoryIndex: Int?
@@ -52,16 +53,16 @@ struct MemoryDetailEditView: View {
                     .padding(.bottom, 40)
                 }
             }
-            .navigationTitle(isAddMode ? "Add Memory" : draft.title)
+            .navigationTitle(isAddMode ? lang.t("memories.detail.add.title") : draft.title)
             .navigationBarTitleDisplayMode(.large)
             .scrollDismissesKeyboard(.interactively)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(lang.t("common.cancel")) { dismiss() }
                         .foregroundColor(.onSurface.opacity(0.6))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") { save() }
+                    Button(lang.t("common.save")) { save() }
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(draft.title.isEmpty ? .onSurface.opacity(0.3) : .accentYellow)
                         .disabled(draft.title.isEmpty)
@@ -111,7 +112,7 @@ struct MemoryDetailEditView: View {
             }
 
             PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                Label("Choose Photo", systemImage: "photo.badge.plus")
+                Label(lang.t("memories.detail.photo"), systemImage: "photo.badge.plus")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentYellow)
             }
@@ -125,11 +126,11 @@ struct MemoryDetailEditView: View {
 
     private var titleSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Title")
+            sectionHeader(lang.t("memories.detail.title.label"))
 
             HStack(spacing: 14) {
                 iconBadge("text.badge.star", color: .orange)
-                TextField("e.g. Our Wedding Day", text: $draft.title)
+                TextField(lang.t("memories.detail.title.placeholder"), text: $draft.title)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
             }
@@ -144,11 +145,11 @@ struct MemoryDetailEditView: View {
 
     private var dateSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Date")
+            sectionHeader(lang.t("memories.detail.date.label"))
 
             HStack(spacing: 14) {
                 iconBadge("calendar", color: .blue)
-                TextField("e.g. June 14, 1980", text: $draft.date)
+                TextField(lang.t("memories.detail.date.placeholder"), text: $draft.date)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
             }
@@ -163,12 +164,12 @@ struct MemoryDetailEditView: View {
 
     private var categorySection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Category")
+            sectionHeader(lang.t("memories.detail.category.label"))
 
             HStack(spacing: 14) {
                 iconBadge("tag.fill", color: .purple)
 
-                Picker("Category", selection: $draft.category) {
+                Picker(lang.t("memories.detail.category.label"), selection: $draft.category) {
                     ForEach(MemoryCategory.allCases, id: \.self) { cat in
                         Text(cat.rawValue).tag(cat)
                     }
@@ -186,12 +187,12 @@ struct MemoryDetailEditView: View {
 
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            sectionHeader("Story")
+            sectionHeader(lang.t("memories.detail.story.label"))
 
             HStack(alignment: .top, spacing: 14) {
                 iconBadge("text.quote", color: .green)
                     .padding(.top, 2)
-                TextField("Tell the story of this memory…",
+                TextField(lang.t("memories.detail.story.placeholder"),
                           text: $draft.description, axis: .vertical)
                     .font(.system(size: 15))
                     .foregroundColor(.onSurface)
@@ -217,7 +218,7 @@ struct MemoryDetailEditView: View {
             } label: {
                 HStack {
                     Spacer()
-                    Label("Delete Memory", systemImage: "trash")
+                    Label(lang.t("memories.detail.delete"), systemImage: "trash")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.red)
                     Spacer()
@@ -273,4 +274,5 @@ struct MemoryDetailEditView: View {
 #Preview {
     MemoryDetailEditView(memoryIndex: nil)
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
 }

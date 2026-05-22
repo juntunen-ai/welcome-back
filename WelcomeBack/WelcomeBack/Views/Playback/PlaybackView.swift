@@ -5,6 +5,7 @@ struct PlaybackView: View {
     let member: FamilyMember
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = PlaybackViewModel()
 
@@ -103,7 +104,7 @@ struct PlaybackView: View {
                 if viewModel.isLoading {
                     VStack(spacing: 8) {
                         ProgressView().tint(.accentYellow)
-                        Text("Preparing a message…")
+                        Text(lang.t("playback.preparing"))
                             .font(.system(size: 13))
                             .foregroundColor(.onSurface.opacity(0.6))
                     }
@@ -165,7 +166,7 @@ struct PlaybackView: View {
             }
             .disabled(viewModel.isLoading)
 
-            Text(viewModel.isLoading ? "LOADING…" : viewModel.isPlaying ? "NOW PLAYING" : "TAP TO LISTEN")
+            Text(viewModel.isLoading ? lang.t("playback.loading") : viewModel.isPlaying ? lang.t("playback.now_playing") : lang.t("playback.tap_listen"))
                 .font(.system(size: 13, weight: .bold))
                 .tracking(4)
                 .foregroundColor(.onSurface.opacity(0.5))
@@ -186,4 +187,5 @@ struct PlaybackView: View {
         isVoiceCloned: false
     ))
     .environmentObject(AppViewModel())
+    .environmentObject(LanguageManager())
 }

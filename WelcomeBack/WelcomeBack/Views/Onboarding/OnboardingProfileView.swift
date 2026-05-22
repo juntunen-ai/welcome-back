@@ -1,114 +1,112 @@
 import SwiftUI
-import PhotosUI
 
 struct OnboardingProfileView: View {
 
     let onContinue: () -> Void
 
     @EnvironmentObject private var appVM: AppViewModel
+    @EnvironmentObject private var lang: LanguageManager
     @State private var name: String = ""
-    @State private var photoPickerItem: PhotosPickerItem? = nil
-    @State private var profileImage: UIImage? = nil
     @FocusState private var nameFieldFocused: Bool
 
+    private let maxNameLength = 50
     private var canContinue: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
-                // Header
-                VStack(spacing: 12) {
-                    Text("What's your name?")
-                        .font(.system(size: 32, weight: .black))
-                        .foregroundColor(.onSurface)
-                        .multilineTextAlignment(.center)
+        VStack(spacing: 0) {
+            Spacer()
 
-                    Text("We'll use this to personalise your experience.")
-                        .font(.system(size: 16))
-                        .foregroundColor(.onSurface.opacity(0.6))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 16)
-                }
-                .padding(.top, 60)
-
-                // Profile photo picker
-                PhotosPicker(selection: $photoPickerItem, matching: .images) {
-                    ZStack {
-                        if let img = profileImage {
-                            Image(uiImage: img)
-                                .resizable()
-                                .scaledToFill()
-                        } else {
-                            Color.surfaceVariant
-                            Image(systemName: "person.crop.circle.badge.plus")
-                                .font(.system(size: 36))
-                                .foregroundColor(.onSurface.opacity(0.4))
-                        }
-                    }
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(Color.accentYellow.opacity(0.12))
                     .frame(width: 100, height: 100)
-                    .clipShape(Circle())
-                    .overlay(Circle().strokeBorder(
-                        profileImage != nil ? Color.accentYellow : Color.white.opacity(0.15),
-                        lineWidth: 3))
-                }
-                .accessibilityLabel("Add profile photo (optional)")
-                .onChange(of: photoPickerItem) { _, item in
-                    Task {
-                        if let data = try? await item?.loadTransferable(type: Data.self),
-                           let img = UIImage(data: data) {
-                            profileImage = img
-                        }
-                    }
-                }
+                Image(systemName: "person.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(.accentYellow)
+            }
+            .padding(.bottom, 28)
 
-                // Name field
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Your Name")
+            // Header
+            VStack(spacing: 10) {
+                Text(lang.t("onboarding.profile.title"))
+                    .font(.system(size: 32, weight: .black))
+                    .foregroundColor(.onSurface)
+                    .multilineTextAlignment(.center)
+
+                Text(lang.t("onboarding.profile.subtitle"))
+                    .font(.system(size: 14))
+                    .foregroundColor(.onSurface.opacity(0.55))
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 28)
+            }
+
+            Spacer(minLength: 32)
+
+            // Name field
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(lang.t("onboarding.profile.name.label"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.onSurface.opacity(0.45))
                         .textCase(.uppercase)
                         .tracking(0.8)
                         .padding(.leading, 4)
 
-                    TextField("e.g. Harri", text: $name)
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.onSurface)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 16)
-                        .background(Color.surfaceVariant.opacity(0.4))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .overlay(RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(Color.white.opacity(0.08)))
-                        .focused($nameFieldFocused)
-                        .textInputAutocapitalization(.words)
-                        .disableAutocorrection(true)
-                        .submitLabel(.continue)
-                        .onSubmit { if canContinue { saveAndContinue() } }
-                        .accessibilityLabel("Enter your name")
-                }
-                .padding(.horizontal, 32)
+                    Spacer()
 
-                Spacer(minLength: 40)
-
-                // Continue button
-                Button(action: saveAndContinue) {
-                    Text("Continue")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(canContinue ? .black : .onSurface.opacity(0.3))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(canContinue ? Color.accentYellow : Color.surfaceVariant.opacity(0.5))
-                        .clipShape(Capsule())
+                    if name.count > maxNameLength - 15 {
+                        Text("\(name.count)/\(maxNameLength)")
+                            .font(.system(size: 11))
+                            .foregroundColor(name.count >= maxNameLength
+                                             ? .orange : .onSurface.opacity(0.35))
+                            .padding(.trailing, 4)
+                    }
                 }
-                .buttonStyle(.plain)
-                .disabled(!canContinue)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 48)
-                .accessibilityLabel("Continue to next step")
-                .accessibilityHint(canContinue ? "" : "Enter your name first")
+
+                TextField(lang.t("onboarding.profile.name.placeholder"), text: $name)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(.onSurface)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                    .background(Color.surfaceVariant.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(Color.white.opacity(0.08)))
+                    .focused($nameFieldFocused)
+                    .textInputAutocapitalization(.words)
+                    .disableAutocorrection(true)
+                    .submitLabel(.continue)
+                    .onSubmit { if canContinue { saveAndContinue() } }
+                    .onChange(of: name) { _, newValue in
+                        if newValue.count > maxNameLength {
+                            name = String(newValue.prefix(maxNameLength))
+                        }
+                    }
+                    .accessibilityLabel(lang.t("onboarding.profile.continue.a11y"))
             }
+            .padding(.horizontal, 32)
+
+            Spacer()
+
+            // Continue button
+            Button(action: saveAndContinue) {
+                Text(lang.t("onboarding.profile.continue"))
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(canContinue ? .black : .onSurface.opacity(0.3))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(canContinue ? Color.accentYellow : Color.surfaceVariant.opacity(0.5))
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canContinue)
+            .padding(.horizontal, 32)
+            .padding(.bottom, 48)
+            .accessibilityLabel(lang.t("onboarding.profile.continue.a11y"))
+            .accessibilityHint(canContinue ? "" : lang.t("onboarding.profile.continue.hint"))
         }
-        .scrollDismissesKeyboard(.interactively)
         .onAppear { nameFieldFocused = true }
     }
 
@@ -116,12 +114,6 @@ struct OnboardingProfileView: View {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
         appVM.userProfile.name = trimmed
-
-        if let img = profileImage {
-            let url = PersistenceService.savePhoto(img, memberID: "user_profile")
-            appVM.userProfile.profileImageURL = url
-        }
-
         nameFieldFocused = false
         onContinue()
     }
@@ -130,5 +122,6 @@ struct OnboardingProfileView: View {
 #Preview {
     OnboardingProfileView(onContinue: {})
         .environmentObject(AppViewModel())
+        .environmentObject(LanguageManager())
         .preferredColorScheme(.dark)
 }

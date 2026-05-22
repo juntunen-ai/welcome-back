@@ -35,7 +35,7 @@ enum PersistenceService {
             try data.write(to: profileURL, options: [.atomic, .completeFileProtection])
         } catch {
             #if DEBUG
-            print("[Persistence] Save failed: \(error)")
+            dprint("[Persistence] Save failed: \(error)")
             #endif
         }
     }
@@ -47,7 +47,7 @@ enum PersistenceService {
             return try JSONDecoder().decode(UserProfile.self, from: data)
         } catch {
             #if DEBUG
-            print("[Persistence] Load failed: \(error)")
+            dprint("[Persistence] Load failed: \(error)")
             #endif
             return nil
         }
@@ -57,6 +57,8 @@ enum PersistenceService {
 
     /// Saves JPEG data for a family member photo and returns the `imageURL`
     /// string to store on the `FamilyMember` (prefixed with `"photo:"`).
+    /// Note: re-encodes through UIImage, which strips EXIF metadata.
+    /// Prefer `savePhotoData(_:memberID:)` when the original picker Data is available.
     @discardableResult
     static func savePhoto(_ image: UIImage, memberID: String) -> String {
         createPhotosDirectoryIfNeeded()
@@ -65,6 +67,17 @@ enum PersistenceService {
         if let data = image.jpegData(compressionQuality: 0.85) {
             try? data.write(to: fileURL, options: [.atomic, .completeFileProtection])
         }
+        return "photo:\(filename)"
+    }
+
+    /// Saves raw image bytes directly (preserving EXIF — including GPS coordinates).
+    /// Use this instead of `savePhoto` whenever `PhotosPicker` raw `Data` is available.
+    @discardableResult
+    static func savePhotoData(_ data: Data, memberID: String) -> String {
+        createPhotosDirectoryIfNeeded()
+        let filename = "\(memberID).jpg"
+        let fileURL = photosDirectoryURL.appendingPathComponent(filename)
+        try? data.write(to: fileURL, options: [.atomic, .completeFileProtection])
         return "photo:\(filename)"
     }
 
@@ -77,6 +90,15 @@ enum PersistenceService {
             return UIImage(contentsOfFile: fileURL.path)
         }
         return UIImage(named: imageURL)
+    }
+
+    /// Returns the raw file bytes for a `"photo:…"` imageURL, preserving EXIF metadata.
+    /// Returns `nil` for asset-catalog images or missing files.
+    static func loadImageData(imageURL: String) -> Data? {
+        guard imageURL.hasPrefix("photo:") else { return nil }
+        let filename = String(imageURL.dropFirst("photo:".count))
+        let fileURL = photosDirectoryURL.appendingPathComponent(filename)
+        return try? Data(contentsOf: fileURL)
     }
 
     // MARK: - Reset
