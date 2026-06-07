@@ -50,3 +50,11 @@ __pycache__/
 WelcomeBack/Server/model/
 WelcomeBack/Server/references/
 WelcomeBack/Server/venv/
+
+# Local dev tools / agent configs
+.agent/
+.agents/
+mcp_config.json
+
+# Web prototype (not part of the iOS app)
+app/
