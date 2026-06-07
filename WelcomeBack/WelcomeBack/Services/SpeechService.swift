@@ -17,7 +17,16 @@ final class SpeechService: NSObject, ObservableObject {
 
     // MARK: - Private
 
-    private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    /// Speech recognizer for the current app language. Recreated at the start of
+    /// each listening session so STT matches the conversation language (e.g. fi-FI
+    /// when the app/content is Finnish). Built via `makeRecognizer()`.
+    private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: LanguageManager.shared.language.speechLocaleIdentifier))
+
+    /// Creates a recognizer for the current app language.
+    private func makeRecognizer() -> SFSpeechRecognizer? {
+        SFSpeechRecognizer(locale: Locale(identifier: LanguageManager.shared.language.speechLocaleIdentifier))
+    }
+
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
@@ -108,6 +117,7 @@ final class SpeechService: NSObject, ObservableObject {
         guard !isListening else { return }
 
         transcribedText = ""
+        speechRecognizer = makeRecognizer()   // match current app language
 
         try configureAudioSession(forListening: true)
 
@@ -188,6 +198,7 @@ final class SpeechService: NSObject, ObservableObject {
         self.isCalibrating = true
         self.noiseFloorDb = -40
         transcribedText = ""
+        speechRecognizer = makeRecognizer()   // match current app language
 
         try configureAudioSession(forListening: true)
 
@@ -322,7 +333,7 @@ final class SpeechService: NSObject, ObservableObject {
            let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
             utterance.voice = voice
         } else {
-            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+            utterance.voice = AVSpeechSynthesisVoice(language: LanguageManager.shared.language.speechLocaleIdentifier)
         }
 
         synthesizer.speak(utterance)
@@ -440,13 +451,16 @@ final class SpeechService: NSObject, ObservableObject {
         }
     }
 
-    /// Resolves the voice to use: explicit param > selectedVoiceIdentifier > default en-US.
+    /// Resolves the voice to use: explicit param > selectedVoiceIdentifier > a voice
+    /// matching the current app language (e.g. a Finnish voice for Finnish replies).
+    /// A language-matched voice is essential: an English voice pronouncing Finnish
+    /// text sounds like garbled nonsense.
     private func resolveVoice(explicit voiceIdentifier: String?) -> AVSpeechSynthesisVoice? {
         if let voiceID = voiceIdentifier ?? selectedVoiceIdentifier,
            let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
             return voice
         }
-        return AVSpeechSynthesisVoice(language: "en-US")
+        return AVSpeechSynthesisVoice(language: LanguageManager.shared.language.speechLocaleIdentifier)
     }
 
     func stopSpeaking() {

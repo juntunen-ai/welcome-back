@@ -25,6 +25,12 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private var userName = ""
     private var userProfile: UserProfile?
 
+    /// The conversation language (from the app's language setting), captured at
+    /// session start. Drives the LLM's response language and the greeting so the
+    /// AI always speaks the user's language regardless of the device language or
+    /// the language the profile facts are written in.
+    private var sessionLanguage: AppLanguage = .english
+
     // MARK: - Sentence Buffer (for streaming LLM → TTS)
 
     private var tokenBuffer = ""
@@ -65,6 +71,10 @@ final class LocalVoiceAIService: @unchecked Sendable {
         updateState(.connecting)   // UI shows "Loading AI model…"
 
         sessionImageDescriptions = await MainActor.run { ImageDescriptionService.shared.descriptions }
+        sessionLanguage = await MainActor.run { LanguageManager.shared.language }
+        #if DEBUG
+        dprint("[LocalVoiceAI] 🌐 Conversation language: \(sessionLanguage.englishName)")
+        #endif
         let systemPrompt = buildSystemPrompt(from: profile, imageDescriptions: sessionImageDescriptions)
         let llm: LocalLLMService
 
@@ -384,7 +394,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private func generateGreeting() async {
         guard let llm = llmService else { return }
 
-        let greetingPrompt = "Greet \(userName) warmly in 1 short sentence. Be natural and friendly."
+        let greetingPrompt = "Greet \(userName) warmly in 1 short sentence, in \(sessionLanguage.englishName). Be natural and friendly."
         let greeting = await llm.generateResponse(userMessage: greetingPrompt)
             .reduce("", +)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -515,6 +525,11 @@ final class LocalVoiceAIService: @unchecked Sendable {
         You are a friendly, warm companion talking with \(profile.name). \
         Chat naturally like a good friend would — relaxed, curious, unhurried.
 
+        LANGUAGE — THIS IS CRITICAL: Always speak ONLY in \(sessionLanguage.englishName) (\(sessionLanguage.nativeName)). \
+        Every single reply must be entirely in \(sessionLanguage.englishName). Some of the facts below may be \
+        written in another language — that does not matter, you still reply in \(sessionLanguage.englishName). \
+        Never mix languages and never switch language even if \(profile.name) does.
+
         """
 
         if !profile.biography.isEmpty {
@@ -583,6 +598,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         - Never invent names, people, or events beyond what's listed.
         - If asked whether you are an AI, answer honestly but warmly.
         - Never give medical advice.
+        - Reply ONLY in \(sessionLanguage.englishName) (\(sessionLanguage.nativeName)), always.
         """
 
         return prompt

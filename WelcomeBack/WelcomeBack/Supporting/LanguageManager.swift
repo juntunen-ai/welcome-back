@@ -22,6 +22,30 @@ enum AppLanguage: String, CaseIterable, Codable, Identifiable {
         case .finnish: return "🇫🇮"
         }
     }
+
+    /// BCP-47 locale identifier for speech recognition (STT) and text-to-speech (TTS).
+    var speechLocaleIdentifier: String {
+        switch self {
+        case .english: return "en-US"
+        case .finnish: return "fi-FI"
+        }
+    }
+
+    /// English name of the language, for embedding in the (English) LLM system prompt.
+    var englishName: String {
+        switch self {
+        case .english: return "English"
+        case .finnish: return "Finnish"
+        }
+    }
+
+    /// Native name of the language, reinforced in the prompt to anchor the model.
+    var nativeName: String {
+        switch self {
+        case .english: return "English"
+        case .finnish: return "suomi"
+        }
+    }
 }
 
 // MARK: - LanguageManager
