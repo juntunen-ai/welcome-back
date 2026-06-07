@@ -38,21 +38,21 @@ final class ModelDownloadService: NSObject, ObservableObject {
     }
 
     /// Gemma 4 E2B — Google's latest on-device model with Gemma 4 architecture.
-    /// Uses Unsloth's Dynamic IQ2_M quant (~2.29 GB on disk) — the smallest
-    /// quant that preserves reasonable quality, required to fit within the
-    /// ~2 GB per-app memory budget of free personal provisioning profiles
-    /// (which cannot grant `increased-memory-limit`).
+    /// Uses Unsloth's Q4_K_M quant (~3.1 GB on disk) — the best quality quant
+    /// that fits within the memory budget of a paid Apple Developer account
+    /// with the `increased-memory-limit` entitlement enabled.
+    /// Dramatically better response quality than the previous IQ2_M quant.
     /// This is the ONLY supported model.
     nonisolated static let defaultModel: ModelConfig = {
-        guard let url = URL(string: "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-IQ2_M.gguf") else {
+        guard let url = URL(string: "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf") else {
             preconditionFailure("Invalid hardcoded URL for Gemma 4 E2B model")
         }
         return ModelConfig(
-            id: "gemma-4-e2b",
+            id: "gemma-4-e2b-q4km",
             name: "Gemma 4 E2B",
-            fileName: "gemma-4-E2B-it-UD-IQ2_M.gguf",
+            fileName: "gemma-4-E2B-it-Q4_K_M.gguf",
             downloadURL: url,
-            expectedSizeBytes: 2_290_000_000,
+            expectedSizeBytes: 3_100_000_000,
             expectedSHA256: "",
             family: .gemma4
         )
@@ -110,7 +110,9 @@ final class ModelDownloadService: NSObject, ObservableObject {
 
     private override init() {
         super.init()
-        // Always use Gemma 4 — it's the only model now
+        // Always use Gemma 4 Q4_K_M — it's the only model now.
+        // Force-set the ID so any device upgrading from the old IQ2_M model
+        // correctly detects "not downloaded" and re-downloads the better quant.
         selectedModelID = Self.defaultModel.id
         refreshModelReadiness()
         cleanupLegacyModels()
@@ -123,8 +125,8 @@ final class ModelDownloadService: NSObject, ObservableObject {
             "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
             "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
             "gemma-3-4b-it-Q4_K_M.gguf",
-            "gemma-4-E2B-it-Q4_K_M.gguf",       // too large — replaced
-            "gemma-4-E2B-it-UD-Q2_K_XL.gguf"    // still too large — replaced by UD-IQ2_M
+            "gemma-4-E2B-it-UD-Q2_K_XL.gguf",   // too low quality — replaced by Q4_K_M
+            "gemma-4-E2B-it-UD-IQ2_M.gguf"       // free provisioning era — replaced by Q4_K_M
         ]
         let fm = FileManager.default
         for fileName in legacyFiles {

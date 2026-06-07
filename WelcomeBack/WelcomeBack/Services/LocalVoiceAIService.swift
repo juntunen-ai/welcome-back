@@ -32,7 +32,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
     /// Maximum conversation turns to keep (user + assistant pairs).
     /// Older turns are dropped to prevent unbounded memory growth.
-    private let maxConversationTurns = 16
+    /// With 2048 context window, we can keep more conversation history.
+    private let maxConversationTurns = 24
 
     /// Tracks whether the greeting has finished so we can overlap listening.
     private var greetingFinished = false

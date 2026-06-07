@@ -50,7 +50,7 @@ final class LocalLLMService: @unchecked Sendable {
         var temperature: Float = 0.7
         var topP: Float = 0.9
         var topK: Int32 = 40
-        var maxTokens: Int = 256
+        var maxTokens: Int = 384       // more room for richer responses with Q4_K_M quality
         var repeatPenalty: Float = 1.1
         var repeatPenaltyLastN: Int32 = 64
     }
@@ -112,7 +112,7 @@ final class LocalLLMService: @unchecked Sendable {
         dprint("[LocalLLM] 📦 Model file size: \(fileSize / 1_000_000) MB (\(fileSize) bytes)")
 
         // Validate file size — Gemma 4 E2B Q4_K_M should be ~3.1 GB
-        if fileSize < 1_000_000_000 {
+        if fileSize < 2_000_000_000 {
             dprint("[LocalLLM] ❌ Model file too small (\(fileSize) bytes) — likely corrupt or incomplete download")
             throw LLMError.modelLoadFailed
         }
@@ -127,13 +127,12 @@ final class LocalLLMService: @unchecked Sendable {
         //    or context creation returns nil (most common cause: memory pressure from
         //    3.1 GB mmap + Metal KV cache on smaller iPhones), we retry with
         //    n_gpu_layers=0 so the app can still run entirely on CPU.
-        // Force CPU-only on all targets when running under a personal (free)
-        // provisioning profile. Metal's heap is accounted separately by Jetsam,
-        // so disabling GPU offload reduces peak memory pressure. On unified-memory
-        // Apple Silicon, the quality penalty is mainly speed — the weights are
-        // still in the same RAM pool.
-        let gpuLayerAttempts: [Int32] = [0]
-        dprint("[LocalLLM] 🧠 CPU-only mode (personal provisioning profile limits memory)")
+        // With a paid Apple Developer account + increased-memory-limit entitlement,
+        // we can use Metal GPU offload for dramatically faster inference.
+        // Try full GPU offload first (999 = all layers), then CPU-only as fallback
+        // in case of memory pressure on smaller devices.
+        let gpuLayerAttempts: [Int32] = [999, 0]
+        dprint("[LocalLLM] 🚀 Metal GPU mode enabled (paid developer account)")
 
         let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
         dprint("[LocalLLM] 🔧 Using \(nThreads) threads")
@@ -162,13 +161,13 @@ final class LocalLLMService: @unchecked Sendable {
             dprint("[LocalLLM] ✅ Model loaded into memory")
 
             var ctxParams = llama_context_default_params()
-            ctxParams.n_ctx = 1024          // tight KV cache for personal-team memory budget
-            ctxParams.n_batch = 128
-            ctxParams.n_ubatch = 128
+            ctxParams.n_ctx = 2048          // larger KV cache for longer conversations (paid account + increased-memory-limit)
+            ctxParams.n_batch = 256
+            ctxParams.n_ubatch = 256
             ctxParams.n_threads = Int32(nThreads)
             ctxParams.n_threads_batch = Int32(nThreads)
             ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO
-            dprint("[LocalLLM] 🔧 Creating context (n_ctx=1024, n_batch=128, flash_attn=auto)...")
+            dprint("[LocalLLM] 🔧 Creating context (n_ctx=2048, n_batch=256, flash_attn=auto)...")
 
             guard let ctx = llama_init_from_model(mdl, ctxParams) else {
                 dprint("[LocalLLM] ❌ llama_init_from_model returned nil (n_gpu_layers=\(attemptLayers)) — will retry on CPU if possible")
@@ -309,10 +308,10 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - Evaluation
 
-    /// Maximum tokens per decode call — must match `ctxParams.n_batch` (128).
+    /// Maximum tokens per decode call — must match `ctxParams.n_batch` (256).
     /// Submitting more tokens than n_batch in a single llama_decode call triggers
     /// a ggml_abort assertion inside ggml.c, causing a SIGABRT crash.
-    private let maxBatchSize = 128
+    private let maxBatchSize = 256
 
     /// Evaluates a batch of tokens into the context.
     /// Automatically splits into chunks of `maxBatchSize` to avoid ggml assertion failures.
@@ -460,16 +459,16 @@ final class LocalLLMService: @unchecked Sendable {
     /// Trims proactively at 75% capacity to leave room for the next turn.
     func trimContextIfNeeded() {
         guard isLoaded, let ctx = context else { return }
-        let maxCtx: Int32 = 1024
-        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (768)
+        let maxCtx: Int32 = 2048
+        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (1536)
 
         guard nPast > threshold else { return }
 
         let mem = llama_get_memory(ctx)
 
         // Keep system prompt tokens (0..<systemPromptTokenCount)
-        // and the most recent 384 conversation tokens (~2 turns).
-        let keepRecent: Int32 = min(384, nPast - systemPromptTokenCount)
+        // and the most recent 768 conversation tokens (~4 turns).
+        let keepRecent: Int32 = min(768, nPast - systemPromptTokenCount)
         let evictFrom = systemPromptTokenCount   // first token after system prompt
         let evictTo = nPast - keepRecent          // keep the tail
 

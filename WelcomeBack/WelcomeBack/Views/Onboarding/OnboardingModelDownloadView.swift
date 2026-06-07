@@ -13,8 +13,8 @@ struct OnboardingModelDownloadView: View {
 
     private var model: ModelDownloadService.ModelConfig { ModelDownloadService.defaultModel }
 
-    // Required free space: model size + 20 % buffer
-    private let requiredBytes: Int64 = 2_800_000_000
+    // Required free space: model size (~3.1 GB) + 20 % buffer
+    private let requiredBytes: Int64 = 3_800_000_000
 
     var body: some View {
         VStack(spacing: 0) {
