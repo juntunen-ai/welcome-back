@@ -324,18 +324,7 @@ final class SpeechService: NSObject, ObservableObject {
             return
         }
 
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.rate = 0.52
-        utterance.pitchMultiplier = 1.0
-        utterance.volume = 1.0
-
-        if let voiceID = voiceIdentifier,
-           let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
-            utterance.voice = voice
-        } else {
-            utterance.voice = AVSpeechSynthesisVoice(language: LanguageManager.shared.language.speechLocaleIdentifier)
-        }
-
+        let utterance = makeUtterance(text, voiceIdentifier: voiceIdentifier)
         synthesizer.speak(utterance)
         isSpeaking = true
     }
@@ -382,12 +371,7 @@ final class SpeechService: NSObject, ObservableObject {
         // Apple voice path
         pendingUtteranceCount = sentences.count
         for sentence in sentences {
-            let utterance = AVSpeechUtterance(string: sentence)
-            utterance.rate = 0.52
-            utterance.pitchMultiplier = 1.0
-            utterance.volume = 1.0
-            utterance.voice = resolveVoice(explicit: voiceIdentifier)
-            synthesizer.speak(utterance)
+            synthesizer.speak(makeUtterance(sentence, voiceIdentifier: voiceIdentifier))
         }
         isSpeaking = true
     }
@@ -405,12 +389,7 @@ final class SpeechService: NSObject, ObservableObject {
 
         // Apple voice path
         pendingUtteranceCount += 1
-        let utterance = AVSpeechUtterance(string: sentence)
-        utterance.rate = 0.52
-        utterance.pitchMultiplier = 1.0
-        utterance.volume = 1.0
-        utterance.voice = resolveVoice(explicit: voiceIdentifier)
-        synthesizer.speak(utterance)
+        synthesizer.speak(makeUtterance(sentence, voiceIdentifier: voiceIdentifier))
     }
 
     // MARK: - WAV Queue Playback (F5-TTS)
@@ -441,26 +420,86 @@ final class SpeechService: NSObject, ObservableObject {
                 #if DEBUG
                 dprint("[SpeechService] F5-TTS sentence failed, using Apple voice: \(error.localizedDescription)")
                 #endif
-                let utterance = AVSpeechUtterance(string: sentence)
-                utterance.rate = 0.52
-                utterance.voice = resolveVoice(explicit: nil)
                 // After this utterance finishes, the delegate will call playNextWavSentence
                 pendingUtteranceCount = 1
-                synthesizer.speak(utterance)
+                synthesizer.speak(makeUtterance(sentence, voiceIdentifier: nil))
             }
         }
     }
 
-    /// Resolves the voice to use: explicit param > selectedVoiceIdentifier > a voice
-    /// matching the current app language (e.g. a Finnish voice for Finnish replies).
+    /// Resolves the voice to use: explicit param > selectedVoiceIdentifier > the
+    /// highest-quality voice available for the current app language.
     /// A language-matched voice is essential: an English voice pronouncing Finnish
-    /// text sounds like garbled nonsense.
+    /// text sounds like garbled nonsense. For English, prefer enhanced/premium
+    /// voices (far less robotic) if the user has downloaded any; Finnish only ships
+    /// the compact "Satu" voice, so this gracefully returns that.
     private func resolveVoice(explicit voiceIdentifier: String?) -> AVSpeechSynthesisVoice? {
         if let voiceID = voiceIdentifier ?? selectedVoiceIdentifier,
            let voice = AVSpeechSynthesisVoice(identifier: voiceID) {
             return voice
         }
-        return AVSpeechSynthesisVoice(language: LanguageManager.shared.language.speechLocaleIdentifier)
+        return bestVoice(forBCP47: LanguageManager.shared.language.speechLocaleIdentifier)
+    }
+
+    /// Returns the best-quality installed voice for a BCP-47 identifier (e.g. "en-US"),
+    /// preferring .premium > .enhanced > .default. Falls back to the language default.
+    private func bestVoice(forBCP47 id: String) -> AVSpeechSynthesisVoice? {
+        let prefix = String(id.prefix(2))   // "en", "fi"
+        let candidates = AVSpeechSynthesisVoice.speechVoices().filter {
+            $0.language.hasPrefix(prefix)
+        }
+        if let best = candidates.max(by: { $0.quality.rawValue < $1.quality.rawValue }) {
+            return best
+        }
+        // Last resort: ask for the exact language (may be nil if the user removed it).
+        return AVSpeechSynthesisVoice(language: id)
+    }
+
+    // MARK: - Speech Text Sanitization & Utterance Factory
+
+    /// Calmer speaking rate for an elderly / memory-support audience.
+    /// Caregiver-tunable via UserDefaults; defaults to a gentle pace below Apple's ~0.5 default.
+    var speechRate: Float {
+        get {
+            let v = UserDefaults.standard.float(forKey: "speechRate")
+            return v > 0 ? v : 0.46
+        }
+        set { UserDefaults.standard.set(newValue, forKey: "speechRate") }
+    }
+
+    /// Small pause between sentences so streamed multi-sentence output doesn't feel rushed.
+    private let interSentencePause: TimeInterval = 0.2
+
+    /// Strips markdown, list markers, stray symbols and emoji so the synthesizer
+    /// never voices "asterisk asterisk", "number sign", or spells out emoji.
+    /// Preserves sentence-ending punctuation (. ! ? , ; :) — the streaming splitter
+    /// in LocalVoiceAIService depends on it.
+    func sanitizeForSpeech(_ text: String) -> String {
+        var s = text
+        // Markdown emphasis / code / headings
+        s = s.replacingOccurrences(of: #"[*_`#>]"#, with: "", options: .regularExpression)
+        // Leading list bullets ("- ", "* ", "• ", "1. ") at the start of lines
+        s = s.replacingOccurrences(of: #"(?m)^\s*([-*•]|\d+\.)\s+"#, with: "", options: .regularExpression)
+        // Markdown links [text](url) -> text
+        s = s.replacingOccurrences(of: #"\[([^\]]+)\]\([^)]+\)"#, with: "$1", options: .regularExpression)
+        // Bare URLs
+        s = s.replacingOccurrences(of: #"https?://\S+"#, with: "", options: .regularExpression)
+        // Emoji / symbol scalars
+        s = String(s.unicodeScalars.filter { !$0.properties.isEmoji || ($0.value >= 0x30 && $0.value <= 0x39) })
+        // Collapse whitespace
+        s = s.replacingOccurrences(of: #"[ \t]{2,}"#, with: " ", options: .regularExpression)
+        return s.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Builds a sanitized, gently-paced utterance with the resolved voice.
+    private func makeUtterance(_ text: String, voiceIdentifier: String?) -> AVSpeechUtterance {
+        let utterance = AVSpeechUtterance(string: sanitizeForSpeech(text))
+        utterance.rate = speechRate
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 1.0
+        utterance.postUtteranceDelay = interSentencePause
+        utterance.voice = resolveVoice(explicit: voiceIdentifier)
+        return utterance
     }
 
     func stopSpeaking() {
