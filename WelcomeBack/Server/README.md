@@ -1,6 +1,6 @@
 # F5-TTS Voice Cloning Server
 
-Local server for Finnish voice cloning, used by the Welcome Back iOS app.
+Local server for Finnish voice cloning, used by the Story of My Life iOS app.
 
 ## Requirements
 
@@ -50,7 +50,7 @@ python f5_server.py
 
 ## iOS App Setup
 
-In the Welcome Back app:
+In the Story of My Life app:
 1. Go to **Settings > Voice Cloning Server**
 2. Enter your server URL (e.g., `http://192.168.1.50:5000`)
 3. Tap **Test Connection** to verify

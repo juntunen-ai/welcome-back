@@ -59,7 +59,7 @@ final class NotificationService: ObservableObject {
                     dateMatching: components, repeats: true)
 
                 let content = UNMutableNotificationContent()
-                content.title = "Welcome Back 💛"
+                content.title = "Story of My Life 💛"
                 content.body  = message
                 content.sound = .default
 

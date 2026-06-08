@@ -3,33 +3,33 @@ import SwiftUI
 
 // MARK: - Timeline Entry
 
-struct WelcomeBackEntry: TimelineEntry {
+struct StoryOfMyLifeEntry: TimelineEntry {
     let date: Date
 }
 
 // MARK: - Timeline Provider
 
-struct WelcomeBackProvider: TimelineProvider {
-    func placeholder(in context: Context) -> WelcomeBackEntry {
-        WelcomeBackEntry(date: Date())
+struct StoryOfMyLifeProvider: TimelineProvider {
+    func placeholder(in context: Context) -> StoryOfMyLifeEntry {
+        StoryOfMyLifeEntry(date: Date())
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (WelcomeBackEntry) -> Void) {
-        completion(WelcomeBackEntry(date: Date()))
+    func getSnapshot(in context: Context, completion: @escaping (StoryOfMyLifeEntry) -> Void) {
+        completion(StoryOfMyLifeEntry(date: Date()))
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<WelcomeBackEntry>) -> Void) {
+    func getTimeline(in context: Context, completion: @escaping (Timeline<StoryOfMyLifeEntry>) -> Void) {
         // Refresh once a day — the content is static
         let nextUpdate = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-        let timeline = Timeline(entries: [WelcomeBackEntry(date: Date())], policy: .after(nextUpdate))
+        let timeline = Timeline(entries: [StoryOfMyLifeEntry(date: Date())], policy: .after(nextUpdate))
         completion(timeline)
     }
 }
 
 // MARK: - Widget View
 
-struct WelcomeBackWidgetView: View {
-    let entry: WelcomeBackEntry
+struct StoryOfMyLifeWidgetView: View {
+    let entry: StoryOfMyLifeEntry
     @Environment(\.widgetFamily) var family
 
     var body: some View {
@@ -45,7 +45,7 @@ struct WelcomeBackWidgetView: View {
                 largeLayout
             }
         }
-        .widgetURL(URL(string: "welcomeback://open"))
+        .widgetURL(URL(string: "storyofmylife://open"))
     }
 
     // MARK: - Small (square)
@@ -54,7 +54,7 @@ struct WelcomeBackWidgetView: View {
         VStack(spacing: 6) {
             photoView(size: 72)
 
-            Text("Welcome Back")
+            Text("Story of My Life")
                 .font(.system(size: 11, weight: .bold))
                 .foregroundColor(.white.opacity(0.9))
                 .lineLimit(1)
@@ -74,7 +74,7 @@ struct WelcomeBackWidgetView: View {
             photoView(size: 90)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Welcome Back")
+                Text("Story of My Life")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.white)
 
@@ -102,7 +102,7 @@ struct WelcomeBackWidgetView: View {
 
                 // Text block anchored to bottom
                 VStack(spacing: 6) {
-                    Text("Welcome Back")
+                    Text("Story of My Life")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white.opacity(0.9))
 
@@ -146,18 +146,18 @@ struct WelcomeBackWidgetView: View {
 // MARK: - Widget Configuration
 
 @main
-struct WelcomeBackWidget: Widget {
-    let kind: String = "WelcomeBackWidget"
+struct StoryOfMyLifeWidget: Widget {
+    let kind: String = "StoryOfMyLifeWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: WelcomeBackProvider()) { entry in
-            WelcomeBackWidgetView(entry: entry)
+        StaticConfiguration(kind: kind, provider: StoryOfMyLifeProvider()) { entry in
+            StoryOfMyLifeWidgetView(entry: entry)
                 .containerBackground(
                     Color(red: 0.078, green: 0.094, blue: 0.125),
                     for: .widget
                 )
         }
-        .configurationDisplayName("Welcome Back")
+        .configurationDisplayName("Story of My Life")
         .description("Remember who you are.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge])
     }
@@ -166,19 +166,19 @@ struct WelcomeBackWidget: Widget {
 // MARK: - Preview
 
 #Preview(as: .systemSmall) {
-    WelcomeBackWidget()
+    StoryOfMyLifeWidget()
 } timeline: {
-    WelcomeBackEntry(date: .now)
+    StoryOfMyLifeEntry(date: .now)
 }
 
 #Preview(as: .systemMedium) {
-    WelcomeBackWidget()
+    StoryOfMyLifeWidget()
 } timeline: {
-    WelcomeBackEntry(date: .now)
+    StoryOfMyLifeEntry(date: .now)
 }
 
 #Preview(as: .systemLarge) {
-    WelcomeBackWidget()
+    StoryOfMyLifeWidget()
 } timeline: {
-    WelcomeBackEntry(date: .now)
+    StoryOfMyLifeEntry(date: .now)
 }

@@ -13,9 +13,9 @@ struct LegalView: View {
         var url: URL? {
             switch self {
             case .privacyPolicy:
-                return URL(string: "https://juntunen.ai/welcomeback/privacy")
+                return URL(string: "https://juntunen.ai/storyofmylife/privacy")
             case .termsOfService:
-                return URL(string: "https://juntunen.ai/welcomeback/terms")
+                return URL(string: "https://juntunen.ai/storyofmylife/terms")
             }
         }
     }
@@ -67,7 +67,7 @@ struct LegalView: View {
         VStack(alignment: .leading, spacing: 16) {
             legalSection(title: "What Data We Collect") {
                 """
-                Welcome Back stores your personal profile (name, address, biography), \
+                Story of My Life stores your personal profile (name, address, biography), \
                 family member information, memory descriptions, and photos. All data is \
                 stored locally on your device.
                 """
@@ -121,14 +121,14 @@ struct LegalView: View {
         VStack(alignment: .leading, spacing: 16) {
             legalSection(title: "Acceptance") {
                 """
-                By using Welcome Back, you agree to these terms. If you do not agree, \
+                By using Story of My Life, you agree to these terms. If you do not agree, \
                 please discontinue use.
                 """
             }
 
             legalSection(title: "Purpose") {
                 """
-                Welcome Back is a companion app designed to support memory recall through \
+                Story of My Life is a companion app designed to support memory recall through \
                 AI-assisted conversations. It is not a medical device and does not provide \
                 medical advice, diagnosis, or treatment.
                 """
@@ -160,7 +160,7 @@ struct LegalView: View {
 
             legalSection(title: "Intellectual Property") {
                 """
-                Welcome Back and its original content are owned by Juntunen AI. \
+                Story of My Life and its original content are owned by Juntunen AI. \
                 The app uses open-source components including llama.cpp (MIT License).
                 """
             }

@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "WGT005000000000000000001"
-               BuildableName = "WelcomeBackWidget.appex"
-               BlueprintName = "WelcomeBackWidget"
-               ReferencedContainer = "container:WelcomeBack.xcodeproj">
+               BuildableName = "StoryOfMyLifeWidget.appex"
+               BlueprintName = "StoryOfMyLifeWidget"
+               ReferencedContainer = "container:StoryOfMyLife.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -29,9 +29,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "15282737539D469CAF4A24B5"
-               BuildableName = "WelcomeBack.app"
-               BlueprintName = "WelcomeBack"
-               ReferencedContainer = "container:WelcomeBack.xcodeproj">
+               BuildableName = "StoryOfMyLife.app"
+               BlueprintName = "StoryOfMyLife"
+               ReferencedContainer = "container:StoryOfMyLife.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -49,9 +49,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "T007AA0000000000000000001"
-               BuildableName = "WelcomeBackTests.xctest"
-               BlueprintName = "WelcomeBackTests"
-               ReferencedContainer = "container:WelcomeBack.xcodeproj">
+               BuildableName = "StoryOfMyLifeTests.xctest"
+               BlueprintName = "StoryOfMyLifeTests"
+               ReferencedContainer = "container:StoryOfMyLife.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -71,9 +71,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "15282737539D469CAF4A24B5"
-            BuildableName = "WelcomeBack.app"
-            BlueprintName = "WelcomeBack"
-            ReferencedContainer = "container:WelcomeBack.xcodeproj">
+            BuildableName = "StoryOfMyLife.app"
+            BlueprintName = "StoryOfMyLife"
+            ReferencedContainer = "container:StoryOfMyLife.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -88,9 +88,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "15282737539D469CAF4A24B5"
-            BuildableName = "WelcomeBack.app"
-            BlueprintName = "WelcomeBack"
-            ReferencedContainer = "container:WelcomeBack.xcodeproj">
+            BuildableName = "StoryOfMyLife.app"
+            BlueprintName = "StoryOfMyLife"
+            ReferencedContainer = "container:StoryOfMyLife.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -224,7 +224,7 @@ struct SettingsView: View {
                     .font(.system(size: 12))
                     .foregroundColor(.onSurface.opacity(0.4))
 
-                if let url = URL(string: "https://juntunen.ai/welcomeback/privacy") {
+                if let url = URL(string: "https://juntunen.ai/storyofmylife/privacy") {
                     Link(lang.t("settings.privacy_link"), destination: url)
                         .font(.system(size: 12))
                         .foregroundColor(.onSurface.opacity(0.3))

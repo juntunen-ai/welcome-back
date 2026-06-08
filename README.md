@@ -1,6 +1,6 @@
-# Welcome Back
+# Story of My Life
 
-This is the Welcome Back project.
+This is the Story of My Life project.
 
 ## Getting Started
 

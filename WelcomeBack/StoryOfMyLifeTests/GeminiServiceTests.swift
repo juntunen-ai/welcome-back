@@ -1,5 +1,5 @@
 import XCTest
-@testable import WelcomeBack
+@testable import StoryOfMyLife
 
 /// Tests the JSON parsing logic and error types of GeminiService.
 /// Network calls are NOT made — we test only the parsing path directly.

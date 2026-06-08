@@ -1,7 +1,7 @@
 import Foundation
 import UIKit
 
-/// Handles all on-disk persistence for Welcome Back.
+/// Handles all on-disk persistence for Story of My Life.
 ///
 /// Strategy:
 ///  - `UserProfile` is encoded as JSON to `Documents/userProfile.json`

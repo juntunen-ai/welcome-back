@@ -1,5 +1,5 @@
 import XCTest
-@testable import WelcomeBack
+@testable import StoryOfMyLife
 
 final class FamilyMemberTests: XCTestCase {
 
