@@ -122,17 +122,17 @@ final class LocalLLMService: @unchecked Sendable {
         llama_log_set(llamaLogCallback, nil)
         llama_backend_init()
 
-        // 2. Load model + create context on CPU.
-        //    IMPORTANT: We run CPU-only (n_gpu_layers=0). The Gemma 4 (gemma4) Metal
-        //    GPU path in the bundled llama.xcframework produces GARBAGE output on
-        //    iOS device (gibberish, no error) even though the same GGUF is coherent
-        //    on CPU and on macOS Metal — a known architecture-specific iOS Metal bug
-        //    class (flash-attention / SWA kernels for new arches). CPU is the proven
-        //    known-good backend the app originally shipped with. Re-enable GPU only
-        //    after verifying coherent output ON DEVICE with a newer xcframework
-        //    (and likely flash_attn disabled).
-        let gpuLayerAttempts: [Int32] = [0]
-        dprint("[LocalLLM] 🧠 CPU-only mode (Gemma 4 iOS Metal path produces gibberish — verified)")
+        // 2. Load model + create context. Try Metal GPU offload first, fall back to CPU.
+        //    The PREVIOUS bundled llama.xcframework produced GARBAGE on the iOS Metal
+        //    path for the gemma4 architecture. That framework has been rebuilt from a
+        //    current llama.cpp (b9430) — the exact build verified to produce coherent
+        //    gemma4 output on Metal — so GPU offload is re-enabled here. flash_attn
+        //    stays AUTO to match that verified-good configuration.
+        //    NOTE: [999, 0] only falls back to CPU on a LOAD failure; if a future
+        //    framework regresses Metal *correctness* (loads but emits gibberish),
+        //    set this back to [0] until fixed.
+        let gpuLayerAttempts: [Int32] = [999, 0]
+        dprint("[LocalLLM] 🚀 Metal GPU offload enabled (rebuilt llama.xcframework, gemma4 Metal verified)")
 
         let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
         dprint("[LocalLLM] 🔧 Using \(nThreads) threads")
