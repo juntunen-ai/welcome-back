@@ -1,5 +1,5 @@
 """
-F5-TTS Voice Cloning Server for Welcome Back
+F5-TTS Voice Cloning Server for Story of My Life
 
 A FastAPI wrapper around F5-TTS that provides REST endpoints for:
 - Storing voice reference audio samples

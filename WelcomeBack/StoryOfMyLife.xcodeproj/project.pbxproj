@@ -28,7 +28,7 @@
 		9875E7995D294CB988D762F3 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E003D2E11731416396E5E3C8 /* HomeView.swift */; };
 		9991FE4A04DE8A2511CA0D00 /* ModelDownloadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C88A7012E68BC2A50F591749 /* ModelDownloadService.swift */; };
 		9C309B4373B443F999011B83 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5042CD26087445D78D12F05E /* SettingsView.swift */; };
-		A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */; };
+		A12B001CB7DB49AF9563AD13 /* StoryOfMyLifeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2D677905F4099AEF46386 /* StoryOfMyLifeApp.swift */; };
 		PPS001000000000000000001 /* Place.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000001 /* Place.swift */; };
 		PPS001000000000000000002 /* PlaceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000002 /* PlaceDetailView.swift */; };
 		PPS001000000000000000007 /* MemoryStoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = PPS002000000000000000007 /* MemoryStoryDetailView.swift */; };
@@ -88,11 +88,11 @@
 		V02B000000000000000001 /* F5TTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02B000000000000000002 /* F5TTSService.swift */; };
 		V02C000000000000000001 /* VoiceSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02C000000000000000002 /* VoiceSelectionView.swift */; };
 		V02D000000000000000001 /* F5TTSSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = V02D000000000000000002 /* F5TTSSettingsView.swift */; };
-		WGT001000000000000000001 /* WelcomeBackWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000001 /* WelcomeBackWidget.swift */; };
+		WGT001000000000000000001 /* StoryOfMyLifeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000001 /* StoryOfMyLifeWidget.swift */; };
 		WGT001000000000000000002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000002 /* Assets.xcassets */; };
 		WGT001000000000000000003 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000003 /* WidgetKit.framework */; };
 		WGT001000000000000000004 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000004 /* SwiftUI.framework */; };
-		WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000005 /* WelcomeBackWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		WGT010000000000000000002 /* StoryOfMyLifeWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = WGT002000000000000000005 /* StoryOfMyLifeWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,14 +101,14 @@
 			containerPortal = FB72992900FF436E8131F682 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 15282737539D469CAF4A24B5;
-			remoteInfo = WelcomeBack;
+			remoteInfo = StoryOfMyLife;
 		};
 		WGT011000000000000000002 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FB72992900FF436E8131F682 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = WGT005000000000000000001;
-			remoteInfo = WelcomeBackWidget;
+			remoteInfo = StoryOfMyLifeWidget;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -130,7 +130,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				WGT010000000000000000002 /* WelcomeBackWidget.appex in Embed Foundation Extensions */,
+				WGT010000000000000000002 /* StoryOfMyLifeWidget.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -169,7 +169,7 @@
 		PPS002000000000000000005 /* MemoriesManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoriesManagementView.swift; sourceTree = "<group>"; };
 		PPS002000000000000000006 /* MemoryDetailEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryDetailEditView.swift; sourceTree = "<group>"; };
 		AE8C6810B365488E95EE918D /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
-		AFFB626B53B843ABACAD5923 /* WelcomeBack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WelcomeBack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AFFB626B53B843ABACAD5923 /* StoryOfMyLife.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StoryOfMyLife.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1A7AC45DE64420D84C56C35 /* FamilyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyView.swift; sourceTree = "<group>"; };
 		B7DDFCB37CC2CF458EEAF2E2 /* ModelSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSettingsView.swift; sourceTree = "<group>"; };
 		BB001MUSICKIT0000001 /* MusicKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MusicKit.framework; path = System/Library/Frameworks/MusicKit.framework; sourceTree = SDKROOT; };
@@ -181,12 +181,12 @@
 		CFG001000000000000000001 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		CFG001000000000000000002 /* Secrets.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig.template; sourceTree = "<group>"; };
 		DE297EACA8384C47815D0178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		ENT001000000000000000001 /* WelcomeBack.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WelcomeBack.entitlements; sourceTree = "<group>"; };
-		AA000000000000000000001A /* WelcomeBackWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WelcomeBackWidget.entitlements; sourceTree = "<group>"; };
+		ENT001000000000000000001 /* StoryOfMyLife.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StoryOfMyLife.entitlements; sourceTree = "<group>"; };
+		AA000000000000000000001A /* StoryOfMyLifeWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StoryOfMyLifeWidget.entitlements; sourceTree = "<group>"; };
 		E003D2E11731416396E5E3C8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E4B61E8E07414909ABD6DA65 /* MusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicView.swift; sourceTree = "<group>"; };
 		F6E093F36532A166C425721B /* LocalVoiceSessionViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceSessionViewModel.swift; sourceTree = "<group>"; };
-		F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackApp.swift; sourceTree = "<group>"; };
+		F6E2D677905F4099AEF46386 /* StoryOfMyLifeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryOfMyLifeApp.swift; sourceTree = "<group>"; };
 		FM002000000000000000001 /* FamilyMemberDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMemberDetailView.swift; sourceTree = "<group>"; };
 		KC002000000000000000001 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		LG002000000000000000001 /* LegalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalView.swift; sourceTree = "<group>"; };
@@ -220,17 +220,17 @@
 		T002AA0000000000000000004 /* AppViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModelTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000005 /* GeminiServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiServiceTests.swift; sourceTree = "<group>"; };
 		T002AA0000000000000000006 /* PlaybackViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackViewModelTests.swift; sourceTree = "<group>"; };
-		T004AA0000000000000000001 /* WelcomeBackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WelcomeBackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		T004AA0000000000000000001 /* StoryOfMyLifeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StoryOfMyLifeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		V02A000000000000000002 /* ImageDescriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDescriptionService.swift; sourceTree = "<group>"; };
 		V02B000000000000000002 /* F5TTSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F5TTSService.swift; sourceTree = "<group>"; };
 		V02C000000000000000002 /* VoiceSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSelectionView.swift; sourceTree = "<group>"; };
 		V02D000000000000000002 /* F5TTSSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F5TTSSettingsView.swift; sourceTree = "<group>"; };
-		WGT002000000000000000001 /* WelcomeBackWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeBackWidget.swift; sourceTree = "<group>"; };
+		WGT002000000000000000001 /* StoryOfMyLifeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryOfMyLifeWidget.swift; sourceTree = "<group>"; };
 		WGT002000000000000000002 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		WGT002000000000000000003 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		WGT002000000000000000004 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		WGT002000000000000000005 /* WelcomeBackWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WelcomeBackWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "WelcomeBackWidget-Info.plist"; sourceTree = "<group>"; };
+		WGT002000000000000000005 /* StoryOfMyLifeWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StoryOfMyLifeWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		WGT002000000000000000006 /* StoryOfMyLifeWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "StoryOfMyLifeWidget-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -277,10 +277,10 @@
 		0B822AB8ABC64A07BA47C3B4 = {
 			isa = PBXGroup;
 			children = (
-				2057BA6F46724B71A613E6DB /* WelcomeBack */,
+				2057BA6F46724B71A613E6DB /* StoryOfMyLife */,
 				CFG000000000000000000001 /* Config */,
-				WGT004000000000000000001 /* WelcomeBackWidget */,
-				T006AA0000000000000000001 /* WelcomeBackTests */,
+				WGT004000000000000000001 /* StoryOfMyLifeWidget */,
+				T006AA0000000000000000001 /* StoryOfMyLifeTests */,
 				4DB4CCA7AFE54C2C8ABC05AF /* Products */,
 				BB001FRAMEWORKS0000001 /* Frameworks */,
 			);
@@ -294,10 +294,10 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
-		2057BA6F46724B71A613E6DB /* WelcomeBack */ = {
+		2057BA6F46724B71A613E6DB /* StoryOfMyLife */ = {
 			isa = PBXGroup;
 			children = (
-				F6E2D677905F4099AEF46386 /* WelcomeBackApp.swift */,
+				F6E2D677905F4099AEF46386 /* StoryOfMyLifeApp.swift */,
 				CDE33D5DD1A34B418B2E6D36 /* Models */,
 				0AC5CE7B3F224A4A8C503639 /* ViewModels */,
 				5AA4BFAEF10046B7969992FE /* Services */,
@@ -306,7 +306,7 @@
 				50B68D6E252C4BD796CF26B3 /* Supporting */,
 				PRI002000000000000000001 /* PrivacyInfo.xcprivacy */,
 			);
-			path = WelcomeBack;
+			path = StoryOfMyLife;
 			sourceTree = "<group>";
 		};
 		292412A7699B4FA78D2F9763 /* Resources */ = {
@@ -351,9 +351,9 @@
 		4DB4CCA7AFE54C2C8ABC05AF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AFFB626B53B843ABACAD5923 /* WelcomeBack.app */,
-				T004AA0000000000000000001 /* WelcomeBackTests.xctest */,
-				WGT002000000000000000005 /* WelcomeBackWidget.appex */,
+				AFFB626B53B843ABACAD5923 /* StoryOfMyLife.app */,
+				T004AA0000000000000000001 /* StoryOfMyLifeTests.xctest */,
+				WGT002000000000000000005 /* StoryOfMyLifeWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -362,7 +362,7 @@
 			isa = PBXGroup;
 			children = (
 				DE297EACA8384C47815D0178 /* Info.plist */,
-				ENT001000000000000000001 /* WelcomeBack.entitlements */,
+				ENT001000000000000000001 /* StoryOfMyLife.entitlements */,
 				BB1100BB00BB1100BB00BB11 /* DebugLog.swift */,
 				CC2200BB00CC2200BB00CC22 /* LanguageManager.swift */,
 				DD3300BB00DD3300BB00DD33 /* Strings.swift */,
@@ -521,7 +521,7 @@
 			path = Onboarding;
 			sourceTree = "<group>";
 		};
-		T006AA0000000000000000001 /* WelcomeBackTests */ = {
+		T006AA0000000000000000001 /* StoryOfMyLifeTests */ = {
 			isa = PBXGroup;
 			children = (
 				T002AA0000000000000000001 /* MemoryTests.swift */,
@@ -531,26 +531,26 @@
 				T002AA0000000000000000005 /* GeminiServiceTests.swift */,
 				T002AA0000000000000000006 /* PlaybackViewModelTests.swift */,
 			);
-			path = WelcomeBackTests;
+			path = StoryOfMyLifeTests;
 			sourceTree = "<group>";
 		};
-		WGT004000000000000000001 /* WelcomeBackWidget */ = {
+		WGT004000000000000000001 /* StoryOfMyLifeWidget */ = {
 			isa = PBXGroup;
 			children = (
-				WGT002000000000000000001 /* WelcomeBackWidget.swift */,
+				WGT002000000000000000001 /* StoryOfMyLifeWidget.swift */,
 				WGT002000000000000000002 /* Assets.xcassets */,
-				WGT002000000000000000006 /* WelcomeBackWidget-Info.plist */,
-				AA000000000000000000001A /* WelcomeBackWidget.entitlements */,
+				WGT002000000000000000006 /* StoryOfMyLifeWidget-Info.plist */,
+				AA000000000000000000001A /* StoryOfMyLifeWidget.entitlements */,
 			);
-			path = WelcomeBackWidget;
+			path = StoryOfMyLifeWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		15282737539D469CAF4A24B5 /* WelcomeBack */ = {
+		15282737539D469CAF4A24B5 /* StoryOfMyLife */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AC866B4AFA354D33ABC46F51 /* Build configuration list for PBXNativeTarget "WelcomeBack" */;
+			buildConfigurationList = AC866B4AFA354D33ABC46F51 /* Build configuration list for PBXNativeTarget "StoryOfMyLife" */;
 			buildPhases = (
 				57895A9AD78541B6B5F62E69 /* Sources */,
 				591463A43A7347799042A51D /* Frameworks */,
@@ -563,14 +563,14 @@
 			dependencies = (
 				WGT011000000000000000001 /* PBXTargetDependency */,
 			);
-			name = WelcomeBack;
-			productName = WelcomeBack;
-			productReference = AFFB626B53B843ABACAD5923 /* WelcomeBack.app */;
+			name = StoryOfMyLife;
+			productName = StoryOfMyLife;
+			productReference = AFFB626B53B843ABACAD5923 /* StoryOfMyLife.app */;
 			productType = "com.apple.product-type.application";
 		};
-		T007AA0000000000000000001 /* WelcomeBackTests */ = {
+		T007AA0000000000000000001 /* StoryOfMyLifeTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = T008AA0000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackTests" */;
+			buildConfigurationList = T008AA0000000000000000001 /* Build configuration list for PBXNativeTarget "StoryOfMyLifeTests" */;
 			buildPhases = (
 				T009AA0000000000000000001 /* Sources */,
 				T005AA0000000000000000001 /* Frameworks */,
@@ -580,14 +580,14 @@
 			dependencies = (
 				T010AA0000000000000000001 /* PBXTargetDependency */,
 			);
-			name = WelcomeBackTests;
-			productName = WelcomeBackTests;
-			productReference = T004AA0000000000000000001 /* WelcomeBackTests.xctest */;
+			name = StoryOfMyLifeTests;
+			productName = StoryOfMyLifeTests;
+			productReference = T004AA0000000000000000001 /* StoryOfMyLifeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		WGT005000000000000000001 /* WelcomeBackWidget */ = {
+		WGT005000000000000000001 /* StoryOfMyLifeWidget */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = WGT008000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackWidget" */;
+			buildConfigurationList = WGT008000000000000000001 /* Build configuration list for PBXNativeTarget "StoryOfMyLifeWidget" */;
 			buildPhases = (
 				WGT006000000000000000001 /* Sources */,
 				WGT003000000000000000001 /* Frameworks */,
@@ -597,9 +597,9 @@
 			);
 			dependencies = (
 			);
-			name = WelcomeBackWidget;
-			productName = WelcomeBackWidget;
-			productReference = WGT002000000000000000005 /* WelcomeBackWidget.appex */;
+			name = StoryOfMyLifeWidget;
+			productName = StoryOfMyLifeWidget;
+			productReference = WGT002000000000000000005 /* StoryOfMyLifeWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -624,7 +624,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 13D5CBDABBF94964B094F216 /* Build configuration list for PBXProject "WelcomeBack" */;
+			buildConfigurationList = 13D5CBDABBF94964B094F216 /* Build configuration list for PBXProject "StoryOfMyLife" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -637,9 +637,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				15282737539D469CAF4A24B5 /* WelcomeBack */,
-				T007AA0000000000000000001 /* WelcomeBackTests */,
-				WGT005000000000000000001 /* WelcomeBackWidget */,
+				15282737539D469CAF4A24B5 /* StoryOfMyLife */,
+				T007AA0000000000000000001 /* StoryOfMyLifeTests */,
+				WGT005000000000000000001 /* StoryOfMyLifeWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -670,7 +670,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A12B001CB7DB49AF9563AD13 /* WelcomeBackApp.swift in Sources */,
+				A12B001CB7DB49AF9563AD13 /* StoryOfMyLifeApp.swift in Sources */,
 				BB1100AA00BB1100AA00BB11 /* DebugLog.swift in Sources */,
 				CC2200AA00CC2200AA00CC22 /* LanguageManager.swift in Sources */,
 				DD3300AA00DD3300AA00DD33 /* Strings.swift in Sources */,
@@ -759,7 +759,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				WGT001000000000000000001 /* WelcomeBackWidget.swift in Sources */,
+				WGT001000000000000000001 /* StoryOfMyLifeWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -768,12 +768,12 @@
 /* Begin PBXTargetDependency section */
 		T010AA0000000000000000001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 15282737539D469CAF4A24B5 /* WelcomeBack */;
+			target = 15282737539D469CAF4A24B5 /* StoryOfMyLife */;
 			targetProxy = T003AA0000000000000000001 /* PBXContainerItemProxy */;
 		};
 		WGT011000000000000000001 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = WGT005000000000000000001 /* WelcomeBackWidget */;
+			target = WGT005000000000000000001 /* StoryOfMyLifeWidget */;
 			targetProxy = WGT011000000000000000002 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -849,7 +849,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
+				CODE_SIGN_ENTITLEMENTS = StoryOfMyLife/Supporting/StoryOfMyLife.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 17;
@@ -857,14 +857,14 @@
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WelcomeBack/Supporting/Info.plist;
+				INFOPLIST_FILE = StoryOfMyLife/Supporting/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -879,7 +879,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = WelcomeBack/Supporting/WelcomeBack.entitlements;
+				CODE_SIGN_ENTITLEMENTS = StoryOfMyLife/Supporting/StoryOfMyLife.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 17;
@@ -887,14 +887,14 @@
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = WelcomeBack/Supporting/Info.plist;
+				INFOPLIST_FILE = StoryOfMyLife/Supporting/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -969,12 +969,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WelcomeBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WelcomeBack";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StoryOfMyLife.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StoryOfMyLife";
 			};
 			name = Debug;
 		};
@@ -987,12 +987,12 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WelcomeBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WelcomeBack";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StoryOfMyLife.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/StoryOfMyLife";
 			};
 			name = Release;
 		};
@@ -1000,12 +1000,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = StoryOfMyLifeWidget/StoryOfMyLifeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
+				INFOPLIST_FILE = "StoryOfMyLifeWidget/StoryOfMyLifeWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1013,7 +1013,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1026,12 +1026,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = WelcomeBackWidget/WelcomeBackWidget.entitlements;
+				CODE_SIGN_ENTITLEMENTS = StoryOfMyLifeWidget/StoryOfMyLifeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "WelcomeBackWidget/WelcomeBackWidget-Info.plist";
+				INFOPLIST_FILE = "StoryOfMyLifeWidget/StoryOfMyLifeWidget-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1039,7 +1039,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.5;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.welcomeback.widget;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1051,7 +1051,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13D5CBDABBF94964B094F216 /* Build configuration list for PBXProject "WelcomeBack" */ = {
+		13D5CBDABBF94964B094F216 /* Build configuration list for PBXProject "StoryOfMyLife" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3E2AADFDDECE49C2847688BX /* Debug */,
@@ -1060,7 +1060,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AC866B4AFA354D33ABC46F51 /* Build configuration list for PBXNativeTarget "WelcomeBack" */ = {
+		AC866B4AFA354D33ABC46F51 /* Build configuration list for PBXNativeTarget "StoryOfMyLife" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AFFB626B53B843ABACAD592X /* Debug */,
@@ -1069,7 +1069,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		T008AA0000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackTests" */ = {
+		T008AA0000000000000000001 /* Build configuration list for PBXNativeTarget "StoryOfMyLifeTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				T011AA0000000000000000001 /* Debug */,
@@ -1078,7 +1078,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		WGT008000000000000000001 /* Build configuration list for PBXNativeTarget "WelcomeBackWidget" */ = {
+		WGT008000000000000000001 /* Build configuration list for PBXNativeTarget "StoryOfMyLifeWidget" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				WGT009000000000000000001 /* Debug */,

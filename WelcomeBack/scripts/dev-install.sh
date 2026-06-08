@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# dev-install.sh — Clean build & install Welcome Back on Dirti Harri
+# dev-install.sh — Clean build & install Story of My Life on Dirti Harri
 #
 # Usage:  make install
 #         ./scripts/dev-install.sh [--no-bump]
@@ -20,9 +20,9 @@ DEVICE_ID="00008130-001659462E8B803A"   # Dirti Harri (hardware UDID)
 # CoreDevice UUID — used by xcrun devicectl (Xcode 15+)
 COREDEVICE_UUID="7ABD2D9D-DAAF-5F34-85DC-89BBBBC0DE38"
 DEVICE_NAME="Dirti Harri"
-SCHEME="WelcomeBack"
+SCHEME="StoryOfMyLife"
 CONFIGURATION="Debug"
-APP_NAME="WelcomeBack"
+APP_NAME="StoryOfMyLife"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -142,6 +142,6 @@ xcrun devicectl device install app \
   "$APP_PATH" 2>&1 | grep -v "^$"
 
 green ""
-green "✅ Welcome Back (build ${NEW_BUILD:-$CURRENT_BUILD}) installed on $DEVICE_NAME"
+green "✅ Story of My Life (build ${NEW_BUILD:-$CURRENT_BUILD}) installed on $DEVICE_NAME"
 echo "   Open the app on your iPhone — changes are live."
 echo

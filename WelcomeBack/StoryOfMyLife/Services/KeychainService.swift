@@ -5,7 +5,7 @@ import Security
 /// (API keys, tokens) securely instead of UserDefaults.
 enum KeychainService {
 
-    private static let service = Bundle.main.bundleIdentifier ?? "ai.juntunen.welcomeback"
+    private static let service = Bundle.main.bundleIdentifier ?? "ai.juntunen.storyofmylife"
 
     // MARK: - Public API
 

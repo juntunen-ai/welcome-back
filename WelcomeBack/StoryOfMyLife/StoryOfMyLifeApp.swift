@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct WelcomeBackApp: App {
+struct StoryOfMyLifeApp: App {
 
     @StateObject private var appViewModel = AppViewModel()
     @StateObject private var languageManager = LanguageManager.shared

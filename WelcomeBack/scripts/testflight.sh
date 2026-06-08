@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# testflight.sh — Archive Welcome Back and open Xcode Organizer for upload
+# testflight.sh — Archive Story of My Life and open Xcode Organizer for upload
 #
 # Usage:  make tf
 #         ./scripts/testflight.sh
@@ -15,8 +15,8 @@
 # =============================================================================
 set -euo pipefail
 
-SCHEME="WelcomeBack"
-APP_NAME="WelcomeBack"
+SCHEME="StoryOfMyLife"
+APP_NAME="StoryOfMyLife"
 EXPECTED_BRANCH_PREFIX="release/"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -72,7 +72,7 @@ green "  ✓ DerivedData cleared"
 
 # ── 4. Archive ────────────────────────────────────────────────────────────────
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
-ARCHIVE_PATH="$ARCHIVES_DIR/WelcomeBack_v${MARKETING}_b${NEW_BUILD}_${TIMESTAMP}.xcarchive"
+ARCHIVE_PATH="$ARCHIVES_DIR/StoryOfMyLife_v${MARKETING}_b${NEW_BUILD}_${TIMESTAMP}.xcarchive"
 mkdir -p "$ARCHIVES_DIR"
 
 step "Archiving (Release configuration)"
@@ -120,7 +120,7 @@ echo "  In Organizer: select the archive → Distribute App → TestFlight"
 
 # ── 6. Commit build number bump ───────────────────────────────────────────────
 step "Committing build number bump"
-git add WelcomeBack.xcodeproj/project.pbxproj
+git add StoryOfMyLife.xcodeproj/project.pbxproj
 git commit -m "Bump build to $NEW_BUILD for TestFlight v$MARKETING
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"

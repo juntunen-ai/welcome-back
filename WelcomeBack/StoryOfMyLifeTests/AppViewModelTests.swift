@@ -1,5 +1,5 @@
 import XCTest
-@testable import WelcomeBack
+@testable import StoryOfMyLife
 
 @MainActor
 final class AppViewModelTests: XCTestCase {

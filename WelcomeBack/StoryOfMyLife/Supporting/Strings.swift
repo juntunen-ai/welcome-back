@@ -29,7 +29,7 @@ struct Strings {
         "common.connect":  "Connect",
 
         // Home
-        "home.greeting":                 "Welcome Back,",
+        "home.greeting":                 "Welcome back,",
         "home.friend":                   "Friend",
         "home.location.label":           "Your Location",
         "home.location.finding":         "Finding location…",
@@ -40,7 +40,7 @@ struct Strings {
         "home.mic.accessibility.hint":   "Double-tap to begin a voice conversation about your memories",
         "home.profile.accessibility":    "Your profile photo — tap to edit",
         "home.family.header":            "Your Family",
-        "home.intro.title":              "What is Welcome Back?",
+        "home.intro.title":              "What is Story of My Life?",
         "home.intro.body":               "A compassionate AI companion that helps you remember the people, places, and moments that matter most. Tap the microphone and start talking.",
 
         // Onboarding — Language picker
@@ -49,11 +49,11 @@ struct Strings {
         "onboarding.language.continue": "Continue",
 
         // Onboarding — Welcome
-        "onboarding.welcome.title":    "Welcome Back",
+        "onboarding.welcome.title":    "Story of My Life",
         "onboarding.welcome.subtitle": "A compassionate companion\nfor your most precious memories.",
         "onboarding.welcome.cta":      "Get Started",
         "onboarding.welcome.time":     "Set up takes about 1 minute",
-        "onboarding.welcome.a11y":     "Get started with Welcome Back",
+        "onboarding.welcome.a11y":     "Get started with Story of My Life",
 
         // Onboarding — Profile
         "onboarding.profile.title":              "What's your name?",
@@ -138,7 +138,7 @@ struct Strings {
 
         // Onboarding — Permissions
         "onboarding.permissions.title":           "A few permissions",
-        "onboarding.permissions.subtitle":        "Welcome Back needs access to your\nmicrophone and photos.",
+        "onboarding.permissions.subtitle":        "Story of My Life needs access to your\nmicrophone and photos.",
         "onboarding.permissions.mic.title":       "Microphone",
         "onboarding.permissions.mic.desc":        "Listen to your voice so the AI companion can understand you.",
         "onboarding.permissions.photos.title":    "Photo Library",
@@ -156,7 +156,7 @@ struct Strings {
 
         // Onboarding — Model Download
         "onboarding.model.title":              "Download the AI",
-        "onboarding.model.subtitle":           "Welcome Back uses an on-device AI.\nYour conversations are completely private\nand work without internet.",
+        "onboarding.model.subtitle":           "Story of My Life uses an on-device AI.\nYour conversations are completely private\nand work without internet.",
         "onboarding.model.card.subtitle":      "Google on-device AI · %@ · Wi-Fi recommended",
         "onboarding.model.ready":              "AI Ready!",
         "onboarding.model.downloading":        "Downloading Gemma 4…",
@@ -176,9 +176,9 @@ struct Strings {
 
         // Onboarding — Complete
         "onboarding.complete.title":    "You're all set%@!",
-        "onboarding.complete.subtitle": "Welcome Back is ready to help you\nrediscover your memories.",
+        "onboarding.complete.subtitle": "Story of My Life is ready to help you\nrediscover your memories.",
         "onboarding.complete.cta":      "Start Remembering",
-        "onboarding.complete.cta.a11y": "Start using Welcome Back",
+        "onboarding.complete.cta.a11y": "Start using Story of My Life",
         "onboarding.complete.tip1":     "Tap the big mic button on the Home screen to start a conversation.",
         "onboarding.complete.tip2":     "Add family members in Settings so the app can introduce them.",
         "onboarding.complete.tip3":     "Your Memories tab shows photos from your photo library grouped by month.",
@@ -220,7 +220,7 @@ struct Strings {
         "settings.reset.confirm.title":      "Reset to New User?",
         "settings.reset.confirm.action":     "Reset Everything",
         "settings.reset.confirm.message":    "This will erase all profile data, family members, and saved photos. The onboarding flow will restart. This cannot be undone.",
-        "settings.footer":                   "Welcome Back uses on-device AI to protect your privacy",
+        "settings.footer":                   "Story of My Life uses on-device AI to protect your privacy",
         "settings.privacy_link":             "Privacy Policy",
 
         // Personal Info
@@ -390,7 +390,7 @@ struct Strings {
         "voicemode.privacy.title":          "Your Privacy",
         "voicemode.privacy.text":           "All conversations run entirely on your iPhone. No audio, no text, and no personal data is ever sent to external servers.",
         "voicemode.offline.title":          "Works Offline",
-        "voicemode.offline.text":           "Once the Gemma 4 model is downloaded, Welcome Back works without any internet connection.",
+        "voicemode.offline.text":           "Once the Gemma 4 model is downloaded, Story of My Life works without any internet connection.",
 
         // Notifications
         "notifications.title":               "Notifications",
@@ -441,7 +441,7 @@ struct Strings {
         "home.mic.accessibility.hint":   "Kaksoisnapauta aloittaaksesi äänijuttelun muistoistasi",
         "home.profile.accessibility":    "Profiilikuvasi — napauta muokataksesi",
         "home.family.header":            "Perheesi",
-        "home.intro.title":              "Mikä on Welcome Back?",
+        "home.intro.title":              "Mikä on Story of My Life?",
         "home.intro.body":               "Välittävä tekoälykumppani, joka auttaa sinua muistamaan tärkeimmät ihmiset, paikat ja hetket. Napauta mikrofonia ja ala puhua.",
 
         // Onboarding — Kielivalinta
@@ -450,11 +450,11 @@ struct Strings {
         "onboarding.language.continue": "Jatka",
 
         // Onboarding — Tervetuloa
-        "onboarding.welcome.title":    "Welcome Back",
+        "onboarding.welcome.title":    "Story of My Life",
         "onboarding.welcome.subtitle": "Välittävä kumppani\nkalleimmille muistoillesi.",
         "onboarding.welcome.cta":      "Aloita",
         "onboarding.welcome.time":     "Käyttöönotto kestää noin minuutin",
-        "onboarding.welcome.a11y":     "Aloita Welcome Back -sovelluksen käyttö",
+        "onboarding.welcome.a11y":     "Aloita Story of My Life -sovelluksen käyttö",
 
         // Onboarding — Profiili
         "onboarding.profile.title":              "Mikä sinun nimesi on?",
@@ -539,7 +539,7 @@ struct Strings {
 
         // Onboarding — Luvat
         "onboarding.permissions.title":           "Muutama lupa",
-        "onboarding.permissions.subtitle":        "Welcome Back tarvitsee pääsyn\nmikrofonillesi ja kuvillesi.",
+        "onboarding.permissions.subtitle":        "Story of My Life tarvitsee pääsyn\nmikrofonillesi ja kuvillesi.",
         "onboarding.permissions.mic.title":       "Mikrofoni",
         "onboarding.permissions.mic.desc":        "Kuuntelee ääntäsi, jotta tekoälykumppani voi ymmärtää sinua.",
         "onboarding.permissions.photos.title":    "Kuvagalleria",
@@ -557,7 +557,7 @@ struct Strings {
 
         // Onboarding — Mallin lataus
         "onboarding.model.title":              "Lataa tekoäly",
-        "onboarding.model.subtitle":           "Welcome Back käyttää laitteessa toimivaa tekoälyä.\nKeskustelusi ovat täysin yksityisiä\nja toimivat ilman internetyhteyttä.",
+        "onboarding.model.subtitle":           "Story of My Life käyttää laitteessa toimivaa tekoälyä.\nKeskustelusi ovat täysin yksityisiä\nja toimivat ilman internetyhteyttä.",
         "onboarding.model.card.subtitle":      "Google laitteen tekoäly · %@ · Wi-Fi suositellaan",
         "onboarding.model.ready":              "Tekoäly valmis!",
         "onboarding.model.downloading":        "Ladataan Gemma 4…",
@@ -577,9 +577,9 @@ struct Strings {
 
         // Onboarding — Valmis
         "onboarding.complete.title":    "Kaikki on valmiina%@!",
-        "onboarding.complete.subtitle": "Welcome Back on valmis auttamaan sinua\nmuistamaan muistosi.",
+        "onboarding.complete.subtitle": "Story of My Life on valmis auttamaan sinua\nmuistamaan muistosi.",
         "onboarding.complete.cta":      "Aloita muistelu",
-        "onboarding.complete.cta.a11y": "Aloita Welcome Backin käyttö",
+        "onboarding.complete.cta.a11y": "Aloita Story of My Lifein käyttö",
         "onboarding.complete.tip1":     "Napauta isoa mikrofoninappia kotinäytöllä aloittaaksesi keskustelun.",
         "onboarding.complete.tip2":     "Lisää perheenjäseniä asetuksissa, jotta sovellus voi esitellä heidät.",
         "onboarding.complete.tip3":     "Muistot-välilehti näyttää kuvat kuvakirjastostasi ryhmiteltyinä kuukauden mukaan.",
@@ -621,7 +621,7 @@ struct Strings {
         "settings.reset.confirm.title":      "Nollaatko uudeksi käyttäjäksi?",
         "settings.reset.confirm.action":     "Nollaa kaikki",
         "settings.reset.confirm.message":    "Tämä poistaa kaikki profiilitiedot, perheenjäsenet ja tallennetut kuvat. Käyttöönottoprosessi käynnistyy uudelleen. Tätä ei voi peruuttaa.",
-        "settings.footer":                   "Welcome Back käyttää laitteen tekoälyä suojellakseen yksityisyyttäsi",
+        "settings.footer":                   "Story of My Life käyttää laitteen tekoälyä suojellakseen yksityisyyttäsi",
         "settings.privacy_link":             "Tietosuojakäytäntö",
 
         // Henkilötiedot
@@ -791,7 +791,7 @@ struct Strings {
         "voicemode.privacy.title":          "Yksityisyytesi",
         "voicemode.privacy.text":           "Kaikki keskustelut suoritetaan täysin iPhonellasi. Mitään ääntä, tekstiä tai henkilötietoja ei koskaan lähetetä ulkoisille palvelimille.",
         "voicemode.offline.title":          "Toimii offline-tilassa",
-        "voicemode.offline.text":           "Kun Gemma 4 -malli on ladattu, Welcome Back toimii ilman internetyhteyttä.",
+        "voicemode.offline.text":           "Kun Gemma 4 -malli on ladattu, Story of My Life toimii ilman internetyhteyttä.",
 
         // Ilmoitukset
         "notifications.title":               "Ilmoitukset",
