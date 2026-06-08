@@ -25,6 +25,15 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private var userName = ""
     private var userProfile: UserProfile?
 
+    /// The conversation language (from the app's language setting), captured at
+    /// session start. Drives the LLM's response language and the greeting so the
+    /// AI always speaks the user's language regardless of the device language or
+    /// the language the profile facts are written in.
+    private var sessionLanguage: AppLanguage = .english
+
+    /// Consecutive empty/garbled transcriptions, to avoid a re-engagement loop in noise.
+    private var consecutiveEmptyFinals = 0
+
     // MARK: - Sentence Buffer (for streaming LLM → TTS)
 
     private var tokenBuffer = ""
@@ -65,6 +74,10 @@ final class LocalVoiceAIService: @unchecked Sendable {
         updateState(.connecting)   // UI shows "Loading AI model…"
 
         sessionImageDescriptions = await MainActor.run { ImageDescriptionService.shared.descriptions }
+        sessionLanguage = await MainActor.run { LanguageManager.shared.language }
+        #if DEBUG
+        dprint("[LocalVoiceAI] 🌐 Conversation language: \(sessionLanguage.englishName)")
+        #endif
         let systemPrompt = buildSystemPrompt(from: profile, imageDescriptions: sessionImageDescriptions)
         let llm: LocalLLMService
 
@@ -165,7 +178,9 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private func startListeningCycle() {
         do {
             try SpeechService.shared.startListeningWithVAD(
-                silenceThreshold: 0.8,
+                // Elderly / memory-support speakers pause longer mid-recall; a short
+                // cutoff cuts them off. ~3s lets them finish their thought.
+                silenceThreshold: 3.0,
                 onPartialResult: { [weak self] text in
                     guard let self else { return }
                     self.currentTranscription = text
@@ -189,14 +204,21 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     #if DEBUG
                     dprint("[LocalVoiceAI] 📝 Final result: '\(finalText)'")
                     #endif
-                    guard let self, !finalText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    guard let self else { return }
+                    let trimmed = finalText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if trimmed.isEmpty {
+                        // Heard sound but couldn't transcribe it. Gently re-engage —
+                        // never "I didn't catch that" (feels like failure). Also avoids
+                        // the conversation silently hanging here.
                         #if DEBUG
-                        dprint("[LocalVoiceAI] ⚠️ Final text was empty, skipping")
+                        dprint("[LocalVoiceAI] ⚠️ Empty final — gently re-engaging")
                         #endif
+                        self.gentlyReEngage()
                         return
                     }
+                    self.consecutiveEmptyFinals = 0
                     Task {
-                        await self.processUserInput(finalText)
+                        await self.processUserInput(trimmed)
                     }
                 }
             )
@@ -384,7 +406,13 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private func generateGreeting() async {
         guard let llm = llmService else { return }
 
-        let greetingPrompt = "Greet \(userName) warmly in 1 short sentence. Be natural and friendly."
+        // Open warmly and, if we have a positive memory, gently offer it as an
+        // invitation to reminisce — never as a quiz ("do you remember…?").
+        var memoryInvite = ""
+        if let memory = userProfile?.memories.first(where: { !$0.title.isEmpty }) {
+            memoryInvite = " Then, as a soft optional invitation, mention you were just thinking of \"\(memory.title)\" and ask if they'd like to talk about it for a moment. Do not ask them to recall any facts."
+        }
+        let greetingPrompt = "Greet \(userName) warmly by name in one short, natural spoken sentence, in \(sessionLanguage.englishName).\(memoryInvite) Keep it to 1–2 short spoken sentences. No lists, markdown, or emoji."
         let greeting = await llm.generateResponse(userMessage: greetingPrompt)
             .reduce("", +)
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -422,6 +450,31 @@ final class LocalVoiceAIService: @unchecked Sendable {
         updateState(.listening)
         Task { @MainActor [weak self] in
             self?.startListeningCycle()
+        }
+    }
+
+    /// We heard sound but couldn't transcribe it. Re-engage warmly without making
+    /// the person feel they failed. After a couple of empties (likely background
+    /// noise) just re-arm silently instead of talking over an empty room.
+    private func gentlyReEngage() {
+        guard sessionState != .disconnected, !isProcessing else { return }
+        consecutiveEmptyFinals += 1
+
+        guard consecutiveEmptyFinals <= 1 else {
+            // Repeated empties are probably ambient noise — quietly resume
+            // listening instead of talking into an empty room.
+            onAllSpeechFinished()
+            return
+        }
+
+        let line = sessionLanguage == .finnish
+            ? "Olen tässä ihan rauhassa. Ota aikaa niin paljon kuin haluat."
+            : "I'm right here with you. Take all the time you need."
+        updateState(.aiSpeaking)
+        Task { @MainActor [weak self] in
+            SpeechService.shared.speakSentences([line]) { [weak self] in
+                self?.onAllSpeechFinished()
+            }
         }
     }
 
@@ -512,8 +565,15 @@ final class LocalVoiceAIService: @unchecked Sendable {
         let relevantMemberIDs = Set(relevantMembers.map(\.id))
 
         var prompt = """
-        You are a friendly, warm companion talking with \(profile.name). \
-        Chat naturally like a good friend would — relaxed, curious, unhurried.
+        You are a warm, gentle companion sitting beside \(profile.name), who is older and \
+        may have some memory difficulties. Your purpose is simply to keep them company and \
+        help them enjoy their own memories — not to inform, test, assist, or fix anything. \
+        Think of yourself as a kind friend on the sofa, unhurried and fully present.
+
+        LANGUAGE — THIS IS CRITICAL: Always speak ONLY in \(sessionLanguage.englishName) (\(sessionLanguage.nativeName)). \
+        Every single reply must be entirely in \(sessionLanguage.englishName). Some of the facts below may be \
+        written in another language — that does not matter, you still reply in \(sessionLanguage.englishName). \
+        Never mix languages and never switch language even if \(profile.name) does.
 
         """
 
@@ -565,7 +625,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 let dateStr = memory.date.isEmpty ? "" : " [\(memory.date)]"
                 prompt += "- \(memory.title)\(dateStr): \(memory.description)"
                 if let photoDesc = imageDescs[memory.imageURL], photoDesc != "photo" {
-                    prompt += " [Photo: \(photoDesc)]"
+                    // Rough auto-generated hint only — may be wrong. Never state it as fact.
+                    prompt += " [there is a photo of this; rough hint, may be inaccurate: \(photoDesc)]"
                 }
                 prompt += "\n"
             }
@@ -573,16 +634,29 @@ final class LocalVoiceAIService: @unchecked Sendable {
 
         prompt += """
 
-        Guidelines:
-        - Be conversational, warm, and unhurried. Don't sound like a helper or assistant.
-        - Follow \(profile.name)'s lead: if they want to chat about something, go with it.
-        - Keep replies to 1-2 sentences. This is a spoken conversation — short and natural.
-        - Start your response immediately with the main point, not filler words.
-        - If they seem unsure about something, gently offer a detail or ask a light question — never make them feel tested.
-        - Use the facts above as a natural backdrop, not a script. Bring them up when relevant.
-        - Never invent names, people, or events beyond what's listed.
-        - If asked whether you are an AI, answer honestly but warmly.
-        - Never give medical advice.
+        HOW TO TALK WITH \(profile.name):
+        - Keep every reply to ONE, at most TWO, short spoken sentences. One idea per sentence.
+        - Be warm, calm and unhurried. Lead with feeling, not information. Reflect the emotion \
+        you hear ("That sounds wonderful", "You really loved that place").
+        - NEVER quiz or test. Never ask "Do you remember…?", never ask for dates, names, or facts, \
+        and never correct \(profile.name). If they misremember, simply go along with their version warmly.
+        - Instead of asking them to recall, SHARE a detail from their life and gently invite. \
+        Prefer "what was it like" / "how was that" over "why".
+          GOOD: "You and Anna married at Porvoo Cathedral, with sunflowers everywhere — it sounds beautiful."
+          BAD: "Do you remember where you married Anna?" or "What year was your wedding?"
+        - If \(profile.name) seems confused, repeats themselves, or contradicts the facts, do not point \
+        it out. Answer again warmly as if for the first time. If they seem upset, slow down, validate \
+        the feeling ("I'm right here with you"), then gently move toward a calm, happy memory.
+        - It is completely fine to sit in a little silence. Never rush them.
+        - Speak as a person speaks aloud: NO lists, numbers, bullet points, markdown, asterisks, or emoji. \
+        Spell things out (say the time and dates in words). Keep sentences short and easy to follow by ear.
+        - Use ONLY the facts above. Never invent people, dates, or events. There may be photos, but you \
+        cannot truly see them — never claim what a photo shows; instead mention a photo exists and invite \
+        \(profile.name)'s own recollection.
+        - Speak respectfully, as to a dignified adult — never babyish, sing-song, or condescending.
+        - If asked whether you are an AI, answer simply and warmly, without a long disclaimer.
+        - Never give medical, legal, or financial advice; gently suggest asking a family member.
+        - Reply ONLY in \(sessionLanguage.englishName) (\(sessionLanguage.nativeName)), always.
         """
 
         return prompt

@@ -122,17 +122,17 @@ final class LocalLLMService: @unchecked Sendable {
         llama_log_set(llamaLogCallback, nil)
         llama_backend_init()
 
-        // 2. Try to load model + create context, with CPU-only fallback if GPU path fails.
-        //    On real devices we first attempt full Metal offload; if either model load
-        //    or context creation returns nil (most common cause: memory pressure from
-        //    3.1 GB mmap + Metal KV cache on smaller iPhones), we retry with
-        //    n_gpu_layers=0 so the app can still run entirely on CPU.
-        // With a paid Apple Developer account + increased-memory-limit entitlement,
-        // we can use Metal GPU offload for dramatically faster inference.
-        // Try full GPU offload first (999 = all layers), then CPU-only as fallback
-        // in case of memory pressure on smaller devices.
-        let gpuLayerAttempts: [Int32] = [999, 0]
-        dprint("[LocalLLM] 🚀 Metal GPU mode enabled (paid developer account)")
+        // 2. Load model + create context on CPU.
+        //    IMPORTANT: We run CPU-only (n_gpu_layers=0). The Gemma 4 (gemma4) Metal
+        //    GPU path in the bundled llama.xcframework produces GARBAGE output on
+        //    iOS device (gibberish, no error) even though the same GGUF is coherent
+        //    on CPU and on macOS Metal — a known architecture-specific iOS Metal bug
+        //    class (flash-attention / SWA kernels for new arches). CPU is the proven
+        //    known-good backend the app originally shipped with. Re-enable GPU only
+        //    after verifying coherent output ON DEVICE with a newer xcframework
+        //    (and likely flash_attn disabled).
+        let gpuLayerAttempts: [Int32] = [0]
+        dprint("[LocalLLM] 🧠 CPU-only mode (Gemma 4 iOS Metal path produces gibberish — verified)")
 
         let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
         dprint("[LocalLLM] 🔧 Using \(nThreads) threads")
@@ -161,13 +161,13 @@ final class LocalLLMService: @unchecked Sendable {
             dprint("[LocalLLM] ✅ Model loaded into memory")
 
             var ctxParams = llama_context_default_params()
-            ctxParams.n_ctx = 2048          // larger KV cache for longer conversations (paid account + increased-memory-limit)
+            ctxParams.n_ctx = 4096          // longer conversational memory (CPU + increased-memory-limit entitlement)
             ctxParams.n_batch = 256
             ctxParams.n_ubatch = 256
             ctxParams.n_threads = Int32(nThreads)
             ctxParams.n_threads_batch = Int32(nThreads)
             ctxParams.flash_attn_type = LLAMA_FLASH_ATTN_TYPE_AUTO
-            dprint("[LocalLLM] 🔧 Creating context (n_ctx=2048, n_batch=256, flash_attn=auto)...")
+            dprint("[LocalLLM] 🔧 Creating context (n_ctx=4096, n_batch=256, flash_attn=auto)...")
 
             guard let ctx = llama_init_from_model(mdl, ctxParams) else {
                 dprint("[LocalLLM] ❌ llama_init_from_model returned nil (n_gpu_layers=\(attemptLayers)) — will retry on CPU if possible")
@@ -355,17 +355,19 @@ final class LocalLLMService: @unchecked Sendable {
 
     // MARK: - System Prompt
 
-    /// Stores the system prompt for Gemma 4 (embedded in the first user turn).
-    /// Gemma 4 has no separate system role — instructions are prepended to the first user message.
+    /// Stores the system prompt for Gemma 4. It is emitted once at the start of
+    /// the conversation in a dedicated `<|turn>system … <turn|>` block on the
+    /// first generation (see `generateResponse`), matching Gemma 4's native
+    /// chat template (Gemma 4 DOES have a system role, unlike Gemma 3).
     func setSystemPrompt(_ prompt: String) throws {
         gemmaSystemPrompt = prompt
         systemPromptTokenCount = 0
         #if DEBUG
-        dprint("[LocalLLM] Gemma 4 system prompt stored (\(prompt.count) chars, will prepend to first user turn)")
+        dprint("[LocalLLM] Gemma 4 system prompt stored (\(prompt.count) chars, emitted as a <|turn>system block on first turn)")
         #endif
     }
 
-    /// Stored system prompt for Gemma models (embedded in the first user turn).
+    /// Stored system prompt for Gemma models (emitted in a leading system turn).
     private var gemmaSystemPrompt: String?
     private var gemmaFirstTurn = true
 
@@ -387,21 +389,41 @@ final class LocalLLMService: @unchecked Sendable {
                 self.cancelGeneration = false
 
                 do {
-                    // 1. Format user turn + model header using Gemma 4 chat template
-                    var userContent = userMessage
-                    if self.gemmaFirstTurn, let sys = self.gemmaSystemPrompt, !sys.isEmpty {
-                        userContent = "System: \(sys)\n\n\(userMessage)"
-                        self.gemmaFirstTurn = false
+                    // 1. Format the prompt using Gemma 4's NATIVE chat template.
+                    //    Gemma 4 uses <|turn>role\n …<turn|>\n delimiters with a real
+                    //    `system` role — NOT Gemma 3's <start_of_turn>/<end_of_turn>,
+                    //    which are not tokens in the Gemma 4 vocabulary and would be fed
+                    //    to the model as ordinary text. The model's stop token is <turn|>.
+                    //    Full first turn:
+                    //      <bos><|turn>system\n{system}<turn|>\n<|turn>user\n{msg}<turn|>\n<|turn>model\n
+                    //    Later turns omit <bos> and the system block (the KV cache retains them).
+                    let isFirstTurn = self.nPast == 0
+                    var prefill = ""
+                    var systemBlockTokens: Int32 = 0
+                    if isFirstTurn {
+                        var systemBlock = "<bos>"
+                        if let sys = self.gemmaSystemPrompt, !sys.isEmpty {
+                            systemBlock += "<|turn>system\n\(sys)<turn|>\n"
+                        }
+                        // Count the system-block tokens so the sliding-window trimmer
+                        // never evicts the personal-profile system prompt. The <bos>,
+                        // <|turn> and <turn|> tokens are atomic special tokens, so the
+                        // separate tokenization matches the prefix of the full prefill.
+                        systemBlockTokens = Int32(self.tokenize(systemBlock).count)
+                        prefill += systemBlock
                     }
-                    let bos = self.nPast == 0 ? "<bos>" : ""
-                    let prefill = "\(bos)<start_of_turn>user\n\(userContent)<end_of_turn>\n<start_of_turn>model\n"
+                    prefill += "<|turn>user\n\(userMessage)<turn|>\n<|turn>model\n"
+                    self.gemmaFirstTurn = false
                     let prefillTokens = self.tokenize(prefill)
                     #if DEBUG
                     dprint("[LocalLLM] 📝 Prefill tokens: \(prefillTokens.count), nPast=\(self.nPast)")
                     #endif
                     try self.evaluate(tokens: prefillTokens)
+                    if isFirstTurn {
+                        self.systemPromptTokenCount = systemBlockTokens
+                    }
                     #if DEBUG
-                    dprint("[LocalLLM] ✅ Prefill evaluated, nPast=\(self.nPast)")
+                    dprint("[LocalLLM] ✅ Prefill evaluated, nPast=\(self.nPast), systemTokens=\(self.systemPromptTokenCount)")
                     #endif
 
                     // 3. Sampling loop
@@ -459,16 +481,16 @@ final class LocalLLMService: @unchecked Sendable {
     /// Trims proactively at 75% capacity to leave room for the next turn.
     func trimContextIfNeeded() {
         guard isLoaded, let ctx = context else { return }
-        let maxCtx: Int32 = 2048
-        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (1536)
+        let maxCtx: Int32 = 4096
+        let threshold: Int32 = maxCtx * 3 / 4  // trim at 75% (3072)
 
         guard nPast > threshold else { return }
 
         let mem = llama_get_memory(ctx)
 
         // Keep system prompt tokens (0..<systemPromptTokenCount)
-        // and the most recent 768 conversation tokens (~4 turns).
-        let keepRecent: Int32 = min(768, nPast - systemPromptTokenCount)
+        // and the most recent ~1536 conversation tokens (~8 turns).
+        let keepRecent: Int32 = min(1536, nPast - systemPromptTokenCount)
         let evictFrom = systemPromptTokenCount   // first token after system prompt
         let evictTo = nPast - keepRecent          // keep the tail
 
