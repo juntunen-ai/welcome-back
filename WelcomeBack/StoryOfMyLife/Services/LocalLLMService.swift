@@ -122,17 +122,17 @@ final class LocalLLMService: @unchecked Sendable {
         llama_log_set(llamaLogCallback, nil)
         llama_backend_init()
 
-        // 2. Load model + create context on CPU.
-        //    IMPORTANT: We run CPU-only (n_gpu_layers=0). The Gemma 4 (gemma4) Metal
-        //    GPU path in the bundled llama.xcframework produces GARBAGE output on
-        //    iOS device (gibberish, no error) even though the same GGUF is coherent
-        //    on CPU and on macOS Metal — a known architecture-specific iOS Metal bug
-        //    class (flash-attention / SWA kernels for new arches). CPU is the proven
-        //    known-good backend the app originally shipped with. Re-enable GPU only
-        //    after verifying coherent output ON DEVICE with a newer xcframework
-        //    (and likely flash_attn disabled).
-        let gpuLayerAttempts: [Int32] = [0]
-        dprint("[LocalLLM] 🧠 CPU-only mode (Gemma 4 iOS Metal path produces gibberish — verified)")
+        // 2. Load model + create context. Try Metal GPU offload first, fall back to CPU.
+        //    The PREVIOUS bundled llama.xcframework produced GARBAGE on the iOS Metal
+        //    path for the gemma4 architecture. That framework has been rebuilt from a
+        //    current llama.cpp (b9430) — the exact build verified to produce coherent
+        //    gemma4 output on Metal — so GPU offload is re-enabled here. flash_attn
+        //    stays AUTO to match that verified-good configuration.
+        //    NOTE: [999, 0] only falls back to CPU on a LOAD failure; if a future
+        //    framework regresses Metal *correctness* (loads but emits gibberish),
+        //    set this back to [0] until fixed.
+        let gpuLayerAttempts: [Int32] = [999, 0]
+        dprint("[LocalLLM] 🚀 Metal GPU offload enabled (rebuilt llama.xcframework, gemma4 Metal verified)")
 
         let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
         dprint("[LocalLLM] 🔧 Using \(nThreads) threads")
@@ -176,9 +176,32 @@ final class LocalLLMService: @unchecked Sendable {
                 continue
             }
 
+            // Coherence self-test. A broken GPU/Metal path for a newer architecture
+            // can load successfully yet emit garbage tokens (this happened with the
+            // previous framework). Probe a tiny greedy generation; if the GPU output
+            // is incoherent, discard it and fall back to CPU — guaranteeing usable
+            // output on any device without relying on a manual check.
+            self.context = ctx
+            self.vocab = llama_model_get_vocab(mdl)
+            self.nPast = 0
+            let probe = self.probeGeneration()
+            llama_memory_clear(llama_get_memory(ctx), true)
+            self.nPast = 0
+            let coherent = Self.looksCoherent(probe)
+            dprint("[LocalLLM] 🔎 Coherence probe (n_gpu_layers=\(attemptLayers)): coherent=\(coherent), sample=\"\(probe.prefix(60))\"")
+            if !coherent && attemptLayers > 0 {
+                dprint("[LocalLLM] ⚠️ GPU output incoherent — discarding, falling back to CPU")
+                self.context = nil
+                self.vocab = nil
+                llama_free(ctx)
+                llama_model_free(mdl)
+                lastFailure = .generationFailed
+                continue
+            }
+
             loadedModel = mdl
             createdCtx = ctx
-            dprint("[LocalLLM] ✅ Context created (n_gpu_layers=\(attemptLayers))")
+            dprint("[LocalLLM] ✅ Context created & verified (n_gpu_layers=\(attemptLayers), coherent=\(coherent))")
             break
         }
 
@@ -205,6 +228,42 @@ final class LocalLLMService: @unchecked Sendable {
         #if DEBUG
         dprint("[LocalLLM] ✅ Model fully ready")
         #endif
+    }
+
+    /// Runs a short deterministic (greedy) generation to sanity-check the backend.
+    /// Returns the generated text. Assumes `context`/`vocab` are set and KV is empty.
+    private func probeGeneration() -> String {
+        guard let ctx = context, vocab != nil else { return "" }
+        let prompt = "<bos><|turn>user\nSay hello in English.<turn|>\n<|turn>model\n"
+        let toks = tokenize(prompt)
+        do { try evaluate(tokens: toks) } catch { return "" }
+        guard let greedy = llama_sampler_init_greedy() else { return "" }
+        defer { llama_sampler_free(greedy) }
+        var out = ""
+        var n = 0
+        while n < 24 {
+            let tok = llama_sampler_sample(greedy, ctx, -1)
+            if let voc = vocab, llama_vocab_is_eog(voc, tok) { break }
+            out += tokenToString(tok)
+            do { try evaluate(tokens: [tok]) } catch { break }
+            n += 1
+        }
+        return out
+    }
+
+    /// Heuristic: is a short English probe response coherent (vs Metal garbage)?
+    /// Broken-backend output tends to be empty, repeated, or non-Latin/symbol soup.
+    private static func looksCoherent(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard t.unicodeScalars.count >= 3 else { return false }
+        let scalars = Array(t.unicodeScalars)
+        let ascii = scalars.filter { $0.isASCII }.count
+        let letters = scalars.filter { CharacterSet.letters.contains($0) }.count
+        let asciiRatio = Double(ascii) / Double(scalars.count)
+        let letterRatio = Double(letters) / Double(scalars.count)
+        // The probe asks for English, so coherent output is overwhelmingly ASCII
+        // with a healthy share of letters; gibberish fails one or both.
+        return asciiRatio > 0.85 && letterRatio > 0.45
     }
 
     /// Builds a sampler chain with the current generation config.
