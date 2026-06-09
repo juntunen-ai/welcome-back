@@ -176,9 +176,32 @@ final class LocalLLMService: @unchecked Sendable {
                 continue
             }
 
+            // Coherence self-test. A broken GPU/Metal path for a newer architecture
+            // can load successfully yet emit garbage tokens (this happened with the
+            // previous framework). Probe a tiny greedy generation; if the GPU output
+            // is incoherent, discard it and fall back to CPU — guaranteeing usable
+            // output on any device without relying on a manual check.
+            self.context = ctx
+            self.vocab = llama_model_get_vocab(mdl)
+            self.nPast = 0
+            let probe = self.probeGeneration()
+            llama_memory_clear(llama_get_memory(ctx), true)
+            self.nPast = 0
+            let coherent = Self.looksCoherent(probe)
+            dprint("[LocalLLM] 🔎 Coherence probe (n_gpu_layers=\(attemptLayers)): coherent=\(coherent), sample=\"\(probe.prefix(60))\"")
+            if !coherent && attemptLayers > 0 {
+                dprint("[LocalLLM] ⚠️ GPU output incoherent — discarding, falling back to CPU")
+                self.context = nil
+                self.vocab = nil
+                llama_free(ctx)
+                llama_model_free(mdl)
+                lastFailure = .generationFailed
+                continue
+            }
+
             loadedModel = mdl
             createdCtx = ctx
-            dprint("[LocalLLM] ✅ Context created (n_gpu_layers=\(attemptLayers))")
+            dprint("[LocalLLM] ✅ Context created & verified (n_gpu_layers=\(attemptLayers), coherent=\(coherent))")
             break
         }
 
@@ -205,6 +228,42 @@ final class LocalLLMService: @unchecked Sendable {
         #if DEBUG
         dprint("[LocalLLM] ✅ Model fully ready")
         #endif
+    }
+
+    /// Runs a short deterministic (greedy) generation to sanity-check the backend.
+    /// Returns the generated text. Assumes `context`/`vocab` are set and KV is empty.
+    private func probeGeneration() -> String {
+        guard let ctx = context, vocab != nil else { return "" }
+        let prompt = "<bos><|turn>user\nSay hello in English.<turn|>\n<|turn>model\n"
+        let toks = tokenize(prompt)
+        do { try evaluate(tokens: toks) } catch { return "" }
+        guard let greedy = llama_sampler_init_greedy() else { return "" }
+        defer { llama_sampler_free(greedy) }
+        var out = ""
+        var n = 0
+        while n < 24 {
+            let tok = llama_sampler_sample(greedy, ctx, -1)
+            if let voc = vocab, llama_vocab_is_eog(voc, tok) { break }
+            out += tokenToString(tok)
+            do { try evaluate(tokens: [tok]) } catch { break }
+            n += 1
+        }
+        return out
+    }
+
+    /// Heuristic: is a short English probe response coherent (vs Metal garbage)?
+    /// Broken-backend output tends to be empty, repeated, or non-Latin/symbol soup.
+    private static func looksCoherent(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard t.unicodeScalars.count >= 3 else { return false }
+        let scalars = Array(t.unicodeScalars)
+        let ascii = scalars.filter { $0.isASCII }.count
+        let letters = scalars.filter { CharacterSet.letters.contains($0) }.count
+        let asciiRatio = Double(ascii) / Double(scalars.count)
+        let letterRatio = Double(letters) / Double(scalars.count)
+        // The probe asks for English, so coherent output is overwhelmingly ASCII
+        // with a healthy share of letters; gibberish fails one or both.
+        return asciiRatio > 0.85 && letterRatio > 0.45
     }
 
     /// Builds a sampler chain with the current generation config.
