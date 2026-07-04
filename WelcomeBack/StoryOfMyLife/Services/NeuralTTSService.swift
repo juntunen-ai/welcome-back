@@ -32,16 +32,29 @@ final class NeuralTTSService: @unchecked Sendable {
 
     // MARK: - Availability
 
+    /// User preference: use ONE voice for both languages — the English
+    /// "lessac" voice also reads Finnish text. Lessac was trained only on
+    /// English phonemes, so Finnish comes out with a clear English accent;
+    /// set this to false to restore the native Finnish "harri" voice
+    /// (still bundled under TTSVoices/fi/).
+    private let unifiedVoice = true
+
+    /// The bundled voice actually used for a conversation language.
+    private func voiceLanguage(for language: AppLanguage) -> AppLanguage {
+        unifiedVoice ? .english : language
+    }
+
     /// Bundle URL of the voice model for a language, or nil if not shipped.
     private func modelURL(for language: AppLanguage) -> URL? {
-        let name = language == .finnish ? "fi_FI-harri-medium" : "en_US-lessac-medium"
-        let dir = language == .finnish ? "fi" : "en"
+        let voice = voiceLanguage(for: language)
+        let name = voice == .finnish ? "fi_FI-harri-medium" : "en_US-lessac-medium"
+        let dir = voice == .finnish ? "fi" : "en"
         return Bundle.main.url(forResource: name, withExtension: "onnx",
                                subdirectory: "TTSVoices/\(dir)")
     }
 
     private func tokensURL(for language: AppLanguage) -> URL? {
-        let dir = language == .finnish ? "fi" : "en"
+        let dir = voiceLanguage(for: language) == .finnish ? "fi" : "en"
         return Bundle.main.url(forResource: "tokens", withExtension: "txt",
                                subdirectory: "TTSVoices/\(dir)")
     }
@@ -63,8 +76,11 @@ final class NeuralTTSService: @unchecked Sendable {
     // MARK: - Engine lifecycle
 
     /// Loads (or switches) the engine for a language. Runs on `queue`.
+    /// Cache is keyed on the resolved VOICE (with unifiedVoice both app
+    /// languages map to the same model — no reload on language switch).
     private func ensureLoaded(for language: AppLanguage) throws {
-        if loadedLanguage == language, tts != nil { return }
+        let voice = voiceLanguage(for: language)
+        if loadedLanguage == voice, tts != nil { return }
 
         guard let model = modelURL(for: language),
               let tokens = tokensURL(for: language),
@@ -84,7 +100,7 @@ final class NeuralTTSService: @unchecked Sendable {
         let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits, numThreads: 2)
         var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
         tts = SherpaOnnxOfflineTtsWrapper(config: &config)
-        loadedLanguage = language
+        loadedLanguage = voice
         #if DEBUG
         dprint("[NeuralTTS] ✅ Voice ready (\(language.englishName))")
         #endif
