@@ -18,8 +18,26 @@
 	<string>1.6</string>
 	<key>CFBundleVersion</key>
 	<string>25</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Story of My Life uses Apple Music to play familiar songs from your past, helping to trigger positive memories and feelings of comfort.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Story of My Life can use the camera to capture new memory photos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Story of My Life shows your current location on the home screen so you always know where you are.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Story of My Life uses the microphone to listen to your voice so it can help you rediscover your memories.</string>
+	<key>NSPersonalVoiceUsageDescription</key>
+	<string>Story of My Life can use your Personal Voice so the AI companion sounds like you or a loved one.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Story of My Life saves captured photos to your photo library.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Story of My Life accesses your photo library to display and add memory photos.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Story of My Life uses speech recognition to understand what you say and respond with personalised memory stories.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -35,27 +53,5 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-
-	<!-- Permissions -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Story of My Life shows your current location on the home screen so you always know where you are.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Story of My Life uses the microphone to listen to your voice so it can help you rediscover your memories.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Story of My Life uses speech recognition to understand what you say and respond with personalised memory stories.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Story of My Life can use the camera to capture new memory photos.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Story of My Life accesses your photo library to display and add memory photos.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Story of My Life saves captured photos to your photo library.</string>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>Story of My Life uses Apple Music to play familiar songs from your past, helping to trigger positive memories and feelings of comfort.</string>
-	<key>NSPersonalVoiceUsageDescription</key>
-	<string>Story of My Life can use your Personal Voice so the AI companion sounds like you or a loved one.</string>
-
-	<!-- Export compliance: app uses standard HTTPS only (exempt) -->
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>

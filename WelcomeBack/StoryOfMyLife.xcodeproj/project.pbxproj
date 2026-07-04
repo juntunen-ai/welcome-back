@@ -874,7 +874,6 @@
 				CODE_SIGN_ENTITLEMENTS = StoryOfMyLife/Supporting/StoryOfMyLife.entitlements;
 				SWIFT_OBJC_BRIDGING_HEADER = "StoryOfMyLife/Supporting/StoryOfMyLife-Bridging-Header.h";
 				OTHER_LDFLAGS = "-lc++";
-				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 25;
 				DEVELOPMENT_ASSET_PATHS = "";
