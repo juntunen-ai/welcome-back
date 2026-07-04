@@ -16,9 +16,9 @@ set -euo pipefail
 
 # ── Config ────────────────────────────────────────────────────────────────────
 # Hardware UDID — used by xcodebuild -destination
-DEVICE_ID="00008130-001659462E8B803A"   # Dirti Harri (hardware UDID)
+DEVICE_ID="00008150-0011602E3C3B401C"   # Dirti Harri (hardware UDID)
 # CoreDevice UUID — used by xcrun devicectl (Xcode 15+)
-COREDEVICE_UUID="7ABD2D9D-DAAF-5F34-85DC-89BBBBC0DE38"
+COREDEVICE_UUID="3B2E3C80-6D4E-5D5B-B765-6FD866D7F704"
 DEVICE_NAME="Dirti Harri"
 SCHEME="StoryOfMyLife"
 CONFIGURATION="Debug"
