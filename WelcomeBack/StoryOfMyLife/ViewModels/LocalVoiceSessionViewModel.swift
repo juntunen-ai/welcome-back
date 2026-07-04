@@ -68,6 +68,11 @@ final class LocalVoiceSessionViewModel: ObservableObject {
         sessionLLM = nil
         service = nil
     }
+
+    /// Stops the AI's current reply and returns to listening (tap-to-stop).
+    func stopCurrentReply() {
+        service?.stopCurrentReply()
+    }
 }
 
 // MARK: - VoiceSessionBridge
@@ -120,6 +125,11 @@ final class VoiceSessionBridge: ObservableObject {
     func endSession() {
         cloudVM?.endSession()
         localVM?.endSession()
+    }
+
+    /// Stops the AI's current reply without ending the session (local mode only).
+    func stopCurrentReply() {
+        localVM?.stopCurrentReply()
     }
 
     /// Returns the still-loaded LLM after a local session ends, for reuse.

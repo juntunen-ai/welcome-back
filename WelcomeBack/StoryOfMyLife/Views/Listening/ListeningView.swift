@@ -75,6 +75,14 @@ struct ListeningView: View {
             if let announcement {
                 AccessibilityNotification.Announcement(announcement).post()
             }
+            // Graceful close when the session winds itself down (e.g. the idle
+            // "shall we rest?" path). No-op if the user already dismissed.
+            if case .disconnected = newState {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    dismiss()
+                    appVM.doneSpeaking()
+                }
+            }
         }
         // Fallback: only for cloud mode — if WebSocket fails, dismiss gracefully.
         // Local mode errors are shown in-view via .error state; don't auto-dismiss.
@@ -158,6 +166,19 @@ struct ListeningView: View {
                 .animation(.easeInOut(duration: 0.3), value: voiceVM.sessionState)
                 .accessibilityLabel(statusLabel)
         }
+        // Tapping the blob while the AI talks also stops the reply —
+        // a large, forgiving target for elderly users.
+        .contentShape(Circle())
+        .onTapGesture {
+            if showStopReply { voiceVM.stopCurrentReply() }
+        }
+    }
+
+    /// Show tap-to-stop whenever the AI is talking or preparing a reply
+    /// (local mode only — the cloud path has its own interruption handling).
+    private var showStopReply: Bool {
+        voiceVM.mode == .local &&
+        (voiceVM.sessionState == .aiSpeaking || voiceVM.sessionState == .aiThinking)
     }
 
     private var bottomActions: some View {
@@ -175,6 +196,22 @@ struct ListeningView: View {
                             value: wavePhase
                         )
                 }
+            }
+
+            // Tap-to-stop: a big, obvious way to interrupt a long reply without
+            // ending the whole session (half-duplex has no voice barge-in).
+            if showStopReply {
+                Button(action: { voiceVM.stopCurrentReply() }) {
+                    Text(lang.t("listening.stop_reply"))
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.black)
+                        .frame(width: 220, height: 56)
+                        .background(Color.accentYellow)
+                        .clipShape(Capsule())
+                }
+                .accessibilityLabel(lang.t("listening.stop_reply.a11y"))
+                .accessibilityHint(lang.t("listening.stop_reply.hint"))
+                .transition(.opacity)
             }
 
             // "End" replaces "Done Speaking" — VAD handles turn-taking

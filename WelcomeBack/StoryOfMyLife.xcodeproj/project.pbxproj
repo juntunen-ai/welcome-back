@@ -56,6 +56,11 @@
 		LI001000000000000000001 /* LicensesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = LI002000000000000000001 /* LicensesView.swift */; };
 		LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = LL002000000000000000001 /* llama-cpp-LICENSE.txt */; };
 		LLMXCFW0000000000000001 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; };
+		SHRP00000000000000000001 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = SHRP00000000000000000002 /* sherpa-onnx.xcframework */; };
+		ONNX00000000000000000001 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = ONNX00000000000000000002 /* onnxruntime.xcframework */; };
+		TTSV00000000000000000001 /* TTSVoices in Resources */ = {isa = PBXBuildFile; fileRef = TTSV00000000000000000002 /* TTSVoices */; };
+		NTTS00000000000000000001 /* NeuralTTSService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NTTS00000000000000000002 /* NeuralTTSService.swift */; };
+		SONX00000000000000000001 /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = SONX00000000000000000002 /* SherpaOnnx.swift */; };
 		LLMXCFW0000000000000003 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = LLMXCFW0000000000000002 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		NS0010000000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = NS0020000000000000000001 /* NotificationService.swift */; };
 		OB0010000000000000000001 /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = OB0020000000000000000001 /* OnboardingContainerView.swift */; };
@@ -193,6 +198,12 @@
 		LI002000000000000000001 /* LicensesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicensesView.swift; sourceTree = "<group>"; };
 		LL002000000000000000001 /* llama-cpp-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "llama-cpp-LICENSE.txt"; sourceTree = "<group>"; };
 		LLMXCFW0000000000000002 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = llama.xcframework; path = Frameworks/llama.xcframework; sourceTree = "<group>"; };
+		SHRP00000000000000000002 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "Frameworks/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
+		ONNX00000000000000000002 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = Frameworks/onnxruntime.xcframework; sourceTree = "<group>"; };
+		TTSV00000000000000000002 /* TTSVoices */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TTSVoices; sourceTree = "<group>"; };
+		NTTS00000000000000000002 /* NeuralTTSService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeuralTTSService.swift; sourceTree = "<group>"; };
+		SONX00000000000000000002 /* SherpaOnnx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnx.swift; sourceTree = "<group>"; };
+		BRGH00000000000000000002 /* StoryOfMyLife-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "StoryOfMyLife-Bridging-Header.h"; sourceTree = "<group>"; };
 		NS0020000000000000000001 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		OB0020000000000000000001 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
 		OB0020000000000000000002 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
@@ -240,6 +251,8 @@
 			files = (
 				BB001MUSICKIT0000002 /* MusicKit.framework in Frameworks */,
 				LLMXCFW0000000000000001 /* llama.xcframework in Frameworks */,
+				SHRP00000000000000000001 /* sherpa-onnx.xcframework in Frameworks */,
+				ONNX00000000000000000001 /* onnxruntime.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,6 +326,7 @@
 			isa = PBXGroup;
 			children = (
 				3E2AADFDDECE49C2847688B6 /* Assets.xcassets */,
+				TTSV00000000000000000002 /* TTSVoices */,
 				LIC00000000000000000001 /* LICENSES */,
 			);
 			path = Resources;
@@ -366,6 +380,7 @@
 				BB1100BB00BB1100BB00BB11 /* DebugLog.swift */,
 				CC2200BB00CC2200BB00CC22 /* LanguageManager.swift */,
 				DD3300BB00DD3300BB00DD33 /* Strings.swift */,
+				BRGH00000000000000000002 /* StoryOfMyLife-Bridging-Header.h */,
 			);
 			path = Supporting;
 			sourceTree = "<group>";
@@ -401,6 +416,8 @@
 				V02A000000000000000002 /* ImageDescriptionService.swift */,
 				V02B000000000000000002 /* F5TTSService.swift */,
 				KC002000000000000000001 /* KeychainService.swift */,
+				NTTS00000000000000000002 /* NeuralTTSService.swift */,
+				SONX00000000000000000002 /* SherpaOnnx.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -409,6 +426,8 @@
 			isa = PBXGroup;
 			children = (
 				LLMXCFW0000000000000002 /* llama.xcframework */,
+				SHRP00000000000000000002 /* sherpa-onnx.xcframework */,
+				ONNX00000000000000000002 /* onnxruntime.xcframework */,
 				BB001MUSICKIT0000001 /* MusicKit.framework */,
 				WGT002000000000000000003 /* WidgetKit.framework */,
 				WGT002000000000000000004 /* SwiftUI.framework */,
@@ -652,6 +671,7 @@
 				966EF1AF5CE941F0A10740D0 /* Assets.xcassets in Resources */,
 				PRI001000000000000000001 /* PrivacyInfo.xcprivacy in Resources */,
 				LL001000000000000000001 /* llama-cpp-LICENSE.txt in Resources */,
+				TTSV00000000000000000001 /* TTSVoices in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -725,6 +745,8 @@
 				OB0031000000000000000008 /* OnboardingMusicView.swift in Sources */,
 				887246CC0AA0491DA9AC9F97 /* MemberImageView.swift in Sources */,
 				BC6926A6DB3A0A0A9CFB84D0 /* LocalLLMService.swift in Sources */,
+				NTTS00000000000000000001 /* NeuralTTSService.swift in Sources */,
+				SONX00000000000000000001 /* SherpaOnnx.swift in Sources */,
 				C9E4108B2833F69113E4A884 /* LocalVoiceAIService.swift in Sources */,
 				9991FE4A04DE8A2511CA0D00 /* ModelDownloadService.swift in Sources */,
 				DF851633FA1FD0820C26E86F /* LocalVoiceSessionViewModel.swift in Sources */,
@@ -850,9 +872,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StoryOfMyLife/Supporting/StoryOfMyLife.entitlements;
+				SWIFT_OBJC_BRIDGING_HEADER = "StoryOfMyLife/Supporting/StoryOfMyLife-Bridging-Header.h";
+				OTHER_LDFLAGS = "-lc++";
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -863,7 +887,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -880,9 +904,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StoryOfMyLife/Supporting/StoryOfMyLife.entitlements;
+				SWIFT_OBJC_BRIDGING_HEADER = "StoryOfMyLife/Supporting/StoryOfMyLife-Bridging-Header.h";
+				OTHER_LDFLAGS = "-lc++";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				ENABLE_PREVIEWS = YES;
@@ -893,7 +919,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -965,10 +991,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 23;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -983,10 +1009,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 23;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -1002,7 +1028,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StoryOfMyLifeWidget/StoryOfMyLifeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "StoryOfMyLifeWidget/StoryOfMyLifeWidget-Info.plist";
@@ -1012,7 +1038,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1028,7 +1054,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = StoryOfMyLifeWidget/StoryOfMyLifeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 21;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_TEAM = 647W3RAYL3;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "StoryOfMyLifeWidget/StoryOfMyLifeWidget-Info.plist";
@@ -1038,7 +1064,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.5;
+				MARKETING_VERSION = 1.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.juntunen.storyofmylife.widget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

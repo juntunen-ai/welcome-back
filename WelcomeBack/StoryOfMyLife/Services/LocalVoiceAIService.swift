@@ -34,6 +34,18 @@ final class LocalVoiceAIService: @unchecked Sendable {
     /// Consecutive empty/garbled transcriptions, to avoid a re-engagement loop in noise.
     private var consecutiveEmptyFinals = 0
 
+    /// Set when the user taps "That's enough" — suppresses any further TTS
+    /// for the current reply while the generation loop unwinds.
+    private var stopRequested = false
+
+    /// Fires after a stretch of `.listening` with no speech at all, so a silent
+    /// user (dozed off, walked away, unsure it's their turn) gets a warm nudge
+    /// instead of a mic that stays hot forever.
+    private var idleTimer: Timer?
+    /// 0 = none sent; 1 = invitation sent; 2 = wind-down sent (session ends).
+    private var idleNudgesSent = 0
+    private let idleNudgeInterval: TimeInterval = 40
+
     // MARK: - Sentence Buffer (for streaming LLM → TTS)
 
     private var tokenBuffer = ""
@@ -159,6 +171,8 @@ final class LocalVoiceAIService: @unchecked Sendable {
     /// The LLM stays loaded in memory so the next session starts instantly.
     /// Call `unloadLLM()` to fully release the model from memory.
     func endSession() {
+        idleTimer?.invalidate()
+        idleTimer = nil
         Task { @MainActor in
             SpeechService.shared.stopListening()
             SpeechService.shared.stopSpeaking()
@@ -170,6 +184,69 @@ final class LocalVoiceAIService: @unchecked Sendable {
         sessionImageDescriptions = [:]
         updateState(.disconnected)
         stateContinuation.finish()
+    }
+
+    // MARK: - Tap-to-Stop
+
+    /// User tapped "That's enough" while the AI was talking (or thinking).
+    /// Stops the reply immediately and returns to listening — without ending
+    /// the whole session, which used to be the only escape from a long reply.
+    func stopCurrentReply() {
+        guard sessionState == .aiSpeaking || sessionState == .aiThinking else { return }
+        #if DEBUG
+        dprint("[LocalVoiceAI] ✋ User stopped the current reply")
+        #endif
+        stopRequested = true
+        llmService?.cancelGeneration = true
+        Task { @MainActor [weak self] in
+            SpeechService.shared.stopSpeaking()   // clears queue + completion callback
+            guard let self, self.sessionState != .disconnected else { return }
+            self.updateState(.listening)
+            self.startListeningCycle()
+        }
+    }
+
+    // MARK: - Idle Re-engagement
+
+    /// (Re)arms the idle timer for the current listening stretch.
+    @MainActor
+    private func armIdleTimer() {
+        idleTimer?.invalidate()
+        idleTimer = Timer.scheduledTimer(withTimeInterval: idleNudgeInterval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.idleTimerFired()
+            }
+        }
+    }
+
+    /// No speech at all for a whole idle interval while listening.
+    /// First time: a warm, no-pressure invitation. Second time: offer to rest
+    /// and wind the session down gracefully instead of staying hot forever.
+    @MainActor
+    private func idleTimerFired() {
+        guard sessionState == .listening, !isProcessing else { return }
+        idleNudgesSent += 1
+
+        // Half-duplex: mic must be off while we speak the nudge.
+        SpeechService.shared.stopListening()
+
+        if idleNudgesSent <= 1 {
+            let line = sessionLanguage == .finnish
+                ? "Olen tässä, kun haluat jutella."
+                : "I'm here whenever you feel like talking."
+            updateState(.aiSpeaking)
+            SpeechService.shared.speakSentences([line]) { [weak self] in
+                self?.onAllSpeechFinished()   // restarts listening + idle timer
+            }
+        } else {
+            let line = sessionLanguage == .finnish
+                ? "Levätäänkö hetki? Voimme jutella taas milloin vain haluat."
+                : "Shall we rest for a little while? We can talk again whenever you like."
+            updateState(.aiSpeaking)
+            SpeechService.shared.speakSentences([line]) { [weak self] in
+                self?.endSession()   // graceful wind-down; view dismisses on .disconnected
+            }
+        }
     }
 
     // MARK: - Listening Cycle
@@ -187,6 +264,12 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     #if DEBUG
                     dprint("[LocalVoiceAI] 🎙️ Partial: \(text)")
                     #endif
+                    if !text.isEmpty {
+                        // The user is talking — they're not idle.
+                        self.idleTimer?.invalidate()
+                        self.idleTimer = nil
+                        self.idleNudgesSent = 0
+                    }
                     if self.sessionState == .listening {
                         self.updateState(.userSpeaking)
                     }
@@ -222,6 +305,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     }
                 }
             )
+            armIdleTimer()
         } catch {
             updateState(.error("Could not start listening: \(error.localizedDescription)"))
         }
@@ -237,6 +321,12 @@ final class LocalVoiceAIService: @unchecked Sendable {
             return
         }
         isProcessing = true
+        stopRequested = false
+        await MainActor.run { [weak self] in
+            self?.idleTimer?.invalidate()
+            self?.idleTimer = nil
+            self?.idleNudgesSent = 0
+        }
         #if DEBUG
         dprint("[LocalVoiceAI] 🧠 Processing user input: '\(text)'")
         #endif
@@ -282,6 +372,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
         var tokenCount = 0
         let generationStartTime = Date()
         var receivedFirstToken = false
+        var timedOut = false
 
         #if DEBUG
         dprint("[LocalVoiceAI] 📤 Sending to LLM: '\(text)'")
@@ -324,7 +415,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                 tokenBuffer = String(tokenBuffer[range.upperBound...])
 
-                guard !sentence.isEmpty else { continue }
+                guard !sentence.isEmpty, !stopRequested else { continue }
                 #if DEBUG
                 dprint("[LocalVoiceAI] 💬 Sentence ready: '\(sentence)'")
                 #endif
@@ -352,6 +443,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 #if DEBUG
                 dprint("[LocalVoiceAI] ⏰ Generation timeout after 45s")
                 #endif
+                timedOut = true
                 llm.cancelGeneration = true
                 break
             }
@@ -362,9 +454,12 @@ final class LocalVoiceAIService: @unchecked Sendable {
         dprint("[LocalVoiceAI] 📊 Generation done: \(tokenCount) tokens in \(String(format: "%.1f", totalTime))s, response: '\(fullResponse.prefix(200))'")
         #endif
 
-        // Flush remaining buffer
+        // Flush remaining buffer — but not after a user stop, and not a
+        // mid-sentence fragment from the 45s timeout (a reply that trails off
+        // mid-clause sounds broken; better to end at the last full sentence).
         let remaining = tokenBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !remaining.isEmpty {
+        let isCompleteSentence = remaining.hasSuffix(".") || remaining.hasSuffix("!") || remaining.hasSuffix("?")
+        if !remaining.isEmpty && !stopRequested && (!timedOut || isCompleteSentence) {
             #if DEBUG
             dprint("[LocalVoiceAI] 💬 Flushing remaining buffer: '\(remaining)'")
             #endif
@@ -396,6 +491,11 @@ final class LocalVoiceAIService: @unchecked Sendable {
             dprint("[LocalVoiceAI] ❌ No tokens generated! receivedFirstToken=\(receivedFirstToken)")
             #endif
             isProcessing = false
+            if stopRequested {
+                // User stopped the reply — stopCurrentReply() already returned
+                // the session to listening; nothing more to do.
+                return
+            }
             if !receivedFirstToken {
                 updateState(.error("No response from AI. Please try again."))
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
@@ -420,36 +520,18 @@ final class LocalVoiceAIService: @unchecked Sendable {
     private func generateGreeting() async {
         guard let llm = llmService else { return }
 
-        // Open warmly and, if we have a positive memory, gently offer it as an
-        // invitation to reminisce — never as a quiz ("do you remember…?").
-        var memoryInvite = ""
-        if let memory = userProfile?.memories.first(where: { !$0.title.isEmpty }) {
-            memoryInvite = " Then, as a soft optional invitation, mention you were just thinking of \"\(memory.title)\" and ask if they'd like to talk about it for a moment. Do not ask them to recall any facts."
-        }
-        let greetingPrompt = "Greet \(userName) warmly by name in one short, natural spoken sentence, in \(sessionLanguage.englishName).\(memoryInvite) Keep it to 1–2 short spoken sentences. No lists, markdown, or emoji."
-        llm.cancelGeneration = false   // arm for a wanted generation
-        let greeting = await llm.generateResponse(userMessage: greetingPrompt)
-            .reduce("", +)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !greeting.isEmpty else {
-            #if DEBUG
-            dprint("[LocalVoiceAI] ⚠️ Greeting was empty, skipping")
-            #endif
-            updateState(.listening)
-            await MainActor.run { [weak self] in
-                self?.startListeningCycle()
-            }
-            return
-        }
+        stopRequested = false
 
-        #if DEBUG
-        dprint("[LocalVoiceAI] 👋 Greeting: '\(greeting)'")
-        #endif
-        conversationHistory.append((role: "assistant", content: greeting))
+        // 1. INSTANT canned greeting — sound starts the moment the model is
+        //    ready, covering the multi-second system-prompt prefill + greeting
+        //    generation that used to be dead air under "Loading AI model…".
+        //    A first-time user hears a warm voice within ~a second.
+        let canned = sessionLanguage == .finnish
+            ? "Hei \(userName)! Mukava olla taas kanssasi."
+            : "Hello \(userName)! It's lovely to be with you."
         updateState(.aiSpeaking)
-
         await MainActor.run { [weak self] in
-            SpeechService.shared.speakSentences([greeting]) { [weak self] in
+            SpeechService.shared.speakSentences([canned], expectingMore: true) { [weak self] in
                 self?.greetingFinished = true
                 // Only restart listening if we're not already processing user input
                 if self?.isProcessing == false {
@@ -457,6 +539,43 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 }
             }
         }
+
+        // 2. Meanwhile, stream the personalised memory-invitation from the LLM
+        //    into the same TTS queue, right behind the canned line.
+        var memoryInvite = " Say one more short, warm sentence to open the conversation."
+        if let memory = userProfile?.memories.first(where: { !$0.title.isEmpty }) {
+            memoryInvite = " As a soft optional invitation, mention you were just thinking of \"\(memory.title)\" and ask if they'd like to talk about it for a moment. Do not ask them to recall any facts."
+        }
+        let greetingPrompt = "You have just said hello to \(userName).\(memoryInvite) One or two short spoken sentences, in \(sessionLanguage.englishName). No lists, markdown, or emoji."
+        llm.cancelGeneration = false   // arm for a wanted generation
+
+        var buffer = ""
+        var full = ""
+        for await token in llm.generateResponse(userMessage: greetingPrompt) {
+            if stopRequested { break }
+            buffer += token
+            full += token
+            while let range = buffer.range(of: #"[.!?][\"'\u{201D}\u{2019}]?[\s]*"#, options: .regularExpression) {
+                let sentence = String(buffer[buffer.startIndex..<range.upperBound])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                buffer = String(buffer[range.upperBound...])
+                guard !sentence.isEmpty, !stopRequested else { continue }
+                await MainActor.run { SpeechService.shared.enqueueSentence(sentence) }
+            }
+        }
+        let tail = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !tail.isEmpty && !stopRequested {
+            await MainActor.run { SpeechService.shared.enqueueSentence(tail) }
+        }
+        await MainActor.run { SpeechService.shared.finishStreaming() }
+
+        let fullTrimmed = full.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !fullTrimmed.isEmpty {
+            conversationHistory.append((role: "assistant", content: fullTrimmed))
+        }
+        #if DEBUG
+        dprint("[LocalVoiceAI] 👋 Greeting: canned + streamed '\(fullTrimmed.prefix(120))'")
+        #endif
     }
 
     /// Called when TTS finishes all queued sentences → restart listening.

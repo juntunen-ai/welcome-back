@@ -65,11 +65,34 @@ final class SpeechService: NSObject, ObservableObject {
     /// by finishStreaming().
     private var expectingMoreUtterances = false
 
-    // Cloned voice WAV queue (F5-TTS path)
+    // WAV sentence queue — shared by the two non-Apple voices:
+    //   .f5     — LAN voice-cloning server (premium, optional)
+    //   .neural — on-device sherpa-onnx Piper voice (fi/en; the default cure
+    //             for the robotic compact voices)
+    // Sentences are synthesized one at a time and played via AVAudioPlayer,
+    // preserving the streaming(LLM)→sentence→speak pipeline.
+    enum WavBackend {
+        case f5(referenceID: String)
+        case neural(AppLanguage)
+    }
     private var wavPlayer: AVAudioPlayer?
     private var wavQueue: [String] = []        // sentences waiting to be synthesized + played
-    private var wavVoiceProfileID: String?      // current voice profile for WAV queue
+    private var wavBackend: WavBackend?        // active backend for the WAV queue
     private var isWavPlaying = false
+
+    /// Picks the voice backend for a sentence-queue request.
+    /// Explicit Apple voice choice > F5 cloned voice > on-device neural > Apple.
+    private func selectWavBackend(voiceIdentifier: String?, voiceProfileID: String?) -> WavBackend? {
+        if voiceIdentifier != nil { return nil }   // user explicitly picked an Apple voice
+        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
+            return .f5(referenceID: profileID)
+        }
+        let language = LanguageManager.shared.language
+        if NeuralTTSService.shared.isAvailable(for: language) {
+            return .neural(language)
+        }
+        return nil
+    }
 
     /// The voice identifier to use for TTS. If set, uses this voice instead of default.
     /// Can be a Personal Voice identifier or a premium Apple voice.
@@ -423,8 +446,18 @@ final class SpeechService: NSObject, ObservableObject {
 
     /// Speaks text, using F5-TTS cloned voice if `voiceProfileID` is provided and server is configured.
     func speak(_ text: String, voiceIdentifier: String? = nil, voiceProfileID: String? = nil) {
-        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
-            speakWithClonedVoice(text, referenceId: profileID)
+        if let backend = selectWavBackend(voiceIdentifier: voiceIdentifier, voiceProfileID: voiceProfileID) {
+            if case .f5(let referenceID) = backend {
+                speakWithClonedVoice(text, referenceId: referenceID)
+                return
+            }
+            // Neural single-shot through the WAV queue
+            wavBackend = backend
+            let clean = sanitizeForSpeech(text)
+            guard !clean.isEmpty else { return }
+            wavQueue = [clean]
+            isSpeaking = true
+            playNextWavSentence()
             return
         }
 
@@ -465,10 +498,10 @@ final class SpeechService: NSObject, ObservableObject {
         allFinishedCallback = onAllFinished
         expectingMoreUtterances = expectingMore
 
-        // F5-TTS cloned voice path
-        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
-            wavVoiceProfileID = profileID
-            wavQueue = sentences
+        // Neural / F5 WAV path
+        if let backend = selectWavBackend(voiceIdentifier: voiceIdentifier, voiceProfileID: voiceProfileID) {
+            wavBackend = backend
+            wavQueue = sentences.map { sanitizeForSpeech($0) }.filter { !$0.isEmpty }
             isSpeaking = true
             playNextWavSentence()
             return
@@ -485,10 +518,14 @@ final class SpeechService: NSObject, ObservableObject {
     /// Enqueues an additional sentence while speaking.
     /// When `voiceProfileID` is provided and F5-TTS is configured, uses cloned voice.
     func enqueueSentence(_ sentence: String, voiceIdentifier: String? = nil, voiceProfileID: String? = nil) {
-        // F5-TTS path: add to WAV queue
-        if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
-            wavVoiceProfileID = profileID
-            wavQueue.append(sentence)
+        // Neural / F5 WAV path — stay on whichever backend the reply started with
+        if wavBackend != nil || selectWavBackend(voiceIdentifier: voiceIdentifier, voiceProfileID: voiceProfileID) != nil {
+            if wavBackend == nil {
+                wavBackend = selectWavBackend(voiceIdentifier: voiceIdentifier, voiceProfileID: voiceProfileID)
+            }
+            let clean = sanitizeForSpeech(sentence)
+            guard !clean.isEmpty else { return }
+            wavQueue.append(clean)
             if !isWavPlaying { playNextWavSentence() }
             return
         }
@@ -502,7 +539,7 @@ final class SpeechService: NSObject, ObservableObject {
 
     /// Plays the next sentence in the WAV queue via F5-TTS synthesis.
     private func playNextWavSentence() {
-        guard !wavQueue.isEmpty, let profileID = wavVoiceProfileID else {
+        guard !wavQueue.isEmpty, let backend = wavBackend else {
             // Queue exhausted
             isWavPlaying = false
             guard !expectingMoreUtterances else { return }   // more sentences streaming in
@@ -517,7 +554,13 @@ final class SpeechService: NSObject, ObservableObject {
 
         Task {
             do {
-                let wavData = try await F5TTSService.shared.synthesize(text: sentence, referenceId: profileID)
+                let wavData: Data
+                switch backend {
+                case .f5(let referenceID):
+                    wavData = try await F5TTSService.shared.synthesize(text: sentence, referenceId: referenceID)
+                case .neural(let language):
+                    wavData = try await NeuralTTSService.shared.synthesizeWAV(sentence, language: language)
+                }
                 let player = try AVAudioPlayer(data: wavData)
                 self.wavPlayer = player
                 player.delegate = self
@@ -525,7 +568,7 @@ final class SpeechService: NSObject, ObservableObject {
             } catch {
                 // Fallback: speak this sentence with Apple voice, then continue queue
                 #if DEBUG
-                dprint("[SpeechService] F5-TTS sentence failed, using Apple voice: \(error.localizedDescription)")
+                dprint("[SpeechService] WAV synthesis failed, using Apple voice: \(error.localizedDescription)")
                 #endif
                 // After this utterance finishes, the delegate will call playNextWavSentence
                 pendingUtteranceCount = 1
@@ -626,6 +669,7 @@ final class SpeechService: NSObject, ObservableObject {
         wavPlayer?.stop()
         wavPlayer = nil
         wavQueue.removeAll()
+        wavBackend = nil
         isWavPlaying = false
         isSpeaking = false
         pendingUtteranceCount = 0

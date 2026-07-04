@@ -58,3 +58,8 @@ mcp_config.json
 
 # Web prototype (not part of the iOS app)
 app/
+
+# Neural TTS binaries (fetched via scripts/fetch-tts-assets.sh — not in git)
+WelcomeBack/Frameworks/sherpa-onnx.xcframework/
+WelcomeBack/Frameworks/onnxruntime.xcframework/
+WelcomeBack/StoryOfMyLife/Resources/TTSVoices/
