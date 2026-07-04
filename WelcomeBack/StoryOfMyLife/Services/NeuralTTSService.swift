@@ -32,12 +32,12 @@ final class NeuralTTSService: @unchecked Sendable {
 
     // MARK: - Availability
 
-    /// User preference: use ONE voice for both languages — the English
-    /// "lessac" voice also reads Finnish text. Lessac was trained only on
-    /// English phonemes, so Finnish comes out with a clear English accent;
-    /// set this to false to restore the native Finnish "harri" voice
-    /// (still bundled under TTSVoices/fi/).
-    private let unifiedVoice = true
+    /// Each language uses its natively-trained voice: Finnish speaks with
+    /// "harri" (trained on Finnish speech — correct pronunciation), English
+    /// with "lessac". Setting this true would make the English voice read
+    /// Finnish too (one voice identity, but with an English accent) — tried
+    /// and rejected: native pronunciation matters more than voice consistency.
+    private let unifiedVoice = false
 
     /// The bundled voice actually used for a conversation language.
     private func voiceLanguage(for language: AppLanguage) -> AppLanguage {
