@@ -272,6 +272,10 @@ final class LocalVoiceAIService: @unchecked Sendable {
         // Trim context proactively BEFORE generation to ensure space
         llm.trimContextIfNeeded()
 
+        // Arm the cancellation flag for a generation we know is wanted.
+        // (LocalLLMService never resets it itself — see cancelGeneration docs.)
+        llm.cancelGeneration = false
+
         tokenBuffer = ""
         isFirstSentenceSpoken = false
         var fullResponse = ""
@@ -329,7 +333,10 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     isFirstSentenceSpoken = true
                     updateState(.aiSpeaking)
                     await MainActor.run { [weak self] in
-                        SpeechService.shared.speakSentences([sentence]) { [weak self] in
+                        // expectingMore: generation is still streaming — the
+                        // completion callback must not fire (mic must not open)
+                        // until finishStreaming() marks the reply complete.
+                        SpeechService.shared.speakSentences([sentence], expectingMore: true) { [weak self] in
                             self?.onAllSpeechFinished()
                         }
                     }
@@ -365,7 +372,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
                 isFirstSentenceSpoken = true
                 updateState(.aiSpeaking)
                 await MainActor.run { [weak self] in
-                    SpeechService.shared.speakSentences([remaining]) { [weak self] in
+                    SpeechService.shared.speakSentences([remaining], expectingMore: true) { [weak self] in
                         self?.onAllSpeechFinished()
                     }
                 }
@@ -374,6 +381,13 @@ final class LocalVoiceAIService: @unchecked Sendable {
                     SpeechService.shared.enqueueSentence(remaining)
                 }
             }
+        }
+
+        // Generation is complete and every sentence is enqueued — allow the
+        // TTS completion callback to fire once the queue drains. (Runs on all
+        // exit paths; harmless no-op when nothing was spoken.)
+        await MainActor.run {
+            SpeechService.shared.finishStreaming()
         }
 
         // If nothing was generated at all, show error and go back to listening
@@ -413,6 +427,7 @@ final class LocalVoiceAIService: @unchecked Sendable {
             memoryInvite = " Then, as a soft optional invitation, mention you were just thinking of \"\(memory.title)\" and ask if they'd like to talk about it for a moment. Do not ask them to recall any facts."
         }
         let greetingPrompt = "Greet \(userName) warmly by name in one short, natural spoken sentence, in \(sessionLanguage.englishName).\(memoryInvite) Keep it to 1–2 short spoken sentences. No lists, markdown, or emoji."
+        llm.cancelGeneration = false   // arm for a wanted generation
         let greeting = await llm.generateResponse(userMessage: greetingPrompt)
             .reduce("", +)
             .trimmingCharacters(in: .whitespacesAndNewlines)
