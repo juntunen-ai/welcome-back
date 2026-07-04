@@ -77,7 +77,16 @@ final class LocalLLMService: @unchecked Sendable {
     var config = GenerationConfig()
 
     /// Set `true` from outside to cancel an in-progress generation.
+    /// NOTE: intentionally never reset by this class — the session orchestrator
+    /// arms it (false) right before starting a generation it knows is wanted.
+    /// If this class reset it (as resetContext once did), an endSession() cancel
+    /// could be silently undone by a queued/stale generation.
     var cancelGeneration = false
+
+    /// Serial queue for ALL llama context mutations (generation, reset).
+    /// llama_decode racing llama_memory_clear on the same context is undefined
+    /// behavior; serializing here makes endSession-during-generation safe.
+    private let generationQueue = DispatchQueue(label: "ai.juntunen.storyofmylife.llm", qos: .userInitiated)
 
     // MARK: - Init / Deinit
 
@@ -305,16 +314,22 @@ final class LocalLLMService: @unchecked Sendable {
     /// Resets the context for a new session without unloading the model.
     /// Much faster than unload + reload (~10ms vs ~2-5s).
     func resetContext() {
-        guard isLoaded, let ctx = context else { return }
-        let mem = llama_get_memory(ctx)
-        llama_memory_clear(mem, true)
-        nPast = 0
-        systemPromptTokenCount = 0
-        cancelGeneration = false
-        gemmaFirstTurn = true
-        #if DEBUG
-        dprint("[LocalLLM] 🔄 Context reset (model stays loaded)")
-        #endif
+        // Run on the generation queue so the reset executes only AFTER any
+        // in-flight sampling loop has observed cancelGeneration and exited —
+        // clearing the KV cache under a live llama_decode is undefined behavior,
+        // and stray decodes after the clear would re-increment nPast, making the
+        // next session silently skip the system prompt (nPast != 0).
+        generationQueue.async { [weak self] in
+            guard let self, self.isLoaded, let ctx = self.context else { return }
+            let mem = llama_get_memory(ctx)
+            llama_memory_clear(mem, true)
+            self.nPast = 0
+            self.systemPromptTokenCount = 0
+            self.gemmaFirstTurn = true
+            #if DEBUG
+            dprint("[LocalLLM] 🔄 Context reset (model stays loaded)")
+            #endif
+        }
     }
 
     /// Unloads the model and frees all resources.
@@ -438,14 +453,21 @@ final class LocalLLMService: @unchecked Sendable {
     /// completed sentences to TTS for streaming playback.
     func generateResponse(userMessage: String) -> AsyncStream<String> {
         AsyncStream { continuation in
-            // Use DispatchQueue (8 MB stack) instead of Task.detached (64 KB stack)
-            // to avoid stack overflow in llama.cpp C code.
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            // Serial generationQueue: serializes against resetContext (see there)
+            // and gives the same worker-thread stack as the global queue.
+            self.generationQueue.async { [weak self] in
                 guard let self, self.isLoaded else {
                     continuation.finish()
                     return
                 }
-                self.cancelGeneration = false
+                // Deliberately NOT resetting cancelGeneration here: if endSession
+                // cancelled while this block was queued, we must stay cancelled.
+                // The orchestrator arms cancelGeneration = false before starting
+                // a generation it wants.
+                if self.cancelGeneration {
+                    continuation.finish()
+                    return
+                }
 
                 do {
                     // 1. Format the prompt using Gemma 4's NATIVE chat template.

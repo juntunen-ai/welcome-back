@@ -13,7 +13,7 @@ SHELL  := /bin/zsh
 
 APP         := StoryOfMyLife
 SCHEME      := StoryOfMyLife
-DEVICE_ID   := 00008130-001659462E8B803A
+DEVICE_ID   := 00008150-0011602E3C3B401C
 DEVICE_NAME := Dirti Harri
 PROJECT     := $(APP).xcodeproj
 SCRIPTS     := scripts

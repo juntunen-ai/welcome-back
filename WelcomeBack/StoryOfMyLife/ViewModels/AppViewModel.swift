@@ -68,9 +68,9 @@ final class AppViewModel: ObservableObject {
     /// Pre-loads the LLM in background so tapping the mic is instant.
     func preloadLLMIfNeeded() {
         guard preloadedLLM == nil,
+              preloadTask == nil,   // load already in flight — never start a second 3 GB load
               ModelDownloadService.shared.isModelReady else { return }
 
-        preloadTask?.cancel()
         preloadTask = Task {
             let config = ModelDownloadService.shared.selectedModel
             let modelPath = ModelDownloadService.shared.modelFileURL(for: config).path
@@ -88,14 +88,17 @@ final class AppViewModel: ObservableObject {
                     }
                 }
                 guard !Task.isCancelled else {
+                    // Whoever cancelled (releasePreloadedLLM) already reset preloadTask.
                     llm.unloadModel()
                     return
                 }
                 self.preloadedLLM = llm
+                self.preloadTask = nil   // done — allow future preloads after take/release
                 #if DEBUG
                 dprint("[AppVM] ✅ LLM pre-warmed and ready")
                 #endif
             } catch {
+                if !Task.isCancelled { self.preloadTask = nil }
                 #if DEBUG
                 dprint("[AppVM] ⚠️ LLM pre-warm failed: \(error.localizedDescription)")
                 #endif

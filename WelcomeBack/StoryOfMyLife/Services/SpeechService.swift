@@ -35,10 +35,17 @@ final class SpeechService: NSObject, ObservableObject {
     // VAD state
     private var lastSpeechTime: Date = .distantPast
     private var isSpeechActive = false
+    /// When the current utterance started — bounds runaway "speech" (e.g. a TV
+    /// in the background keeps resetting lastSpeechTime so silence never comes).
+    private var speechStartTime: Date?
+    /// Force-finalize an utterance after this long, even without silence.
+    private let maxUtteranceDuration: TimeInterval = 30
     private var silenceThreshold: TimeInterval = 1.5
     private var silenceTimer: Timer?
     private var vadSilenceCallback: (() -> Void)?
     private var vadFinalCallback: ((String) -> Void)?
+    /// True once a session has produced a trustworthy noise-floor estimate.
+    private var hasCalibratedNoiseFloor = false
 
     // Adaptive VAD: noise floor calibration
     private var noiseFloorDb: Float = -40   // initial conservative estimate
@@ -50,6 +57,13 @@ final class SpeechService: NSObject, ObservableObject {
     // Sentence TTS queue (AVSpeechSynthesizer path)
     private var pendingUtteranceCount = 0
     private var allFinishedCallback: (() -> Void)?
+
+    /// True while the LLM is still streaming sentences for the current reply.
+    /// Without this, allFinishedCallback fires the moment the queue momentarily
+    /// drains (TTS outran generation) — the mic turns on mid-reply and the app
+    /// transcribes its own voice. Set by speakSentences(expectingMore:), cleared
+    /// by finishStreaming().
+    private var expectingMoreUtterances = false
 
     // Cloned voice WAV queue (F5-TTS path)
     private var wavPlayer: AVAudioPlayer?
@@ -136,12 +150,22 @@ final class SpeechService: NSObject, ObservableObject {
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        inputNode.removeTap(onBus: 0)   // defensive: never double-install
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
             self?.recognitionRequest?.append(buffer)
         }
 
         audioEngine.prepare()
-        try audioEngine.start()
+        do {
+            try audioEngine.start()
+        } catch {
+            // Clean up fully so the next attempt starts from a valid state.
+            inputNode.removeTap(onBus: 0)
+            recognitionTask?.cancel()
+            recognitionTask = nil
+            recognitionRequest = nil
+            throw error
+        }
         isListening = true
     }
 
@@ -151,6 +175,14 @@ final class SpeechService: NSObject, ObservableObject {
         vadSilenceCallback = nil
         vadFinalCallback = nil
         isSpeechActive = false
+        speechStartTime = nil
+
+        // ALWAYS remove the tap, even if the engine never started. If
+        // audioEngine.start() threw (mic contention, interruption), the tap
+        // stays installed; a second installTap on the same bus raises an
+        // NSException and crashes the app. removeTap is a safe no-op when
+        // no tap exists.
+        audioEngine.inputNode.removeTap(onBus: 0)
 
         guard audioEngine.isRunning else {
             recognitionRequest = nil
@@ -161,7 +193,6 @@ final class SpeechService: NSObject, ObservableObject {
         }
 
         audioEngine.stop()
-        audioEngine.inputNode.removeTap(onBus: 0)
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         recognitionRequest = nil
@@ -193,10 +224,15 @@ final class SpeechService: NSObject, ObservableObject {
         self.vadSilenceCallback = onSilenceDetected
         self.vadFinalCallback = onFinalResult
         self.isSpeechActive = false
+        self.speechStartTime = nil
         self.lastSpeechTime = .distantPast
         self.noiseCalibrationSamples = []
+        // Recalibrate the noise floor, but KEEP the previous session estimate as
+        // a ceiling (see processAudioBufferForVAD): users often answer the moment
+        // the mic opens, and without the ceiling their own voice becomes the
+        // "noise floor", pushing the speech threshold above their speaking volume.
         self.isCalibrating = true
-        self.noiseFloorDb = -40
+        if !hasCalibratedNoiseFloor { self.noiseFloorDb = -40 }
         transcribedText = ""
         speechRecognizer = makeRecognizer()   // match current app language
 
@@ -216,14 +252,39 @@ final class SpeechService: NSObject, ObservableObject {
             if let result {
                 let text = result.bestTranscription.formattedString
                 Task { @MainActor in
+                    // A growing partial is ground-truth voice activity — more
+                    // reliable than RMS, which can be poisoned if the user's own
+                    // speech lands in the noise-floor calibration window (quiet
+                    // elderly voices then never cross the threshold and the turn
+                    // hangs forever on "listening").
+                    if !text.isEmpty && text != self.transcribedText {
+                        self.lastSpeechTime = Date()
+                        self.isSpeechActive = true
+                        if self.speechStartTime == nil { self.speechStartTime = Date() }
+                    }
                     self.transcribedText = text
                     onPartialResult(text)
+                }
+            } else if error != nil {
+                // Recognizer failure (no on-device model for the locale + offline,
+                // service error mid-utterance, …). Without this branch no partial
+                // ever arrives, isSpeechActive never flips, and the session sits
+                // on "listening" forever. Finalize with whatever we have so the
+                // orchestrator can recover. stopListening() cancellation also
+                // lands here — the isListening guard filters that out.
+                Task { @MainActor in
+                    guard self.isListening else { return }
+                    #if DEBUG
+                    dprint("[SpeechService] ⚠️ Recognizer error — finalizing listening cycle")
+                    #endif
+                    self.finalizeListening()
                 }
             }
         }
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        inputNode.removeTap(onBus: 0)   // defensive: never double-install
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
             guard let self else { return }
             // Feed audio to speech recognizer
@@ -234,7 +295,20 @@ final class SpeechService: NSObject, ObservableObject {
         }
 
         audioEngine.prepare()
-        try audioEngine.start()
+        do {
+            try audioEngine.start()
+        } catch {
+            // Clean up fully so the next attempt starts from a valid state.
+            inputNode.removeTap(onBus: 0)
+            recognitionTask?.cancel()
+            recognitionTask = nil
+            recognitionRequest = nil
+            silenceTimer?.invalidate()
+            silenceTimer = nil
+            vadSilenceCallback = nil
+            vadFinalCallback = nil
+            throw error
+        }
         isListening = true
 
         // Periodically check for silence
@@ -268,8 +342,17 @@ final class SpeechService: NSObject, ObservableObject {
                     // Use median of samples as noise floor (robust to outliers)
                     let sorted = self.noiseCalibrationSamples.sorted()
                     let median = sorted[sorted.count / 2]
-                    // Clamp noise floor to reasonable range
-                    self.noiseFloorDb = max(-55, min(-20, median))
+                    // Clamp to a reasonable range
+                    let measured = max(-55, min(-20, median))
+                    if self.hasCalibratedNoiseFloor {
+                        // Later cycles: the floor may only DROP (quieter room).
+                        // If the user was already speaking when the mic opened,
+                        // the median is speech, not noise — min() rejects it.
+                        self.noiseFloorDb = min(self.noiseFloorDb, measured)
+                    } else {
+                        self.noiseFloorDb = measured
+                        self.hasCalibratedNoiseFloor = true
+                    }
                     self.isCalibrating = false
                     #if DEBUG
                     dprint("[SpeechService] 🎤 Noise floor calibrated: \(String(format: "%.1f", self.noiseFloorDb)) dB, threshold: \(String(format: "%.1f", self.noiseFloorDb + self.speechMarginDb)) dB")
@@ -283,36 +366,57 @@ final class SpeechService: NSObject, ObservableObject {
             if dbLevel > threshold {
                 self.lastSpeechTime = Date()
                 self.isSpeechActive = true
+                if self.speechStartTime == nil { self.speechStartTime = Date() }
             }
         }
     }
 
-    /// Checks if silence duration exceeds the threshold.
+    /// Checks if silence duration exceeds the threshold (or the utterance has
+    /// run past the maximum duration).
     private func checkSilence() {
         guard isSpeechActive else { return }
-        let elapsed = Date().timeIntervalSince(lastSpeechTime)
 
-        if elapsed > silenceThreshold {
-            isSpeechActive = false
-
-            // Capture the final transcription and callbacks BEFORE stopListening()
-            // because stopListening() nils out the callbacks
-            let finalText = transcribedText
-            let silenceCallback = vadSilenceCallback
-            let finalCallback = vadFinalCallback
-
-            // Notify silence detected
-            silenceCallback?()
-
-            // Stop listening (this clears vadSilenceCallback & vadFinalCallback)
-            stopListening()
-
-            // Deliver final result AFTER stopping
+        // Runaway-utterance cap: continuous background sound (TV, radio) keeps
+        // refreshing lastSpeechTime so silence is never declared — force
+        // finalization so the turn always completes.
+        if let start = speechStartTime,
+           Date().timeIntervalSince(start) > maxUtteranceDuration {
             #if DEBUG
-            dprint("[SpeechService] 📝 Delivering final VAD result: '\(finalText)'")
+            dprint("[SpeechService] ⏰ Max utterance duration reached — force finalizing")
             #endif
-            finalCallback?(finalText)
+            finalizeListening()
+            return
         }
+
+        if Date().timeIntervalSince(lastSpeechTime) > silenceThreshold {
+            finalizeListening()
+        }
+    }
+
+    /// Ends the current listening cycle and delivers the best transcript so far.
+    /// Shared by the silence path, the max-utterance cap, and recognizer-error
+    /// recovery — every path out of a listening cycle goes through here so the
+    /// orchestrator always gets its callback and can never hang on "listening".
+    private func finalizeListening() {
+        isSpeechActive = false
+
+        // Capture the final transcription and callbacks BEFORE stopListening()
+        // because stopListening() nils out the callbacks
+        let finalText = transcribedText
+        let silenceCallback = vadSilenceCallback
+        let finalCallback = vadFinalCallback
+
+        // Notify silence detected
+        silenceCallback?()
+
+        // Stop listening (this clears vadSilenceCallback & vadFinalCallback)
+        stopListening()
+
+        // Deliver final result AFTER stopping
+        #if DEBUG
+        dprint("[SpeechService] 📝 Delivering final VAD result: '\(finalText)'")
+        #endif
+        finalCallback?(finalText)
     }
 
     // MARK: - Text-to-Speech (Single)
@@ -355,9 +459,11 @@ final class SpeechService: NSObject, ObservableObject {
     func speakSentences(_ sentences: [String],
                         voiceIdentifier: String? = nil,
                         voiceProfileID: String? = nil,
+                        expectingMore: Bool = false,
                         onAllFinished: @escaping () -> Void) {
         try? configureAudioSession(forListening: false)
         allFinishedCallback = onAllFinished
+        expectingMoreUtterances = expectingMore
 
         // F5-TTS cloned voice path
         if let profileID = voiceProfileID, F5TTSService.shared.isConfigured {
@@ -399,6 +505,7 @@ final class SpeechService: NSObject, ObservableObject {
         guard !wavQueue.isEmpty, let profileID = wavVoiceProfileID else {
             // Queue exhausted
             isWavPlaying = false
+            guard !expectingMoreUtterances else { return }   // more sentences streaming in
             isSpeaking = false
             allFinishedCallback?()
             allFinishedCallback = nil
@@ -502,6 +609,18 @@ final class SpeechService: NSObject, ObservableObject {
         return utterance
     }
 
+    /// Marks the end of a streamed reply: no further sentences will be enqueued.
+    /// If TTS has already drained the queue, fires the completion callback now;
+    /// otherwise the delegate fires it when the last utterance finishes.
+    func finishStreaming() {
+        expectingMoreUtterances = false
+        if pendingUtteranceCount <= 0 && wavQueue.isEmpty && !isWavPlaying && !synthesizer.isSpeaking {
+            isSpeaking = false
+            allFinishedCallback?()
+            allFinishedCallback = nil
+        }
+    }
+
     func stopSpeaking() {
         synthesizer.stopSpeaking(at: .immediate)
         wavPlayer?.stop()
@@ -510,6 +629,7 @@ final class SpeechService: NSObject, ObservableObject {
         isWavPlaying = false
         isSpeaking = false
         pendingUtteranceCount = 0
+        expectingMoreUtterances = false
         allFinishedCallback = nil
     }
 }
@@ -526,7 +646,9 @@ extension SpeechService: AVSpeechSynthesizerDelegate {
                 // If we're in WAV queue mode (fallback utterance finished), continue the queue
                 if !self.wavQueue.isEmpty {
                     self.playNextWavSentence()
-                } else if !self.isWavPlaying {
+                } else if !self.isWavPlaying && !self.expectingMoreUtterances {
+                    // Only report completion when the LLM has also finished
+                    // streaming — otherwise the mic would open mid-reply.
                     self.isSpeaking = false
                     self.allFinishedCallback?()
                     self.allFinishedCallback = nil
